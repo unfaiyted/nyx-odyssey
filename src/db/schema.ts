@@ -65,6 +65,8 @@ export const tripDestinations = pgTable('trip_destinations', {
   lng: doublePrecision('lng'),
   arrivalDate: text('arrival_date'),
   departureDate: text('departure_date'),
+  photoUrl: text('photo_url'),
+  status: text('status').default('researched'), // researched, booked, visited
   researchStatus: text('research_status').default('pending'), // pending, researched, approved, booked
   orderIndex: integer('order_index').notNull().default(0),
   createdAt: timestamp('created_at').defaultNow().notNull(),

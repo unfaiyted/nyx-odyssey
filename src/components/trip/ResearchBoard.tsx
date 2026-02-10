@@ -155,8 +155,8 @@ export function ResearchBoard({ tripId, items }: Props) {
                       exit={{ opacity: 0, scale: 0.9 }}
                       transition={{ duration: 0.2 }}
                       draggable
-                      onDragStart={e => handleDragStart(e, dest.id)}
-                      onDragEnd={handleDragEnd}
+                      onDragStart={e => handleDragStart(e as unknown as React.DragEvent, dest.id)}
+                      onDragEnd={() => handleDragEnd()}
                       className="glass-card p-3 cursor-grab active:cursor-grabbing group hover:border-ody-accent/30 transition-colors"
                     >
                       <div className="flex items-start gap-2">

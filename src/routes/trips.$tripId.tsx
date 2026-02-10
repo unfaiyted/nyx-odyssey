@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car, ClipboardList } from 'lucide-react';
 import type { TripDetail, TripTab } from '../types/trips';
 import { ItineraryTab } from '../components/trip/ItineraryTab';
 import { DestinationsTab } from '../components/trip/DestinationsTab';
@@ -11,6 +11,7 @@ import { BudgetTab } from '../components/trip/BudgetTab';
 import { PackingTab } from '../components/trip/PackingTab';
 import { RoutesTab } from '../components/trip/RoutesTab';
 import { FlightsTab } from '../components/trip/FlightsTab';
+import { ResearchBoard } from '../components/trip/ResearchBoard';
 
 export const Route = createFileRoute('/trips/$tripId')({
   component: TripDetailPage,
@@ -19,6 +20,7 @@ export const Route = createFileRoute('/trips/$tripId')({
 const tabs: { id: TripTab; label: string; icon: typeof Calendar }[] = [
   { id: 'itinerary', label: 'Itinerary', icon: Calendar },
   { id: 'destinations', label: 'Destinations', icon: MapPin },
+  { id: 'research', label: 'Research Board', icon: ClipboardList },
   { id: 'accommodations', label: 'Accommodations', icon: Hotel },
   { id: 'budget', label: 'Budget', icon: DollarSign },
   { id: 'packing', label: 'Packing List', icon: Luggage },
@@ -104,6 +106,7 @@ function TripDetailPage() {
           transition={{ duration: 0.2 }}>
           {activeTab === 'itinerary' && <ItineraryTab tripId={tripId} items={trip.itineraryItems} />}
           {activeTab === 'destinations' && <DestinationsTab tripId={tripId} items={trip.destinations} />}
+          {activeTab === 'research' && <ResearchBoard tripId={tripId} items={trip.destinations} />}
           {activeTab === 'accommodations' && <AccommodationsTab tripId={tripId} items={trip.accommodations} />}
           {activeTab === 'budget' && <BudgetTab tripId={tripId} items={trip.budgetItems} totalBudget={trip.totalBudget} currency={trip.currency} />}
           {activeTab === 'packing' && <PackingTab tripId={tripId} items={trip.packingItems} />}
