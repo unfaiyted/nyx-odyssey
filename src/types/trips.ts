@@ -130,6 +130,20 @@ export interface TripRoute {
   toDestination?: TripDestination;
 }
 
+export interface TripCronJob {
+  id: string;
+  tripId: string;
+  cronJobId: string;
+  name: string;
+  schedule: string;
+  description: string | null;
+  enabled: boolean;
+  lastRun: string | null;
+  lastStatus: string | null;
+  nextRun: string | null;
+  createdAt: string;
+}
+
 export interface TripDetail extends Trip {
   itineraryItems: ItineraryItem[];
   destinations: TripDestination[];

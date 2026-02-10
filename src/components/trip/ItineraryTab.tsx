@@ -270,7 +270,6 @@ function WeekView({
               date={date}
               items={grouped[date] || []}
               dayNumber={dayNum}
-              tripId={tripId}
               onToggle={onToggle}
               onDelete={onDelete}
               onDrop={onDrop}
@@ -500,7 +499,6 @@ export function ItineraryTab({ tripId, items }: Props) {
                     date={date}
                     items={grouped[date] || []}
                     dayNumber={dayNum}
-                    tripId={tripId}
                     onToggle={(item) => toggleMutation.mutate(item)}
                     onDelete={(id) => deleteMutation.mutate(id)}
                     onDrop={handleDrop}
@@ -524,7 +522,6 @@ export function ItineraryTab({ tripId, items }: Props) {
                 dates={weekGroups[weekKey]}
                 grouped={grouped}
                 tripStartDate={tripStartDate}
-                tripId={tripId}
                 onToggle={(item) => toggleMutation.mutate(item)}
                 onDelete={(id) => deleteMutation.mutate(id)}
                 onDrop={handleDrop}

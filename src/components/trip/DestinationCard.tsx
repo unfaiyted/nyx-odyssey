@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { MapPin, Trash2, Camera, Navigation, CheckCircle, Bookmark, Search } from 'lucide-react';
+import { MapPin, Trash2, Navigation, CheckCircle, Bookmark, Search } from 'lucide-react';
 import type { TripDestination } from '../../types/trips';
 
 interface Props {

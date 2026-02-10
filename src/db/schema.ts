@@ -154,6 +154,21 @@ export const flights = pgTable('flights', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// ── Trip Cron Jobs ─────────────────────────────────────
+export const tripCronJobs = pgTable('trip_cron_jobs', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  tripId: text('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  cronJobId: text('cron_job_id').notNull(), // External ID from nyx-console
+  name: text('name').notNull(),
+  schedule: text('schedule').notNull(), // Cron expression
+  description: text('description'),
+  enabled: boolean('enabled').default(true),
+  lastRun: timestamp('last_run'),
+  lastStatus: text('last_status'), // success, failure, running
+  nextRun: timestamp('next_run'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 // ── Relations ──────────────────────────────────────────
 export const tripsRelations = relations(trips, ({ many }) => ({
   itineraryItems: many(itineraryItems),
@@ -163,6 +178,7 @@ export const tripsRelations = relations(trips, ({ many }) => ({
   budgetCategories: many(budgetCategories),
   packingItems: many(packingItems),
   flights: many(flights),
+  cronJobs: many(tripCronJobs),
 }));
 
 export const itineraryItemsRelations = relations(itineraryItems, ({ one }) => ({
@@ -187,6 +203,10 @@ export const packingItemsRelations = relations(packingItems, ({ one }) => ({
 
 export const flightsRelations = relations(flights, ({ one }) => ({
   trip: one(trips, { fields: [flights.tripId], references: [trips.id] }),
+}));
+
+export const tripCronJobsRelations = relations(tripCronJobs, ({ one }) => ({
+  trip: one(trips, { fields: [tripCronJobs.tripId], references: [trips.id] }),
 }));
 
 export const routes = pgTable('routes', {

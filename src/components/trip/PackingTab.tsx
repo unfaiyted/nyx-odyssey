@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Plus, Trash2, Check, Package, Search, ChevronDown, ChevronRight,
+  Plus, Trash2, Check, Package, Search, ChevronRight,
   CheckCircle2, Circle, PackageCheck, Filter, X, Sparkles,
 } from 'lucide-react';
 import type { PackingItem } from '../../types/trips';
@@ -22,8 +22,6 @@ const CATEGORIES = [
   { value: 'snacks', label: 'Snacks & Drinks', emoji: '🍫' },
   { value: 'general', label: 'General', emoji: '📦' },
 ];
-
-const categoryMap = Object.fromEntries(CATEGORIES.map(c => [c.value, c]));
 
 type FilterMode = 'all' | 'packed' | 'unpacked';
 
