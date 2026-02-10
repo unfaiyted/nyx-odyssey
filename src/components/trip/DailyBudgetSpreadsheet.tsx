@@ -105,13 +105,6 @@ export function DailyBudgetSpreadsheet({ tripId, items, startDate, endDate, curr
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => fetch(`/api/trips/${tripId}/budget`, {
-      method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }),
-    }).then(r => r.json()),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
-  });
-
   const handleCellClick = useCallback((date: string, category: DailyCategoryKey, field: 'estimated' | 'actual') => {
     const cellData = dailyData[date]?.[category];
     const currentValue = field === 'estimated' ? cellData?.estimated : cellData?.actual;
