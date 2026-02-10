@@ -107,8 +107,8 @@ function TripDetailPage() {
           {activeTab === 'itinerary' && <ItineraryTab tripId={tripId} items={trip.itineraryItems} />}
           {activeTab === 'destinations' && <DestinationsTab tripId={tripId} items={trip.destinations} />}
           {activeTab === 'research' && <ResearchBoard tripId={tripId} items={trip.destinations} />}
-          {activeTab === 'accommodations' && <AccommodationsTab tripId={tripId} items={trip.accommodations} />}
-          {activeTab === 'budget' && <BudgetTab tripId={tripId} items={trip.budgetItems} totalBudget={trip.totalBudget} currency={trip.currency} />}
+          {activeTab === 'accommodations' && <AccommodationsTab tripId={tripId} items={trip.accommodations} destinations={trip.destinations} />}
+          {activeTab === 'budget' && <BudgetTab tripId={tripId} items={trip.budgetItems} budgetCategories={trip.budgetCategories || []} totalBudget={trip.totalBudget} currency={trip.currency} />}
           {activeTab === 'packing' && <PackingTab tripId={tripId} items={trip.packingItems} />}
           {activeTab === 'flights' && <FlightsTab tripId={tripId} items={trip.flights} />}
           {activeTab === 'routes' && <RoutesTab tripId={tripId} routes={trip.routes || []} destinations={trip.destinations} />}
