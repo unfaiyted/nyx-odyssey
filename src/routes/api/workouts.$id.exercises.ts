@@ -4,6 +4,12 @@ import { workoutExercises } from '../../db/schema';
 import { eq, and } from 'drizzle-orm';
 
 export const APIRoute = createAPIFileRoute('/api/workouts/$id/exercises')({
+  GET: async ({ params }) => {
+    const exercises = await db.select().from(workoutExercises)
+      .where(eq(workoutExercises.workoutId, params.id))
+      .orderBy(workoutExercises.orderIndex);
+    return json(exercises);
+  },
   POST: async ({ request, params }) => {
     const body = await request.json();
     const [exercise] = await db.insert(workoutExercises).values({

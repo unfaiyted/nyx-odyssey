@@ -4,6 +4,12 @@ import { itineraryItems } from '../../db/schema';
 import { eq, and } from 'drizzle-orm';
 
 export const APIRoute = createAPIFileRoute('/api/trips/$tripId/itinerary')({
+  GET: async ({ params }) => {
+    const items = await db.select().from(itineraryItems)
+      .where(eq(itineraryItems.tripId, params.tripId))
+      .orderBy(itineraryItems.orderIndex);
+    return json(items);
+  },
   POST: async ({ request, params }) => {
     const body = await request.json();
     const [item] = await db.insert(itineraryItems).values({

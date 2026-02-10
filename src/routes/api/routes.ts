@@ -1,7 +1,6 @@
 import { json } from '@tanstack/react-start';
 import { createAPIFileRoute } from '@tanstack/react-start/api';
-import { getDb } from '../../db';
-const db = getDb();
+import { db } from '../../db';
 import { routes } from '../../db/schema';
 
 export const APIRoute = createAPIFileRoute('/api/routes')({

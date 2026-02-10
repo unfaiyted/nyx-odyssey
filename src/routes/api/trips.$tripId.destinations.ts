@@ -1,9 +1,15 @@
 import { json, createAPIFileRoute } from '@tanstack/react-start/api';
 import { db } from '../../db';
 import { tripDestinations } from '../../db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, asc } from 'drizzle-orm';
 
 export const APIRoute = createAPIFileRoute('/api/trips/$tripId/destinations')({
+  GET: async ({ params }) => {
+    const items = await db.select().from(tripDestinations)
+      .where(eq(tripDestinations.tripId, params.tripId))
+      .orderBy(tripDestinations.orderIndex);
+    return json(items);
+  },
   POST: async ({ request, params }) => {
     const body = await request.json();
     const [item] = await db.insert(tripDestinations).values({

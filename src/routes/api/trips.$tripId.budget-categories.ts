@@ -4,6 +4,11 @@ import { budgetCategories } from '../../db/schema';
 import { eq, and } from 'drizzle-orm';
 
 export const APIRoute = createAPIFileRoute('/api/trips/$tripId/budget-categories')({
+  GET: async ({ params }) => {
+    const items = await db.select().from(budgetCategories)
+      .where(eq(budgetCategories.tripId, params.tripId));
+    return json(items);
+  },
   POST: async ({ request, params }) => {
     const body = await request.json();
     const [item] = await db.insert(budgetCategories).values({
