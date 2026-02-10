@@ -184,4 +184,14 @@ export interface TripDetail extends Trip {
   cronJobs: TripCronJob[];
 }
 
+export interface BudgetCategory {
+  id: string;
+  tripId: string;
+  category: string;
+  allocatedBudget: string;
+  color: string | null;
+  icon: string | null;
+  createdAt: string;
+}
+
 export type TripTab = 'itinerary' | 'destinations' | 'research' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'rental-cars' | 'routes' | 'schedule';

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Car, Clock, MapPin, Route, AlertTriangle, Highway } from 'lucide-react';
+import { Car, Clock, MapPin, Route } from 'lucide-react';
 import type { TripRoute, TripDestination } from '../../types/trips';
 
 function formatDuration(minutes: number) {
