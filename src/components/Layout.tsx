@@ -12,6 +12,7 @@ export function Layout({ children }: LayoutProps) {
           <h1 className="text-xl font-bold text-ody-accent">Odyssey</h1>
           <div className="flex gap-4 text-sm text-ody-text-muted">
             <a href="/" className="hover:text-ody-text transition-colors">Dashboard</a>
+            <a href="/map" className="hover:text-ody-text transition-colors">Map</a>
           </div>
         </div>
       </nav>
