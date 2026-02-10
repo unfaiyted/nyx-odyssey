@@ -15,4 +15,6 @@ export function getDb() {
   return _db;
 }
 
+export const db = getDb();
+
 export * from './schema';
