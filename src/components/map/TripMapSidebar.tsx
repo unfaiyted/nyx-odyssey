@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { Navigation, Search, Bookmark, CheckCircle, Filter } from 'lucide-react';
 import type { TripDestination, TripRoute } from '../../types/trips';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof Search; bg: string; count?: number }> = {
