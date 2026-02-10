@@ -209,6 +209,74 @@ export const tripCronJobsRelations = relations(tripCronJobs, ({ one }) => ({
   trip: one(trips, { fields: [tripCronJobs.tripId], references: [trips.id] }),
 }));
 
+// ── Weight Tracking ────────────────────────────────────
+export const weightEntries = pgTable('weight_entries', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  date: text('date').notNull(),
+  weight: doublePrecision('weight').notNull(), // in lbs
+  unit: text('unit').default('lbs'),
+  bodyFatPct: doublePrecision('body_fat_pct'),
+  muscleMassPct: doublePrecision('muscle_mass_pct'),
+  waterPct: doublePrecision('water_pct'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// ── Nutrition Tracking ─────────────────────────────────
+export const nutritionEntries = pgTable('nutrition_entries', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  date: text('date').notNull(),
+  mealType: text('meal_type').default('meal'), // breakfast, lunch, dinner, snack, meal
+  name: text('name').notNull(),
+  calories: doublePrecision('calories'),
+  protein: doublePrecision('protein'), // grams
+  carbs: doublePrecision('carbs'), // grams
+  fat: doublePrecision('fat'), // grams
+  fiber: doublePrecision('fiber'), // grams
+  sugar: doublePrecision('sugar'), // grams
+  sodium: doublePrecision('sodium'), // mg
+  servingSize: text('serving_size'),
+  servings: doublePrecision('servings').default(1),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// ── Workout Tracking ───────────────────────────────────
+export const workouts = pgTable('workouts', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  date: text('date').notNull(),
+  name: text('name').notNull(),
+  type: text('type').default('strength'), // strength, cardio, flexibility, hiit, sport, other
+  durationMinutes: integer('duration_minutes'),
+  caloriesBurned: doublePrecision('calories_burned'),
+  notes: text('notes'),
+  rating: integer('rating'), // 1-5 how it felt
+  completed: boolean('completed').default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const workoutExercises = pgTable('workout_exercises', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  workoutId: text('workout_id').notNull().references(() => workouts.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  orderIndex: integer('order_index').notNull().default(0),
+  sets: integer('sets'),
+  reps: integer('reps'),
+  weight: doublePrecision('weight'), // lbs
+  durationSeconds: integer('duration_seconds'),
+  distanceMiles: doublePrecision('distance_miles'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const workoutsRelations = relations(workouts, ({ many }) => ({
+  exercises: many(workoutExercises),
+}));
+
+export const workoutExercisesRelations = relations(workoutExercises, ({ one }) => ({
+  workout: one(workouts, { fields: [workoutExercises.workoutId], references: [workouts.id] }),
+}));
+
 export const routes = pgTable('routes', {
   id: text('id').primaryKey().$defaultFn(() => nanoid()),
   fromDestinationId: text('from_destination_id').notNull().references(() => destinations.id),
