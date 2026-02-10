@@ -39,6 +39,14 @@ export function DestinationsTab({ tripId, items }: Props) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 
+  const updatePhotoMutation = useMutation({
+    mutationFn: ({ id, photoUrl }: { id: string; photoUrl: string }) => fetch(`/api/trips/${tripId}/destinations`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, photoUrl }),
+    }).then(r => r.json()),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
+  });
+
   const sorted = [...items].sort((a, b) => a.orderIndex - b.orderIndex);
 
   // Use first destination as base for distance calculation
@@ -112,6 +120,7 @@ export function DestinationsTab({ tripId, items }: Props) {
               baseLng={baseLng}
               onDelete={(id) => deleteMutation.mutate(id)}
               onStatusChange={(id, status) => updateStatusMutation.mutate({ id, status })}
+              onPhotoChange={(id, photoUrl) => updatePhotoMutation.mutate({ id, photoUrl })}
             />
           ))}
         </div>
@@ -126,6 +135,7 @@ export function DestinationsTab({ tripId, items }: Props) {
               baseLng={baseLng}
               onDelete={(id) => deleteMutation.mutate(id)}
               onStatusChange={(id, status) => updateStatusMutation.mutate({ id, status })}
+              onPhotoChange={(id, photoUrl) => updatePhotoMutation.mutate({ id, photoUrl })}
             />
           ))}
         </div>
