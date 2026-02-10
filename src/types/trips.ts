@@ -153,6 +153,7 @@ export interface TripDetail extends Trip {
   packingItems: PackingItem[];
   flights: Flight[];
   routes: TripRoute[];
+  cronJobs: TripCronJob[];
 }
 
-export type TripTab = 'itinerary' | 'destinations' | 'research' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'routes';
+export type TripTab = 'itinerary' | 'destinations' | 'research' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'routes' | 'schedule';
