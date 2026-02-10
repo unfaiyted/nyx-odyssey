@@ -20,13 +20,13 @@ async function seed() {
   const existingFlights = await db.select().from(schema.flights).where(eq(schema.flights.tripId, tripId));
   if (existingFlights.length === 0) {
     await db.insert(schema.flights).values([
-      // Outbound
-      { tripId, airline: 'American Airlines', flightNumber: 'AA 2496', confirmationCode: 'NHWAJX', departureAirport: 'SAT', departureCity: 'San Antonio', arrivalAirport: 'CLT', arrivalCity: 'Charlotte', departureDate: '2026-06-09', arrivalDate: '2026-06-09', status: 'confirmed', orderIndex: 0, notes: 'Outbound leg 1' },
-      { tripId, airline: 'American Airlines', flightNumber: 'AA 734', confirmationCode: 'NHWAJX', departureAirport: 'CLT', departureCity: 'Charlotte', arrivalAirport: 'CLT', arrivalCity: 'Charlotte', departureDate: '2026-06-09', arrivalDate: '2026-06-10', status: 'confirmed', orderIndex: 1, notes: 'Outbound leg 2 (transatlantic)' },
-      { tripId, airline: 'American Airlines', flightNumber: 'AA 6727', confirmationCode: 'NHWAJX', departureAirport: 'CLT', departureCity: 'Charlotte', arrivalAirport: 'VCE', arrivalCity: 'Venice', departureDate: '2026-06-09', arrivalDate: '2026-06-10', status: 'confirmed', orderIndex: 2, notes: 'Outbound leg 3 — arrives Venice Marco Polo!' },
-      // Return
-      { tripId, airline: 'American Airlines', flightNumber: 'AA 131', confirmationCode: 'NHWAJX', departureAirport: 'VCE', departureCity: 'Venice', arrivalAirport: 'CLT', arrivalCity: 'Charlotte', departureDate: '2026-07-10', arrivalDate: '2026-07-10', status: 'confirmed', orderIndex: 3, notes: 'Return leg 1' },
-      { tripId, airline: 'American Airlines', flightNumber: 'AA 1406', confirmationCode: 'NHWAJX', departureAirport: 'CLT', departureCity: 'Charlotte', arrivalAirport: 'SAT', arrivalCity: 'San Antonio', departureDate: '2026-07-10', arrivalDate: '2026-07-10', status: 'confirmed', orderIndex: 4, notes: 'Return leg 2 — home!' },
+      // Outbound: SAT → CLT → FCO → VCE
+      { tripId, airline: 'American Airlines', flightNumber: 'AA 2496', confirmationCode: 'NHWAJX', departureAirport: 'SAT', departureCity: 'San Antonio', arrivalAirport: 'CLT', arrivalCity: 'Charlotte', departureDate: '2026-06-09', departureTime: '06:15', arrivalDate: '2026-06-09', arrivalTime: '10:45', duration: '2h 30m', status: 'confirmed', orderIndex: 0, notes: 'Outbound leg 1' },
+      { tripId, airline: 'American Airlines', flightNumber: 'AA 734', confirmationCode: 'NHWAJX', departureAirport: 'CLT', departureCity: 'Charlotte', arrivalAirport: 'FCO', arrivalCity: 'Rome', departureDate: '2026-06-09', departureTime: '17:25', arrivalDate: '2026-06-10', arrivalTime: '08:30', duration: '9h 5m', status: 'confirmed', orderIndex: 1, notes: 'Outbound leg 2 (transatlantic)' },
+      { tripId, airline: 'American Airlines', flightNumber: 'AA 6727', confirmationCode: 'NHWAJX', departureAirport: 'FCO', departureCity: 'Rome', arrivalAirport: 'VCE', arrivalCity: 'Venice', departureDate: '2026-06-10', departureTime: '11:20', arrivalDate: '2026-06-10', arrivalTime: '12:30', duration: '1h 10m', status: 'confirmed', orderIndex: 2, notes: 'Outbound leg 3 — arrives Venice Marco Polo!' },
+      // Return: VCE → CLT → SAT
+      { tripId, airline: 'American Airlines', flightNumber: 'AA 131', confirmationCode: 'NHWAJX', departureAirport: 'VCE', departureCity: 'Venice', arrivalAirport: 'CLT', arrivalCity: 'Charlotte', departureDate: '2026-07-10', departureTime: '10:05', arrivalDate: '2026-07-10', arrivalTime: '15:20', duration: '11h 15m', status: 'confirmed', orderIndex: 3, notes: 'Return leg 1' },
+      { tripId, airline: 'American Airlines', flightNumber: 'AA 1406', confirmationCode: 'NHWAJX', departureAirport: 'CLT', departureCity: 'Charlotte', arrivalAirport: 'SAT', arrivalCity: 'San Antonio', departureDate: '2026-07-10', departureTime: '17:45', arrivalDate: '2026-07-10', arrivalTime: '19:30', duration: '2h 45m', status: 'confirmed', orderIndex: 4, notes: 'Return leg 2 — home!' },
     ]);
     console.log('✅ 5 flights added');
   } else {

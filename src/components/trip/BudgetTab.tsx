@@ -47,7 +47,8 @@ function formatMoneyFull(value: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
 }
 
-export function BudgetTab({ tripId, items, budgetCategories: catAllocations, totalBudget, currency }: Props) {
+export function BudgetTab({ tripId, items, budgetCategories: catAllocations, totalBudget, currency, startDate, endDate }: Props) {
+  const [showDailySpreadsheet, setShowDailySpreadsheet] = useState(true);
   const queryClient = useQueryClient();
   const [showAdd, setShowAdd] = useState(false);
   const [showCategorySetup, setShowCategorySetup] = useState(false);
@@ -217,6 +218,37 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
         </div>
       )}
 
+      {/* ── Daily Budget Spreadsheet ── */}
+      <div className="glass-card p-4">
+        <button
+          onClick={() => setShowDailySpreadsheet(!showDailySpreadsheet)}
+          className="flex items-center justify-between w-full mb-2"
+        >
+          <h4 className="text-sm font-semibold text-ody-text-muted flex items-center gap-2">
+            📊 Daily Budget Spreadsheet
+          </h4>
+          {showDailySpreadsheet ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        </button>
+        <AnimatePresence>
+          {showDailySpreadsheet && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <DailyBudgetSpreadsheet
+                tripId={tripId}
+                items={items}
+                startDate={startDate || null}
+                endDate={endDate || null}
+                currency={currency}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       {/* ── Category Breakdown ── */}
       <div className="glass-card p-4">
         <div className="flex justify-between items-center mb-4">
@@ -265,7 +297,7 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
         <div className="space-y-3">
           {CATEGORIES.map(cat => {
             const stats = categoryStats[cat.key];
-            if (!stats && !allocationMap[cat.key]) return null;
+            if (!stats && !allocationMap[cat.key]) return null as any;
             const allocated = allocationMap[cat.key] || 0;
             const actual = stats?.actual || 0;
             const estimated = stats?.estimated || 0;
@@ -311,6 +343,15 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
                       initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
                       className="ml-5 mt-2 space-y-1 overflow-hidden"
                     >
+                      {allocated > 0 && (
+                        <div className="flex items-center gap-2 py-1 px-2 mb-1 text-xs">
+                          <span className="text-ody-text-dim">Variance:</span>
+                          <span className={isOver ? 'text-ody-danger font-medium' : 'text-ody-success font-medium'}>
+                            {isOver ? '−' : '+'}{formatMoney(Math.abs(allocated - displayValue), currency)}
+                            {isOver ? ' over budget' : ' under budget'}
+                          </span>
+                        </div>
+                      )}
                       {stats.items.map(item => (
                         <div key={item.id} className="flex items-center gap-2 py-1.5 px-2 bg-ody-surface/30 rounded text-xs">
                           <button onClick={() => togglePaidMutation.mutate(item)}

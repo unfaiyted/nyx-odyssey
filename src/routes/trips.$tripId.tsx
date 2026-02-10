@@ -108,11 +108,11 @@ function TripDetailPage() {
         <motion.div key={activeTab}
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}>
-          {activeTab === 'itinerary' && <ItineraryTab tripId={tripId} items={trip.itineraryItems} />}
+          {activeTab === 'itinerary' && <ItineraryTab tripId={tripId} items={trip.itineraryItems} startDate={trip.startDate} endDate={trip.endDate} destinations={trip.destinations} />}
           {activeTab === 'destinations' && <DestinationsTab tripId={tripId} items={trip.destinations} />}
           {activeTab === 'research' && <ResearchBoard tripId={tripId} items={trip.destinations} />}
           {activeTab === 'accommodations' && <AccommodationsTab tripId={tripId} items={trip.accommodations} destinations={trip.destinations} />}
-          {activeTab === 'budget' && <BudgetTab tripId={tripId} items={trip.budgetItems} budgetCategories={trip.budgetCategories || []} totalBudget={trip.totalBudget} currency={trip.currency} />}
+          {activeTab === 'budget' && <BudgetTab tripId={tripId} items={trip.budgetItems} budgetCategories={trip.budgetCategories || []} totalBudget={trip.totalBudget} currency={trip.currency} startDate={trip.startDate} endDate={trip.endDate} />}
           {activeTab === 'packing' && <PackingTab tripId={tripId} items={trip.packingItems} />}
           {activeTab === 'flights' && <FlightsTab tripId={tripId} items={trip.flights} />}
           {activeTab === 'rental-cars' && <RentalCarsTab tripId={tripId} items={trip.rentalCars || []} />}
