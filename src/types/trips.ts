@@ -130,6 +130,33 @@ export interface TripRoute {
   toDestination?: TripDestination;
 }
 
+export interface RentalCar {
+  id: string;
+  tripId: string;
+  company: string;
+  vehicleType: string;
+  vehicleName: string | null;
+  status: string;
+  pickupLocation: string | null;
+  dropoffLocation: string | null;
+  pickupDate: string | null;
+  pickupTime: string | null;
+  dropoffDate: string | null;
+  dropoffTime: string | null;
+  dailyRate: string | null;
+  totalCost: string | null;
+  currency: string;
+  confirmationCode: string | null;
+  bookingUrl: string | null;
+  insuranceIncluded: boolean;
+  mileagePolicy: string | null;
+  fuelPolicy: string | null;
+  transmission: string;
+  notes: string | null;
+  rating: number | null;
+  createdAt: string;
+}
+
 export interface TripCronJob {
   id: string;
   tripId: string;
@@ -152,8 +179,9 @@ export interface TripDetail extends Trip {
   budgetCategories: BudgetCategory[];
   packingItems: PackingItem[];
   flights: Flight[];
+  rentalCars: RentalCar[];
   routes: TripRoute[];
   cronJobs: TripCronJob[];
 }
 
-export type TripTab = 'itinerary' | 'destinations' | 'research' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'routes' | 'schedule';
+export type TripTab = 'itinerary' | 'destinations' | 'research' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'rental-cars' | 'routes' | 'schedule';
