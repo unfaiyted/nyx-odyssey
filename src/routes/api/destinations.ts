@@ -1,7 +1,6 @@
 import { json } from '@tanstack/react-start';
 import { createAPIFileRoute } from '@tanstack/react-start/api';
-import { getDb } from '../../db';
-const db = getDb();
+import { db } from '../../db';
 import { destinations, routes } from '../../db/schema';
 import { eq, asc } from 'drizzle-orm';
 
