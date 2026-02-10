@@ -1,6 +1,6 @@
 import { json, createAPIFileRoute } from '@tanstack/react-start/api';
 import { db } from '../../db';
-import { trips, itineraryItems, tripDestinations, accommodations, budgetItems, budgetCategories, packingItems, flights, tripRoutes } from '../../db/schema';
+import { trips, itineraryItems, tripDestinations, accommodations, budgetItems, budgetCategories, packingItems, flights, tripRoutes, tripCronJobs } from '../../db/schema';
 import { eq } from 'drizzle-orm';
 
 export const APIRoute = createAPIFileRoute('/api/trips/$tripId')({
@@ -9,7 +9,7 @@ export const APIRoute = createAPIFileRoute('/api/trips/$tripId')({
     const [trip] = await db.select().from(trips).where(eq(trips.id, tripId));
     if (!trip) return json({ error: 'Trip not found' }, { status: 404 });
 
-    const [itin, dests, accom, budget, budgetCats, packing, flightRows, routeRows] = await Promise.all([
+    const [itin, dests, accom, budget, budgetCats, packing, flightRows, routeRows, cronJobRows] = await Promise.all([
       db.select().from(itineraryItems).where(eq(itineraryItems.tripId, tripId)),
       db.select().from(tripDestinations).where(eq(tripDestinations.tripId, tripId)),
       db.select().from(accommodations).where(eq(accommodations.tripId, tripId)),
@@ -18,6 +18,7 @@ export const APIRoute = createAPIFileRoute('/api/trips/$tripId')({
       db.select().from(packingItems).where(eq(packingItems.tripId, tripId)),
       db.select().from(flights).where(eq(flights.tripId, tripId)),
       db.select().from(tripRoutes).where(eq(tripRoutes.tripId, tripId)),
+      db.select().from(tripCronJobs).where(eq(tripCronJobs.tripId, tripId)),
     ]);
 
     return json({
@@ -30,6 +31,7 @@ export const APIRoute = createAPIFileRoute('/api/trips/$tripId')({
       packingItems: packing,
       flights: flightRows,
       routes: routeRows,
+      cronJobs: cronJobRows,
     });
   },
   PUT: async ({ request, params }) => {

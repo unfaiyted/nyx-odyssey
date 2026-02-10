@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car, ClipboardList } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car, ClipboardList, Clock } from 'lucide-react';
 import type { TripDetail, TripTab } from '../types/trips';
 import { ItineraryTab } from '../components/trip/ItineraryTab';
 import { DestinationsTab } from '../components/trip/DestinationsTab';
@@ -12,6 +12,7 @@ import { PackingTab } from '../components/trip/PackingTab';
 import { RoutesTab } from '../components/trip/RoutesTab';
 import { FlightsTab } from '../components/trip/FlightsTab';
 import { ResearchBoard } from '../components/trip/ResearchBoard';
+import { ScheduleTab } from '../components/trip/ScheduleTab';
 
 export const Route = createFileRoute('/trips/$tripId')({
   component: TripDetailPage,
@@ -26,6 +27,7 @@ const tabs: { id: TripTab; label: string; icon: typeof Calendar }[] = [
   { id: 'packing', label: 'Packing List', icon: Luggage },
   { id: 'flights', label: 'Flights', icon: Plane },
   { id: 'routes', label: 'Driving Routes', icon: Car },
+  { id: 'schedule', label: 'Schedule', icon: Clock },
 ];
 
 function TripDetailPage() {
@@ -112,6 +114,7 @@ function TripDetailPage() {
           {activeTab === 'packing' && <PackingTab tripId={tripId} items={trip.packingItems} />}
           {activeTab === 'flights' && <FlightsTab tripId={tripId} items={trip.flights} />}
           {activeTab === 'routes' && <RoutesTab tripId={tripId} routes={trip.routes || []} destinations={trip.destinations} />}
+          {activeTab === 'schedule' && <ScheduleTab cronJobs={trip.cronJobs || []} />}
         </motion.div>
       </AnimatePresence>
     </div>
