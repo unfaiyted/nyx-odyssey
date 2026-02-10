@@ -20,6 +20,9 @@ export const Route = createRootRoute({
       { title: 'Odyssey' },
     ],
     links: [
+      { rel: 'icon', href: '/favicon.ico', sizes: '32x32' },
+      { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
+      { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
       { rel: 'stylesheet', href: appCss },
       { rel: 'stylesheet', href: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css' },
       { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
