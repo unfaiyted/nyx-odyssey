@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Calendar, DollarSign, Trash2, MapPin, Star, ExternalLink,
-  Phone, Mail, Filter, ChevronDown, ChevronUp, Edit3, X, Check,
+  Phone, Mail, Filter, ChevronDown, ChevronUp, Edit3, Check,
   Building, Home, Tent, BedDouble, Hotel as HotelIcon, Search,
   Moon, Copy, CheckCircle,
 } from 'lucide-react';

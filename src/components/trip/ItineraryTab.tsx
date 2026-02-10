@@ -1,9 +1,9 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion, AnimatePresence, Reorder } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Check, Clock, MapPin, Trash2, GripVertical,
-  CalendarDays, CalendarRange, ChevronLeft, ChevronRight,
+  CalendarDays, CalendarRange,
 } from 'lucide-react';
 import type { ItineraryItem } from '../../types/trips';
 
@@ -69,20 +69,16 @@ function isPast(dateStr: string): boolean {
 
 // ─── Drag-and-drop item card ──────────────────────────
 function TimelineItemCard({
-  item, onToggle, onDelete, onDrop, isDragging,
+  item, onToggle, onDelete,
 }: {
   item: ItineraryItem;
   onToggle: () => void;
   onDelete: () => void;
-  onDrop: (targetDate: string) => void;
-  isDragging?: boolean;
 }) {
   const cat = categoryConfig[item.category] || categoryConfig.activity;
-  const dragRef = useRef<HTMLDivElement>(null);
 
   return (
     <motion.div
-      ref={dragRef}
       layout
       initial={{ opacity: 0, x: -12 }}
       animate={{ opacity: 1, x: 0 }}
@@ -148,12 +144,11 @@ function TimelineItemCard({
 
 // ─── Day Column ───────────────────────────────────────
 function DayColumn({
-  date, items, dayNumber, tripId, onToggle, onDelete, onDrop,
+  date, items, dayNumber, onToggle, onDelete, onDrop,
 }: {
   date: string;
   items: ItineraryItem[];
   dayNumber: number;
-  tripId: string;
   onToggle: (item: ItineraryItem) => void;
   onDelete: (id: string) => void;
   onDrop: (itemId: string, targetDate: string) => void;
@@ -231,7 +226,6 @@ function DayColumn({
                 item={item}
                 onToggle={() => onToggle(item)}
                 onDelete={() => onDelete(item.id)}
-                onDrop={(targetDate) => onDrop(item.id, targetDate)}
               />
             ))
           )}
@@ -243,13 +237,11 @@ function DayColumn({
 
 // ─── Week View ────────────────────────────────────────
 function WeekView({
-  weekKey, dates, grouped, tripStartDate, tripId, onToggle, onDelete, onDrop,
+  dates, grouped, tripStartDate, onToggle, onDelete, onDrop,
 }: {
-  weekKey: string;
   dates: string[];
   grouped: Record<string, ItineraryItem[]>;
   tripStartDate: string;
-  tripId: string;
   onToggle: (item: ItineraryItem) => void;
   onDelete: (id: string) => void;
   onDrop: (itemId: string, targetDate: string) => void;

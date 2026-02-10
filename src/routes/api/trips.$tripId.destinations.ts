@@ -19,6 +19,14 @@ export const APIRoute = createAPIFileRoute('/api/trips/$tripId/destinations')({
       .returning();
     return json(updated);
   },
+  PATCH: async ({ request, params }) => {
+    const body = await request.json();
+    const { id, ...data } = body;
+    const [updated] = await db.update(tripDestinations).set(data)
+      .where(and(eq(tripDestinations.id, id), eq(tripDestinations.tripId, params.tripId)))
+      .returning();
+    return json(updated);
+  },
   DELETE: async ({ request, params }) => {
     const { id } = await request.json();
     await db.delete(tripDestinations)
