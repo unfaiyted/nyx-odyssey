@@ -11,6 +11,7 @@ import {
   Tooltip, Legend, AreaChart, Area, CartesianGrid, LineChart, Line,
 } from 'recharts';
 import type { BudgetItem, BudgetCategory } from '../../types/trips';
+import { DailyBudgetSpreadsheet } from './DailyBudgetSpreadsheet';
 
 interface Props {
   tripId: string;
@@ -18,6 +19,8 @@ interface Props {
   budgetCategories: BudgetCategory[];
   totalBudget: string | null;
   currency: string;
+  startDate?: string | null;
+  endDate?: string | null;
 }
 
 const CATEGORIES = [
@@ -50,6 +53,8 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
   const [showCategorySetup, setShowCategorySetup] = useState(false);
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [editingItem, setEditingItem] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Partial<BudgetItem>>({});
   const [form, setForm] = useState({
     category: 'food', description: '', estimatedCost: '', actualCost: '', date: '',
   });
@@ -72,6 +77,16 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
       body: JSON.stringify({ id: item.id, paid: !item.paid }),
     }).then(r => r.json()),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
+  });
+
+  const updateItemMutation = useMutation({
+    mutationFn: (data: Partial<BudgetItem> & { id: string }) => fetch(`/api/trips/${tripId}/budget`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
+    }).then(r => r.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
+      setEditingItem(null);
+    },
   });
 
   const deleteMutation = useMutation({
@@ -454,6 +469,35 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
             .map((item, i) => {
               const meta = getCategoryMeta(item.category);
               const Icon = meta.icon;
+              const isEditing = editingItem === item.id;
+
+              if (isEditing) {
+                return (
+                  <motion.div key={item.id} layout className="glass-card p-3 space-y-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <select value={editForm.category || item.category} onChange={e => setEditForm(p => ({ ...p, category: e.target.value }))}
+                        className="bg-ody-bg border border-ody-border rounded px-2 py-1.5 text-sm outline-none focus:border-ody-accent">
+                        {CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+                      </select>
+                      <input value={editForm.description ?? item.description} onChange={e => setEditForm(p => ({ ...p, description: e.target.value }))}
+                        className="bg-ody-bg border border-ody-border rounded px-2 py-1.5 text-sm outline-none focus:border-ody-accent" placeholder="Description" />
+                      <input type="number" step="0.01" value={editForm.estimatedCost ?? item.estimatedCost ?? ''} onChange={e => setEditForm(p => ({ ...p, estimatedCost: e.target.value }))}
+                        className="bg-ody-bg border border-ody-border rounded px-2 py-1.5 text-sm outline-none focus:border-ody-accent" placeholder="Estimated cost" />
+                      <input type="number" step="0.01" value={editForm.actualCost ?? item.actualCost ?? ''} onChange={e => setEditForm(p => ({ ...p, actualCost: e.target.value }))}
+                        className="bg-ody-bg border border-ody-border rounded px-2 py-1.5 text-sm outline-none focus:border-ody-accent" placeholder="Actual cost" />
+                      <input type="date" value={editForm.date ?? item.date ?? ''} onChange={e => setEditForm(p => ({ ...p, date: e.target.value }))}
+                        className="bg-ody-bg border border-ody-border rounded px-2 py-1.5 text-sm outline-none focus:border-ody-accent" />
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => updateItemMutation.mutate({ id: item.id, ...editForm })}
+                        className="px-3 py-1 rounded bg-ody-accent text-white text-xs hover:bg-ody-accent-hover transition-colors">Save</button>
+                      <button onClick={() => { setEditingItem(null); setEditForm({}); }}
+                        className="px-3 py-1 rounded border border-ody-border text-xs hover:bg-ody-surface-hover transition-colors">Cancel</button>
+                    </div>
+                  </motion.div>
+                );
+              }
+
               return (
                 <motion.div
                   key={item.id}
@@ -486,6 +530,10 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
                     )}
                   </div>
                   {item.date && <span className="text-xs text-ody-text-dim hidden sm:block">{item.date}</span>}
+                  <button onClick={() => { setEditingItem(item.id); setEditForm({}); }}
+                    className="text-ody-text-dim hover:text-ody-accent transition-colors p-1 opacity-0 group-hover:opacity-100">
+                    <Edit2 size={14} />
+                  </button>
                   <button onClick={() => deleteMutation.mutate(item.id)}
                     className="text-ody-text-dim hover:text-ody-danger transition-colors p-1 opacity-0 group-hover:opacity-100">
                     <Trash2 size={14} />
