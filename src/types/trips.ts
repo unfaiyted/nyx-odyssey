@@ -36,6 +36,8 @@ export interface TripDestination {
   lng: number | null;
   arrivalDate: string | null;
   departureDate: string | null;
+  photoUrl: string | null;
+  status: string;
   researchStatus: string;
   orderIndex: number;
   createdAt: string;
@@ -133,9 +135,10 @@ export interface TripDetail extends Trip {
   destinations: TripDestination[];
   accommodations: Accommodation[];
   budgetItems: BudgetItem[];
+  budgetCategories: BudgetCategory[];
   packingItems: PackingItem[];
   flights: Flight[];
   routes: TripRoute[];
 }
 
-export type TripTab = 'itinerary' | 'destinations' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'routes';
+export type TripTab = 'itinerary' | 'destinations' | 'research' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'routes';
