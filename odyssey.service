@@ -1,0 +1,20 @@
+[Unit]
+Description=Odyssey - Trip Planning Application
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/clawd/odyssey
+EnvironmentFile=/root/clawd/odyssey/.env
+Environment=PORT=3003
+ExecStart=/usr/local/bin/bun .output/server/index.mjs
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=odyssey
+
+[Install]
+WantedBy=multi-user.target
