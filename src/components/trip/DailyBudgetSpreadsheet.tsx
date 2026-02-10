@@ -2,8 +2,8 @@ import { useState, useMemo, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Utensils, Car, Compass, ShoppingBag, Plus, Trash2, Save,
-  ChevronLeft, ChevronRight, Calendar, TrendingUp, Edit2, X, Check,
+  Utensils, Car, Compass, ShoppingBag, Plus,
+  ChevronLeft, ChevronRight, Calendar, TrendingUp,
 } from 'lucide-react';
 import type { BudgetItem } from '../../types/trips';
 
