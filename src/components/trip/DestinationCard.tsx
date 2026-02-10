@@ -1,5 +1,6 @@
-import { motion } from 'framer-motion';
-import { MapPin, Trash2, Navigation, CheckCircle, Bookmark, Search } from 'lucide-react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MapPin, Trash2, Navigation, CheckCircle, Bookmark, Search, Camera, ExternalLink } from 'lucide-react';
 import type { TripDestination } from '../../types/trips';
 
 interface Props {
@@ -43,7 +44,9 @@ const PLACEHOLDER_PHOTOS = [
   'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=600&h=400&fit=crop',
 ];
 
-export function DestinationCard({ destination, index, baseLat, baseLng, onDelete, onStatusChange }: Props) {
+export function DestinationCard({ destination, index, baseLat, baseLng, onDelete, onStatusChange, onPhotoChange }: Props) {
+  const [showPhotoEdit, setShowPhotoEdit] = useState(false);
+  const [photoInput, setPhotoInput] = useState('');
   const status = destination.status || 'researched';
   const config = STATUS_CONFIG[status] || STATUS_CONFIG.researched;
   const StatusIcon = config.icon;
@@ -85,11 +88,55 @@ export function DestinationCard({ destination, index, baseLat, baseLng, onDelete
           {index + 1}
         </div>
 
+        {/* Photo edit button */}
+        {onPhotoChange && (
+          <button
+            onClick={() => { setPhotoInput(destination.photoUrl || ''); setShowPhotoEdit(true); }}
+            className="absolute top-3 right-12 w-7 h-7 rounded-full bg-black/50 text-white/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:text-white"
+            title="Change photo"
+          >
+            <Camera size={12} />
+          </button>
+        )}
+
         {/* Name overlay */}
         <div className="absolute bottom-3 left-3 right-3">
           <h4 className="font-semibold text-white text-lg leading-tight drop-shadow-lg">{destination.name}</h4>
         </div>
       </div>
+
+      {/* Photo URL editor */}
+      <AnimatePresence>
+        {showPhotoEdit && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-4 pt-3 overflow-hidden"
+          >
+            <div className="flex gap-2">
+              <input
+                value={photoInput}
+                onChange={(e) => setPhotoInput(e.target.value)}
+                placeholder="Photo URL..."
+                className="flex-1 bg-ody-bg border border-ody-border rounded-md px-2 py-1 text-xs outline-none focus:border-ody-accent"
+              />
+              <button
+                onClick={() => { onPhotoChange?.(destination.id, photoInput); setShowPhotoEdit(false); }}
+                className="px-2 py-1 rounded-md bg-ody-accent text-white text-xs hover:bg-ody-accent-hover"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setShowPhotoEdit(false)}
+                className="px-2 py-1 rounded-md border border-ody-border text-xs hover:bg-ody-surface-hover"
+              >
+                ✕
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Info section */}
       <div className="p-4 space-y-3">
@@ -106,10 +153,17 @@ export function DestinationCard({ destination, index, baseLat, baseLng, onDelete
               </span>
             )}
             {destination.lat && destination.lng && (
-              <span className="flex items-center gap-1">
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${destination.lat},${destination.lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 hover:text-ody-accent transition-colors"
+                title="Open in Google Maps"
+              >
                 <MapPin size={11} />
                 {destination.lat.toFixed(2)}, {destination.lng.toFixed(2)}
-              </span>
+                <ExternalLink size={9} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+              </a>
             )}
           </div>
 
