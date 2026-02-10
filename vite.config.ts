@@ -10,6 +10,7 @@ import tailwindcss from '@tailwindcss/vite'
 const config = defineConfig({
   server: {
     port: 3003,
+    allowedHosts: ['odyssey.nyxed.dev'],
   },
   resolve: {
     alias: {
