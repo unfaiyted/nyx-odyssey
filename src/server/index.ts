@@ -12,3 +12,4 @@ export * from './trip-accommodations';
 export * from './trip-budget';
 export * from './trip-flights';
 export * from './trip-packing';
+export * from './trip-rental-cars';
