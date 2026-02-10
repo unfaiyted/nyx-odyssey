@@ -2,13 +2,15 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car } from 'lucide-react';
 import type { TripDetail, TripTab } from '../types/trips';
 import { ItineraryTab } from '../components/trip/ItineraryTab';
 import { DestinationsTab } from '../components/trip/DestinationsTab';
 import { AccommodationsTab } from '../components/trip/AccommodationsTab';
 import { BudgetTab } from '../components/trip/BudgetTab';
 import { PackingTab } from '../components/trip/PackingTab';
+import { RoutesTab } from '../components/trip/RoutesTab';
+import { FlightsTab } from '../components/trip/FlightsTab';
 
 export const Route = createFileRoute('/trips/$tripId')({
   component: TripDetailPage,
@@ -20,6 +22,8 @@ const tabs: { id: TripTab; label: string; icon: typeof Calendar }[] = [
   { id: 'accommodations', label: 'Accommodations', icon: Hotel },
   { id: 'budget', label: 'Budget', icon: DollarSign },
   { id: 'packing', label: 'Packing List', icon: Luggage },
+  { id: 'flights', label: 'Flights', icon: Plane },
+  { id: 'routes', label: 'Driving Routes', icon: Car },
 ];
 
 function TripDetailPage() {
@@ -103,6 +107,8 @@ function TripDetailPage() {
           {activeTab === 'accommodations' && <AccommodationsTab tripId={tripId} items={trip.accommodations} />}
           {activeTab === 'budget' && <BudgetTab tripId={tripId} items={trip.budgetItems} totalBudget={trip.totalBudget} currency={trip.currency} />}
           {activeTab === 'packing' && <PackingTab tripId={tripId} items={trip.packingItems} />}
+          {activeTab === 'flights' && <FlightsTab tripId={tripId} items={trip.flights} />}
+          {activeTab === 'routes' && <RoutesTab tripId={tripId} routes={trip.routes || []} destinations={trip.destinations} />}
         </motion.div>
       </AnimatePresence>
     </div>

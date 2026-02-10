@@ -101,6 +101,23 @@ export interface Flight {
   createdAt: string;
 }
 
+export interface TripRoute {
+  id: string;
+  tripId: string;
+  fromDestinationId: string;
+  toDestinationId: string;
+  distanceKm: number | null;
+  distanceMiles: number | null;
+  durationMinutes: number | null;
+  routeDescription: string | null;
+  tolls: boolean;
+  highway: boolean;
+  notes: string | null;
+  createdAt: string;
+  fromDestination?: TripDestination;
+  toDestination?: TripDestination;
+}
+
 export interface TripDetail extends Trip {
   itineraryItems: ItineraryItem[];
   destinations: TripDestination[];
@@ -108,6 +125,7 @@ export interface TripDetail extends Trip {
   budgetItems: BudgetItem[];
   packingItems: PackingItem[];
   flights: Flight[];
+  routes: TripRoute[];
 }
 
-export type TripTab = 'itinerary' | 'destinations' | 'accommodations' | 'budget' | 'packing' | 'flights';
+export type TripTab = 'itinerary' | 'destinations' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'routes';

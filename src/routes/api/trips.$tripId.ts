@@ -1,6 +1,6 @@
 import { json, createAPIFileRoute } from '@tanstack/react-start/api';
 import { db } from '../../db';
-import { trips, itineraryItems, tripDestinations, accommodations, budgetItems, packingItems, flights } from '../../db/schema';
+import { trips, itineraryItems, tripDestinations, accommodations, budgetItems, packingItems, flights, tripRoutes } from '../../db/schema';
 import { eq } from 'drizzle-orm';
 
 export const APIRoute = createAPIFileRoute('/api/trips/$tripId')({
@@ -16,6 +16,7 @@ export const APIRoute = createAPIFileRoute('/api/trips/$tripId')({
       db.select().from(budgetItems).where(eq(budgetItems.tripId, tripId)),
       db.select().from(packingItems).where(eq(packingItems.tripId, tripId)),
       db.select().from(flights).where(eq(flights.tripId, tripId)),
+      db.select().from(tripRoutes).where(eq(tripRoutes.tripId, tripId)),
     ]);
 
     return json({
@@ -26,6 +27,7 @@ export const APIRoute = createAPIFileRoute('/api/trips/$tripId')({
       budgetItems: budget,
       packingItems: packing,
       flights: flightRows,
+      routes: routeRows,
     });
   },
   PUT: async ({ request, params }) => {
