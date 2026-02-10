@@ -7,76 +7,86 @@ function formatDuration(minutes: number) {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
-interface Props {
+interface RouteDetailPanelProps {
   route: TripRoute;
   onClose: () => void;
   onSelectDestination: (id: string) => void;
 }
 
-export function RouteDetailPanel({ route, onClose, onSelectDestination }: Props) {
+export function RouteDetailPanel({ route, onClose, onSelectDestination }: RouteDetailPanelProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
-      className="absolute bottom-4 right-4 w-80 bg-ody-surface/95 backdrop-blur border border-ody-border rounded-xl p-4 z-[1000]"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }}
+      className="absolute top-4 right-4 w-80 bg-ody-surface/95 backdrop-blur border border-ody-border rounded-xl p-4 z-[1000]"
     >
       <div className="flex justify-between items-start mb-3">
-        <h3 className="font-bold text-sm">Route Details</h3>
-        <button
-          onClick={onClose}
-          className="text-ody-text-muted hover:text-ody-text text-lg leading-none"
-        >
-          ×
-        </button>
+        <h3 className="font-bold text-base">Route Details</h3>
+        <button onClick={onClose} className="text-ody-text-muted hover:text-ody-text text-lg">×</button>
       </div>
 
       {/* From → To */}
-      <div className="flex items-center gap-2 text-sm mb-3">
+      <div className="flex items-center gap-2 mb-3">
         <button
           onClick={() => onSelectDestination(route.fromDestinationId)}
-          className="font-medium text-ody-accent hover:underline truncate"
+          className="text-sm font-semibold text-blue-400 hover:underline truncate"
         >
-          {route.fromDestination?.name ?? 'Origin'}
+          {route.fromDestination?.name ?? 'Unknown'}
         </button>
-        <span className="text-ody-text-dim">→</span>
+        <span className="text-ody-text-muted shrink-0">→</span>
         <button
           onClick={() => onSelectDestination(route.toDestinationId)}
-          className="font-medium text-ody-accent hover:underline truncate"
+          className="text-sm font-semibold text-blue-400 hover:underline truncate"
         >
-          {route.toDestination?.name ?? 'Destination'}
+          {route.toDestination?.name ?? 'Unknown'}
         </button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-2 text-xs">
-        {route.distanceMiles && (
-          <div className="flex items-center gap-1.5 text-ody-text-muted">
-            <Navigation size={11} className="text-ody-accent" />
-            {route.distanceMiles.toFixed(1)} mi
-            {route.distanceKm && ` (${route.distanceKm.toFixed(0)} km)`}
+      {/* Stats grid */}
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        {route.distanceKm != null && (
+          <div className="bg-ody-bg/60 rounded-lg p-2.5 text-center">
+            <div className="text-lg font-bold">{route.distanceKm}</div>
+            <div className="text-xs text-ody-text-muted">km</div>
           </div>
         )}
-        {route.durationMinutes && (
-          <div className="flex items-center gap-1.5 text-ody-text-muted">
-            <Clock size={11} className="text-ody-accent" />
-            {formatDuration(route.durationMinutes)}
+        {route.distanceMiles != null && (
+          <div className="bg-ody-bg/60 rounded-lg p-2.5 text-center">
+            <div className="text-lg font-bold">{route.distanceMiles.toFixed(0)}</div>
+            <div className="text-xs text-ody-text-muted">miles</div>
           </div>
         )}
+        {route.durationMinutes != null && (
+          <div className="bg-ody-bg/60 rounded-lg p-2.5 text-center">
+            <div className="text-lg font-bold">{formatDuration(route.durationMinutes)}</div>
+            <div className="text-xs text-ody-text-muted">drive time</div>
+          </div>
+        )}
+        <div className="bg-ody-bg/60 rounded-lg p-2.5 text-center">
+          <div className="flex justify-center gap-1.5 text-sm">
+            {route.tolls && <span title="Tolls">💰</span>}
+            {route.highway && <span title="Highway">🛣️</span>}
+            {!route.tolls && !route.highway && <span>🏘️</span>}
+          </div>
+          <div className="text-xs text-ody-text-muted">
+            {[route.tolls && 'Tolls', route.highway && 'Highway'].filter(Boolean).join(', ') || 'Local roads'}
+          </div>
+        </div>
       </div>
-
-      {/* Extras */}
-      <div className="flex gap-2 mt-3 text-[10px] text-ody-text-dim">
-        {route.highway && <span className="bg-ody-bg/60 px-2 py-0.5 rounded">🛣️ Highway</span>}
-        {route.tolls && <span className="bg-ody-warning/10 text-ody-warning px-2 py-0.5 rounded">💰 Tolls</span>}
-      </div>
-
-      {route.notes && (
-        <p className="text-xs text-ody-text-muted mt-2 border-t border-ody-border pt-2">{route.notes}</p>
-      )}
 
       {route.routeDescription && (
-        <p className="text-xs text-ody-text-muted mt-2">{route.routeDescription}</p>
+        <div className="mb-3">
+          <p className="text-xs font-semibold text-ody-text-muted mb-1">Route</p>
+          <p className="text-sm">{route.routeDescription}</p>
+        </div>
+      )}
+
+      {route.notes && (
+        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2.5">
+          <p className="text-xs font-semibold text-yellow-400 mb-1">💡 Notes</p>
+          <p className="text-xs text-ody-text-muted">{route.notes}</p>
+        </div>
       )}
     </motion.div>
   );
