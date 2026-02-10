@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { NotificationBadge } from './NotificationBadge';
 
 interface LayoutProps {
   children: ReactNode;
@@ -10,10 +11,11 @@ export function Layout({ children }: LayoutProps) {
       <nav className="border-b border-ody-border bg-ody-surface px-6 py-4">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-ody-accent">Odyssey</h1>
-          <div className="flex gap-4 text-sm text-ody-text-muted">
+          <div className="flex items-center gap-4 text-sm text-ody-text-muted">
             <a href="/" className="hover:text-ody-text transition-colors">Dashboard</a>
             <a href="/trips" className="hover:text-ody-text transition-colors">Trips</a>
             <a href="/map" className="hover:text-ody-text transition-colors">Map</a>
+            <NotificationBadge />
           </div>
         </div>
       </nav>
