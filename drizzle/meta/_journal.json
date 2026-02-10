@@ -8,6 +8,27 @@
       "when": 1770741095348,
       "tag": "0000_nosy_stick",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1770741095349,
+      "tag": "0001_add_fitness_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1770741095350,
+      "tag": "0002_add_rental_cars",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1770782940000,
+      "tag": "0003_add_accommodations",
+      "breakpoints": true
     }
   ]
 }
