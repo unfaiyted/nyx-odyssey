@@ -1,19 +1,18 @@
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Navigation, Search, Bookmark, CheckCircle, Filter } from 'lucide-react';
 import type { TripDestination, TripRoute } from '../../types/trips';
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof Search; bg: string; count?: number }> = {
-  researched: { label: 'Researched', color: 'text-ody-info', icon: Search, bg: 'bg-ody-info/15' },
-  booked: { label: 'Booked', color: 'text-ody-warning', icon: Bookmark, bg: 'bg-ody-warning/15' },
-  visited: { label: 'Visited', color: 'text-ody-success', icon: CheckCircle, bg: 'bg-ody-success/15' },
+const statusColors: Record<string, string> = {
+  researched: '#3b82f6',
+  booked: '#22c55e',
+  visited: '#a855f7',
 };
 
-const PLACEHOLDER_PHOTOS = [
-  'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=200&h=120&fit=crop',
-  'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200&h=120&fit=crop',
-  'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=200&h=120&fit=crop',
-  'https://images.unsplash.com/photo-1530789253388-582c481c54b0?w=200&h=120&fit=crop',
-];
+const statusEmoji: Record<string, string> = {
+  researched: '🔍',
+  booked: '✅',
+  visited: '🏁',
+};
 
 function formatDuration(minutes: number) {
   const h = Math.floor(minutes / 60);
@@ -21,16 +20,18 @@ function formatDuration(minutes: number) {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
-interface Props {
+interface TripMapSidebarProps {
   destinations: TripDestination[];
   routes: TripRoute[];
   selectedId: string | null;
   selectedRouteId: string | null;
-  onSelectDestination: (id: string) => void;
-  onSelectRoute: (id: string) => void;
+  onSelectDestination: (id: string | null) => void;
+  onSelectRoute: (id: string | null) => void;
   filterCategory: string | null;
-  onFilterChange: (category: string | null) => void;
+  onFilterChange: (cat: string | null) => void;
 }
+
+type SidebarTab = 'destinations' | 'routes';
 
 export function TripMapSidebar({
   destinations,
@@ -41,136 +42,176 @@ export function TripMapSidebar({
   onSelectRoute,
   filterCategory,
   onFilterChange,
-}: Props) {
+}: TripMapSidebarProps) {
+  const [tab, setTab] = useState<SidebarTab>('destinations');
   const sorted = [...destinations].sort((a, b) => a.orderIndex - b.orderIndex);
+  const destMap = new Map(destinations.map((d) => [d.id, d]));
 
-  // Status counts
-  const counts = destinations.reduce((acc, d) => {
-    const s = d.status || 'researched';
-    acc[s] = (acc[s] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const totalKm = routes.reduce((sum, r) => sum + (r.distanceKm || 0), 0);
+  const totalMinutes = routes.reduce((sum, r) => sum + (r.durationMinutes || 0), 0);
+
+  // Group routes by origin
+  const routesByOrigin = new Map<string, TripRoute[]>();
+  for (const r of routes) {
+    const origin = r.fromDestination?.name || r.fromDestinationId;
+    const arr = routesByOrigin.get(origin) || [];
+    arr.push(r);
+    routesByOrigin.set(origin, arr);
+  }
 
   return (
     <div className="flex flex-col h-full">
-      {/* Filter chips */}
-      <div className="p-3 border-b border-ody-border">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <button
-            onClick={() => onFilterChange(null)}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-              !filterCategory ? 'bg-ody-accent/20 text-ody-accent' : 'text-ody-text-dim hover:bg-ody-surface-hover'
-            }`}
-          >
-            <Filter size={10} />
-            All ({destinations.length})
-          </button>
-          {Object.entries(STATUS_CONFIG).map(([key, config]) => {
-            const Icon = config.icon;
-            const count = counts[key] || 0;
-            if (count === 0) return null;
-            return (
-              <button
-                key={key}
-                onClick={() => onFilterChange(filterCategory === key ? null : key)}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                  filterCategory === key ? `${config.bg} ${config.color}` : 'text-ody-text-dim hover:bg-ody-surface-hover'
-                }`}
-              >
-                <Icon size={10} />
-                {count}
-              </button>
-            );
-          })}
+      {/* Summary header */}
+      <div className="p-4 border-b border-ody-border">
+        <h3 className="text-lg font-bold">Trip Map</h3>
+        <div className="flex gap-3 mt-2 text-xs text-ody-text-muted">
+          <span>📍 {destinations.length}</span>
+          <span>🛣️ {routes.length}</span>
+          {totalKm > 0 && <span>📏 {totalKm.toFixed(0)} km</span>}
+          {totalMinutes > 0 && <span>⏱ {formatDuration(totalMinutes)}</span>}
         </div>
       </div>
 
-      {/* Destination list with photos */}
+      {/* Tab switcher */}
+      <div className="flex border-b border-ody-border">
+        <button
+          onClick={() => setTab('destinations')}
+          className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
+            tab === 'destinations'
+              ? 'text-ody-accent border-b-2 border-ody-accent'
+              : 'text-ody-text-muted hover:text-ody-text'
+          }`}
+        >
+          📍 Destinations
+        </button>
+        <button
+          onClick={() => setTab('routes')}
+          className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
+            tab === 'routes'
+              ? 'text-ody-accent border-b-2 border-ody-accent'
+              : 'text-ody-text-muted hover:text-ody-text'
+          }`}
+        >
+          🛣️ Routes
+        </button>
+      </div>
+
+      {/* Filter pills */}
+      {tab === 'destinations' && (
+        <div className="flex gap-1.5 px-3 py-2 border-b border-ody-border flex-wrap">
+          <button
+            onClick={() => onFilterChange(null)}
+            className={`px-2 py-0.5 rounded-full text-xs transition-colors ${
+              !filterCategory ? 'bg-ody-accent text-white' : 'bg-ody-bg text-ody-text-muted hover:bg-ody-surface-hover'
+            }`}
+          >
+            All
+          </button>
+          {Object.entries(statusColors).map(([status, color]) => (
+            <button
+              key={status}
+              onClick={() => onFilterChange(filterCategory === status ? null : status)}
+              className={`px-2 py-0.5 rounded-full text-xs transition-colors ${
+                filterCategory === status ? 'text-white' : 'text-ody-text-muted hover:bg-ody-surface-hover'
+              }`}
+              style={filterCategory === status ? { background: color } : undefined}
+            >
+              {statusEmoji[status]} {status}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        <AnimatePresence>
-          {sorted.map((dest, i) => {
-            const status = dest.status || 'researched';
-            const config = STATUS_CONFIG[status] || STATUS_CONFIG.researched;
-            const StatusIcon = config.icon;
-            const photoUrl = dest.photoUrl || PLACEHOLDER_PHOTOS[i % PLACEHOLDER_PHOTOS.length];
-            const isSelected = selectedId === dest.id;
-
-            // Find route to next destination
-            const nextDest = sorted[i + 1];
-            const routeToNext = nextDest
-              ? routes.find((r) => r.fromDestinationId === dest.id && r.toDestinationId === nextDest.id)
-              : undefined;
-
-            return (
-              <motion.div
+        {tab === 'destinations' ? (
+          <AnimatePresence mode="popLayout">
+            {sorted.map((dest, i) => (
+              <motion.button
                 key={dest.id}
-                initial={{ opacity: 0, x: -10 }}
+                initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.03 }}
+                onClick={() => onSelectDestination(dest.id === selectedId ? null : dest.id)}
+                className={`w-full text-left p-3 border-b border-ody-border transition-colors hover:bg-ody-surface-hover ${
+                  selectedId === dest.id ? 'bg-ody-surface-hover' : ''
+                }`}
               >
-                <button
-                  onClick={() => onSelectDestination(dest.id)}
-                  className={`w-full text-left transition-colors hover:bg-ody-surface-hover ${
-                    isSelected ? 'bg-ody-surface-hover border-l-2 border-l-ody-accent' : ''
-                  }`}
-                >
-                  <div className="flex gap-3 p-3">
-                    {/* Photo thumbnail */}
-                    <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0">
-                      <img
-                        src={photoUrl}
-                        alt={dest.name}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                      <div className="absolute top-0.5 left-0.5">
-                        <span className="w-5 h-5 rounded-full bg-ody-accent/90 text-white text-[10px] font-bold flex items-center justify-center">
-                          {i + 1}
+                <div className="flex items-start gap-2.5">
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 mt-0.5"
+                    style={{ background: statusColors[dest.status] || '#8b5cf6' }}
+                  >
+                    {i + 1}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-sm truncate">{dest.name}</p>
+                    {dest.description && (
+                      <p className="text-xs text-ody-text-muted truncate mt-0.5">{dest.description}</p>
+                    )}
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {dest.arrivalDate && (
+                        <span className="text-[10px] text-ody-text-muted bg-ody-bg/60 px-1.5 py-0.5 rounded">
+                          📅 {dest.arrivalDate}
                         </span>
-                      </div>
-                    </div>
-
-                    {/* Info */}
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-sm truncate">{dest.name}</p>
-                      {dest.description && (
-                        <p className="text-xs text-ody-text-muted truncate mt-0.5">{dest.description}</p>
                       )}
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${config.bg} ${config.color}`}>
-                          <StatusIcon size={9} />
-                          {config.label}
-                        </span>
-                        {dest.arrivalDate && (
-                          <span className="text-[10px] text-ody-text-dim">
-                            📅 {dest.arrivalDate}
-                          </span>
-                        )}
-                      </div>
+                      <span className="text-[10px] capitalize" style={{ color: statusColors[dest.status] }}>
+                        {statusEmoji[dest.status]} {dest.status}
+                      </span>
                     </div>
                   </div>
-                </button>
+                </div>
+              </motion.button>
+            ))}
+          </AnimatePresence>
+        ) : (
+          <div className="divide-y divide-ody-border">
+            {[...routesByOrigin.entries()].map(([origin, originRoutes]) => (
+              <div key={origin}>
+                <div className="px-3 py-2 bg-ody-bg/50 text-xs font-semibold text-ody-text-muted">
+                  From {origin}
+                </div>
+                {originRoutes.map((route) => {
+                  const toDest = route.toDestination || destMap.get(route.toDestinationId);
+                  const isSelected = route.id === selectedRouteId;
+                  return (
+                    <button
+                      key={route.id}
+                      onClick={() => onSelectRoute(isSelected ? null : route.id)}
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-ody-surface-hover transition-colors ${
+                        isSelected ? 'bg-ody-surface-hover' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="truncate">→ {toDest?.name ?? '?'}</span>
+                        <span className="text-xs text-ody-text-muted shrink-0 ml-2">
+                          {route.distanceKm && `${route.distanceKm}km`}
+                        </span>
+                      </div>
+                      <div className="flex gap-2 text-[10px] text-ody-text-muted mt-0.5">
+                        {route.durationMinutes && <span>⏱ {formatDuration(route.durationMinutes)}</span>}
+                        {route.tolls && <span>💰 Tolls</span>}
+                        {route.highway && <span>🛣️ Hwy</span>}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
-                {/* Route connector to next */}
-                {routeToNext && (
-                  <button
-                    onClick={() => onSelectRoute(routeToNext.id)}
-                    className={`w-full flex items-center gap-2 px-3 py-1.5 text-[10px] transition-colors hover:bg-ody-bg/80 ${
-                      selectedRouteId === routeToNext.id ? 'bg-ody-bg/80 text-ody-accent' : 'text-ody-text-dim bg-ody-bg/40'
-                    }`}
-                  >
-                    <div className="ml-5 flex items-center gap-1.5">
-                      <Navigation size={9} className="text-ody-accent" />
-                      {routeToNext.distanceMiles && `${routeToNext.distanceMiles.toFixed(1)} mi`}
-                      {routeToNext.distanceKm && ` (${routeToNext.distanceKm.toFixed(0)} km)`}
-                      {routeToNext.durationMinutes && ` · ${formatDuration(routeToNext.durationMinutes)}`}
-                    </div>
-                  </button>
-                )}
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
+      {/* Legend */}
+      <div className="p-3 border-t border-ody-border">
+        <div className="flex flex-wrap gap-3 text-xs text-ody-text-muted">
+          {Object.entries(statusColors).map(([status, color]) => (
+            <div key={status} className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full" style={{ background: color }} />
+              <span className="capitalize">{status}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
