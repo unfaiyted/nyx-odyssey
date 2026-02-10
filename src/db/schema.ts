@@ -65,6 +65,7 @@ export const tripDestinations = pgTable('trip_destinations', {
   lng: doublePrecision('lng'),
   arrivalDate: text('arrival_date'),
   departureDate: text('departure_date'),
+  researchStatus: text('research_status').default('pending'), // pending, researched, approved, booked
   orderIndex: integer('order_index').notNull().default(0),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
@@ -72,14 +73,21 @@ export const tripDestinations = pgTable('trip_destinations', {
 export const accommodations = pgTable('accommodations', {
   id: text('id').primaryKey().$defaultFn(() => nanoid()),
   tripId: text('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  destinationId: text('destination_id').references(() => tripDestinations.id, { onDelete: 'set null' }),
   name: text('name').notNull(),
-  type: text('type').default('hotel'), // hotel, hostel, airbnb, camping, other
+  type: text('type').default('hotel'), // hotel, hostel, airbnb, camping, villa, resort, other
+  status: text('status').default('researched'), // researched, shortlisted, booked, cancelled
   address: text('address'),
   checkIn: text('check_in'),
   checkOut: text('check_out'),
   confirmationCode: text('confirmation_code'),
   costPerNight: numeric('cost_per_night', { precision: 10, scale: 2 }),
   totalCost: numeric('total_cost', { precision: 10, scale: 2 }),
+  currency: text('currency').default('USD'),
+  bookingUrl: text('booking_url'),
+  contactPhone: text('contact_phone'),
+  contactEmail: text('contact_email'),
+  rating: doublePrecision('rating'),
   notes: text('notes'),
   booked: boolean('booked').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -96,6 +104,20 @@ export const budgetItems = pgTable('budget_items', {
   date: text('date'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+export const budgetCategories = pgTable('budget_categories', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  tripId: text('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  category: text('category').notNull(), // flights, accommodations, food, activities, transport, shopping, other
+  allocatedBudget: numeric('allocated_budget', { precision: 10, scale: 2 }).notNull().default('0'),
+  color: text('color'),
+  icon: text('icon'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const budgetCategoriesRelations = relations(budgetCategories, ({ one }) => ({
+  trip: one(trips, { fields: [budgetCategories.tripId], references: [trips.id] }),
+}));
 
 export const packingItems = pgTable('packing_items', {
   id: text('id').primaryKey().$defaultFn(() => nanoid()),
@@ -136,6 +158,7 @@ export const tripsRelations = relations(trips, ({ many }) => ({
   destinations: many(tripDestinations),
   accommodations: many(accommodations),
   budgetItems: many(budgetItems),
+  budgetCategories: many(budgetCategories),
   packingItems: many(packingItems),
   flights: many(flights),
 }));
