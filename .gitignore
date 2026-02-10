@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.output/
+.vinxi/
+.nitro/
+*.local
+.env
+.env.*
+!.env.example
