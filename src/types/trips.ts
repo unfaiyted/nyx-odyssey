@@ -36,21 +36,31 @@ export interface TripDestination {
   lng: number | null;
   arrivalDate: string | null;
   departureDate: string | null;
+  researchStatus: string;
   orderIndex: number;
   createdAt: string;
 }
 
+export type ResearchStatus = 'pending' | 'researched' | 'approved' | 'booked';
+
 export interface Accommodation {
   id: string;
   tripId: string;
+  destinationId: string | null;
   name: string;
   type: string;
+  status: string;
   address: string | null;
   checkIn: string | null;
   checkOut: string | null;
   confirmationCode: string | null;
   costPerNight: string | null;
   totalCost: string | null;
+  currency: string;
+  bookingUrl: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  rating: number | null;
   notes: string | null;
   booked: boolean;
   createdAt: string;
