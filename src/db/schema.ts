@@ -154,6 +154,34 @@ export const flights = pgTable('flights', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// ── Rental Cars ────────────────────────────────────────
+export const rentalCars = pgTable('rental_cars', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  tripId: text('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  company: text('company').notNull(),
+  vehicleType: text('vehicle_type').default('compact'), // compact, sedan, suv, minivan, luxury, convertible, other
+  vehicleName: text('vehicle_name'),
+  status: text('status').default('researched'), // researched, shortlisted, booked, cancelled
+  pickupLocation: text('pickup_location'),
+  dropoffLocation: text('dropoff_location'),
+  pickupDate: text('pickup_date'),
+  pickupTime: text('pickup_time'),
+  dropoffDate: text('dropoff_date'),
+  dropoffTime: text('dropoff_time'),
+  dailyRate: numeric('daily_rate', { precision: 10, scale: 2 }),
+  totalCost: numeric('total_cost', { precision: 10, scale: 2 }),
+  currency: text('currency').default('EUR'),
+  confirmationCode: text('confirmation_code'),
+  bookingUrl: text('booking_url'),
+  insuranceIncluded: boolean('insurance_included').default(false),
+  mileagePolicy: text('mileage_policy'), // unlimited, limited
+  fuelPolicy: text('fuel_policy'), // full-to-full, prepaid
+  transmission: text('transmission').default('manual'), // manual, automatic
+  notes: text('notes'),
+  rating: doublePrecision('rating'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 // ── Trip Cron Jobs ─────────────────────────────────────
 export const tripCronJobs = pgTable('trip_cron_jobs', {
   id: text('id').primaryKey().$defaultFn(() => nanoid()),
@@ -178,6 +206,7 @@ export const tripsRelations = relations(trips, ({ many }) => ({
   budgetCategories: many(budgetCategories),
   packingItems: many(packingItems),
   flights: many(flights),
+  rentalCars: many(rentalCars),
   cronJobs: many(tripCronJobs),
 }));
 
@@ -203,6 +232,10 @@ export const packingItemsRelations = relations(packingItems, ({ one }) => ({
 
 export const flightsRelations = relations(flights, ({ one }) => ({
   trip: one(trips, { fields: [flights.tripId], references: [trips.id] }),
+}));
+
+export const rentalCarsRelations = relations(rentalCars, ({ one }) => ({
+  trip: one(trips, { fields: [rentalCars.tripId], references: [trips.id] }),
 }));
 
 export const tripCronJobsRelations = relations(tripCronJobs, ({ one }) => ({

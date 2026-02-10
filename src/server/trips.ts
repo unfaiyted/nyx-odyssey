@@ -10,6 +10,7 @@ import {
   budgetCategories,
   packingItems,
   flights,
+  rentalCars,
   tripRoutes,
   tripCronJobs,
 } from '../db/schema';
@@ -44,7 +45,7 @@ export const getTrip = createServerFn({ method: 'GET' })
     const [trip] = await db.select().from(trips).where(eq(trips.id, tripId));
     if (!trip) throw new Error('Trip not found');
 
-    const [itin, dests, accom, budget, budgetCats, packing, flightRows, routeRows, cronJobRows] =
+    const [itin, dests, accom, budget, budgetCats, packing, flightRows, rentalCarRows, routeRows, cronJobRows] =
       await Promise.all([
         db.select().from(itineraryItems).where(eq(itineraryItems.tripId, tripId)),
         db.select().from(tripDestinations).where(eq(tripDestinations.tripId, tripId)),
@@ -53,6 +54,7 @@ export const getTrip = createServerFn({ method: 'GET' })
         db.select().from(budgetCategories).where(eq(budgetCategories.tripId, tripId)),
         db.select().from(packingItems).where(eq(packingItems.tripId, tripId)),
         db.select().from(flights).where(eq(flights.tripId, tripId)),
+        db.select().from(rentalCars).where(eq(rentalCars.tripId, tripId)),
         db.select().from(tripRoutes).where(eq(tripRoutes.tripId, tripId)),
         db.select().from(tripCronJobs).where(eq(tripCronJobs.tripId, tripId)),
       ]);
@@ -66,6 +68,7 @@ export const getTrip = createServerFn({ method: 'GET' })
       budgetCategories: budgetCats,
       packingItems: packing,
       flights: flightRows,
+      rentalCars: rentalCarRows,
       routes: routeRows,
       cronJobs: cronJobRows,
     };
