@@ -173,3 +173,24 @@ export const routes = pgTable('routes', {
   polyline: text('polyline'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+export const tripRoutes = pgTable('trip_routes', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  tripId: text('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  fromDestinationId: text('from_destination_id').notNull().references(() => tripDestinations.id, { onDelete: 'cascade' }),
+  toDestinationId: text('to_destination_id').notNull().references(() => tripDestinations.id, { onDelete: 'cascade' }),
+  distanceKm: doublePrecision('distance_km'),
+  distanceMiles: doublePrecision('distance_miles'),
+  durationMinutes: integer('duration_minutes'),
+  routeDescription: text('route_description'),
+  tolls: boolean('tolls').default(false),
+  highway: boolean('highway').default(true),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const tripRoutesRelations = relations(tripRoutes, ({ one }) => ({
+  trip: one(trips, { fields: [tripRoutes.tripId], references: [trips.id] }),
+  fromDestination: one(tripDestinations, { fields: [tripRoutes.fromDestinationId], references: [tripDestinations.id] }),
+  toDestination: one(tripDestinations, { fields: [tripRoutes.toDestinationId], references: [tripDestinations.id] }),
+}));
