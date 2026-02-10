@@ -521,7 +521,6 @@ export function ItineraryTab({ tripId, items }: Props) {
               transition={{ delay: idx * 0.05 }}
             >
               <WeekView
-                weekKey={weekKey}
                 dates={weekGroups[weekKey]}
                 grouped={grouped}
                 tripStartDate={tripStartDate}
