@@ -44,13 +44,20 @@ export const trips = pgTable('trips', {
 export const itineraryItems = pgTable('itinerary_items', {
   id: text('id').primaryKey().$defaultFn(() => nanoid()),
   tripId: text('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  destinationHighlightId: text('destination_highlight_id'),
   title: text('title').notNull(),
   description: text('description'),
   date: text('date').notNull(),
   startTime: text('start_time'),
   endTime: text('end_time'),
   location: text('location'),
-  category: text('category').default('activity'), // activity, transport, meal, sightseeing, rest
+  lat: doublePrecision('lat'),
+  lng: doublePrecision('lng'),
+  category: text('category').default('activity'), // activity, transport, meal, sightseeing, rest, travel
+  travelTimeMinutes: integer('travel_time_minutes'),
+  travelMode: text('travel_mode'), // car, train, bus, walk
+  travelFromLocation: text('travel_from_location'), // description of origin
+  notes: text('notes'),
   orderIndex: integer('order_index').notNull().default(0),
   completed: boolean('completed').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -250,6 +257,8 @@ export const destinationHighlights = pgTable('destination_highlights', {
   priceLevel: integer('price_level'), // 1-4 ($-$$$$)
   imageUrl: text('image_url'),
   address: text('address'),
+  lat: doublePrecision('lat'),
+  lng: doublePrecision('lng'),
   websiteUrl: text('website_url'),
   duration: text('duration'), // e.g. "2-3 hours"
   orderIndex: integer('order_index').notNull().default(0),
