@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Trash2, Navigation, CheckCircle, Bookmark, Search, Camera, ExternalLink, Eye } from 'lucide-react';
+import { MapPin, Trash2, Navigation, CheckCircle, Bookmark, Search, Camera, ExternalLink, Eye, Clock } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 import type { TripDestination } from '../../types/trips';
+import { TravelEstimatePanel } from '../travel/TravelEstimatePanel';
 
 interface Props {
   destination: TripDestination;
@@ -48,6 +49,7 @@ const PLACEHOLDER_PHOTOS = [
 export function DestinationCard({ destination, index, baseLat, baseLng, onDelete, onStatusChange, onPhotoChange }: Props) {
   const [showPhotoEdit, setShowPhotoEdit] = useState(false);
   const [photoInput, setPhotoInput] = useState('');
+  const [showTravel, setShowTravel] = useState(false);
   const status = destination.status || 'researched';
   const config = STATUS_CONFIG[status] || STATUS_CONFIG.researched;
   const StatusIcon = config.icon;
@@ -215,15 +217,40 @@ export function DestinationCard({ destination, index, baseLat, baseLng, onDelete
             })}
           </div>
 
-          {onDelete && (
-            <button
-              onClick={() => onDelete(destination.id)}
-              className="p-1.5 rounded-md text-ody-text-dim hover:text-ody-danger hover:bg-ody-danger/10 transition-colors"
-            >
-              <Trash2 size={14} />
-            </button>
-          )}
+          <div className="flex items-center gap-1">
+            {destination.lat && destination.lng && (
+              <button
+                onClick={() => setShowTravel(!showTravel)}
+                title="Travel times from Vicenza"
+                className={`p-1.5 rounded-md transition-colors ${showTravel ? 'bg-ody-accent/15 text-ody-accent' : 'text-ody-text-dim hover:text-ody-text-muted hover:bg-ody-surface-hover'}`}
+              >
+                <Clock size={14} />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={() => onDelete(destination.id)}
+                className="p-1.5 rounded-md text-ody-text-dim hover:text-ody-danger hover:bg-ody-danger/10 transition-colors"
+              >
+                <Trash2 size={14} />
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Travel estimates expandable */}
+        <AnimatePresence>
+          {showTravel && destination.lat && destination.lng && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <TravelEstimatePanel lat={destination.lat} lng={destination.lng} debounceMs={200} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { TravelEstimatePanel } from '../travel/TravelEstimatePanel';
 
 interface AddDestinationModalProps {
   open: boolean;
@@ -94,6 +95,10 @@ export function AddDestinationModal({ open, onClose, onSubmit }: AddDestinationM
                   className={inputClass}
                 />
               </div>
+              <TravelEstimatePanel
+                lat={form.lat ? parseFloat(form.lat) : null}
+                lng={form.lng ? parseFloat(form.lng) : null}
+              />
               <input
                 placeholder="Address"
                 value={form.address}

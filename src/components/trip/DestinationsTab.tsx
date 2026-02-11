@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Plus, LayoutGrid, List } from 'lucide-react';
 import type { TripDestination } from '../../types/trips';
 import { DestinationCard } from './DestinationCard';
+import { TravelEstimatePanel } from '../travel/TravelEstimatePanel';
 
 interface Props {
   tripId: string;
@@ -88,6 +89,10 @@ export function DestinationsTab({ tripId, items }: Props) {
             <input placeholder="Photo URL (optional)" value={form.photoUrl} onChange={e => setForm(p => ({ ...p, photoUrl: e.target.value }))}
               className="bg-ody-bg border border-ody-border rounded-lg px-3 py-2 text-sm outline-none focus:border-ody-accent md:col-span-2" />
           </div>
+          <TravelEstimatePanel
+            lat={form.lat ? Number(form.lat) : null}
+            lng={form.lng ? Number(form.lng) : null}
+          />
           <div className="flex gap-2">
             <button onClick={() => addMutation.mutate(form)} disabled={!form.name}
               className="px-4 py-2 rounded-lg bg-ody-accent text-white text-sm hover:bg-ody-accent-hover disabled:opacity-50 transition-colors">Save</button>
