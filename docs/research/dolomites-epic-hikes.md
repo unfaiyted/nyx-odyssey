@@ -35,8 +35,8 @@ The single most iconic hike in the Dolomites — a loop around three massive lim
 
 **Parking & Logistics:**
 - Parking at Rifugio Auronzo costs **€40 per vehicle**
-- **Online reservation required** in advance at [auronzo.info](https://auronzo.info/en/parking-tre-cime-di-lavaredo/)
-- 7 km toll road from SP49 near Lago di Misurina
+- **Online reservation required** in advance at [pass.auronzo.info](https://pass.auronzo.info/Frontoffice) (bookings typically open late April for summer season)
+- 6 km paved toll road from near Lago d'Antorno (1.9 km north of Lake Misurina)
 - Alternatively, take a bus from Cortina d'Ampezzo via Misurina (high season only)
 
 **Recommended Direction:** Counter-clockwise (Rifugio Auronzo → Rifugio Lavaredo → Forcella Lavaredo → Rifugio Locatelli → Malga Langalm → back)
@@ -385,6 +385,25 @@ The most famous hut-to-hut trek in the Dolomites. A 120 km point-to-point trail 
 - Lake loop walk (1–1.5 hrs) + photography
 - Optional: First section of Alta Via 1 toward Rifugio Biella
 - Afternoon: Drive back to Vicenza via A22 (~2.5–3 hrs)
+
+---
+
+---
+
+## 🔗 Useful Links & Resources
+
+| Resource | URL |
+|---|---|
+| Tre Cime Parking Reservations | [pass.auronzo.info](https://pass.auronzo.info/Frontoffice) |
+| Lago di Braies Parking/Shuttle | [braies.org](https://www.braies.org) |
+| Seceda Cable Car (Ortisei) | [funivie-ortisei.it](https://www.funivie-ortisei.it) |
+| Alpe di Siusi Cable Car (Siusi) | [seiseralmbahn.it](https://www.seiseralmbahn.it) |
+| Tabacco Maps (offline hiking maps) | [tabaccoeditrice.it](https://www.tabaccoeditrice.it) |
+| Komoot (route planning) | [komoot.com](https://www.komoot.com) |
+| Dolomiti Superbike Lift Pass | [dolomitisuperski.com](https://www.dolomitisuperski.com) |
+| Val Gardena Guest Card | [valgardena.it](https://www.valgardena.it) |
+| Cortina Tourism | [cortina.dolomiti.org](https://cortina.dolomiti.org) |
+| Webcams (conditions check) | [dolomiti.org/webcams](https://www.dolomiti.org/en/webcams) |
 
 ---
 
