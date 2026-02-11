@@ -26,12 +26,15 @@ Cinque Terre — five pastel-colored fishing villages clinging to the rugged Lig
 | Segment | Distance | Time | Difficulty | Status (Feb 2026) | Notes |
 |---|---|---|---|---|---|
 | Riomaggiore → Manarola (Via dell'Amore) | 1 km | 20-30 min | Easy | ✅ OPEN | Reopened Aug 2024! One-way only (Rio→Man). Requires CT Card + €10 surcharge. Wheelchair accessible. |
-| Manarola → Corniglia | 2 km | 40-60 min | Moderate | ❌ CLOSED | Closed due to landslide. No ETA for reopening. Alternative: Manarola-Volastra-Corniglia (also currently closed for maintenance) or train. |
+| Manarola → Corniglia | 2 km | 40-60 min | Moderate | ❌ CLOSED | Closed since 2016 landslide. No ETA for reopening. Alternative: Manarola-Volastra-Corniglia (⚠️ also closed for maintenance as of Feb 2026) — **train is the only option**. |
 | Corniglia → Vernazza | 3.2 km | 70-100 min | Moderate | ✅ OPEN | Most scenic section — dramatic coastal views, forest paths, panoramic viewpoints over both villages. |
 | Vernazza → Monterosso | 3.3 km | 80-120 min | Moderate | ✅ OPEN | Steepest section. Beautiful glade near start with iconic Vernazza photo spot. Return trek harder due to sharp slope near Monterosso. |
 
 ### Summer 2026 Hiking Outlook
-As of Feb 2026, three of four Sentiero Azzurro segments are open. The Manarola→Corniglia section has been closed since ~2016 (landslide) and is unlikely to reopen by summer 2026. **Practical impact:** You'll need to take the train between Manarola and Corniglia (~3 min ride).
+As of Feb 2026, three of four Sentiero Azzurro segments are open. The Manarola→Corniglia section has been closed since 2016 (landslide) and is unlikely to reopen by summer 2026. The alternative Manarola-Volastra-Corniglia trail is also closed for maintenance. **Practical impact:** You **must** take the train between Manarola and Corniglia (~3 min ride). Check the park website closer to your trip date — the Volastra route may reopen by summer.
+
+### Visitor Limits (2026-2027)
+The National Park is developing a virtual waiting list system via their app for paid trails. This could take effect as early as 2026-2027. The limit would only apply to paid routes (Sentiero Azzurro sections); free trails and village access would remain unlimited.
 
 ### Other Open Trails (No Fee)
 | Trail | Distance | Time | Difficulty | Status |
@@ -88,9 +91,12 @@ As of Feb 2026, three of four Sentiero Azzurro segments are open. The Manarola�
 ### Corniglia
 | Restaurant | Specialty | Notes |
 |---|---|---|
+| **Ittourismo Corniglia** ⭐ | Fresh daily catch | In the hills above Corniglia. Family catches the fish you eat. No set menu — let them serve you. Spectacular vineyard/sea views at sunset. They may offer rides from station. A true experience. |
+| **Osteria a Cantina de Mananan** | Traditional Ligurian | Authentic, tucked-away gem. |
 | **Focacceria** | Focaccia di Recco | Cheap, delicious, quintessential Ligurian. |
 | **La Scuda** | Bar/coffee | Great low-key vibe, good music. Perfect post-staircase reward. |
 | **Enoteca Il Pirun** | Wine, bruschetta | Terrace with views. |
+| **Il Gabbiano** (on trail) | Snack bar/café | 30 min hike from Corniglia toward Vernazza. Epic viewpoint. Perfect hiking pitstop. |
 
 ### Vernazza
 | Restaurant | Specialty | Notes |
@@ -103,7 +109,9 @@ As of Feb 2026, three of four Sentiero Azzurro segments are open. The Manarola�
 ### Monterosso al Mare
 | Restaurant | Specialty | Notes |
 |---|---|---|
-| **Miky** | Everything (seafood focus) | Highly recommended across all sources. Worth the splurge. |
+| **Ristorante Miky** ⭐ | Tasting menu, seafood | 10/10 across all sources. Tasting menu ~€100/pp, or à la carte for less. "Dinner and a show" — stunning presentation. Book ahead. |
+| **Buranco** ⭐ | Wine tasting + dinner | Hidden gem up the hill in vineyards. Wine tasting available before dinner. Garden setting overlooking sea. Locals' favorite. |
+| **Tortuga** | Seafood, terrace dining | Cliffside terrace with stunning sunset views. Tasting menu or à la carte. Book outdoor table via WhatsApp. |
 | **La Cantina di Miky** | Trofie al pesto, local wines | Garden setting, slightly more casual than Miky. |
 | **Emy's Way** | Creative Ligurian | Modern take on classics. |
 | **L'Ancora** | Anchovy dishes | Monterosso is the anchovy capital of Italy. |
