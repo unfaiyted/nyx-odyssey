@@ -121,10 +121,10 @@ Naples is where pizza was born. UNESCO recognized Neapolitan pizza-making as an 
   - Personalized tickets with name and entry time (bring ID)
   - Pre-booking required — same-day entry no longer guaranteed
   - Timed entry slots to manage flow
-- **Cost:** €18 (standard), €22 combined with Herculaneum (valid 2 days)
+- **Cost:** €20 (standard, updated Jan 2026), Pompeii+ combined ticket available (valid 2 days)
 - **Hours:** 9:00-19:00 (summer), 9:00-17:00 (winter), last entry 90 min before close
 - **Duration:** 3-4 hours for highlights, full day for thorough exploration
-- **Book at:** ticketone.it or pompeiisites.org
+- **Book at:** vivaticket.com (new from March 2026) or pompeiisites.org
 
 ### Tips
 - **Go early morning** (9am slot) — less crowded, cooler

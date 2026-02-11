@@ -68,6 +68,7 @@ function getResearchData(name: string) {
   if (lower.includes('bologna')) return bolognaData();
   if (lower.includes('verona')) return veronaData();
   if (lower.includes('milan') || lower.includes('milano')) return milanData();
+  if (lower.includes('naples') || lower.includes('napoli') || lower.includes('amalfi')) return naplesAmalfiData();
   // Generic Italian city fallback
   if (lower.includes('italy') || lower.includes('italia')) return genericItalyData(name);
   return null;
@@ -409,6 +410,76 @@ function milanData() {
       { month: 10, avgHighC: 18, avgLowC: 10, rainyDays: 7, sunshineHours: 5 },
       { month: 11, avgHighC: 11, avgLowC: 4, rainyDays: 7, sunshineHours: 3 },
       { month: 12, avgHighC: 6, avgLowC: 0, rainyDays: 5, sunshineHours: 2 },
+    ],
+  };
+}
+
+function naplesAmalfiData() {
+  return {
+    research: {
+      country: 'Italy', region: 'Campania', timezone: 'CET (UTC+1)', language: 'Italian',
+      currency: 'EUR (€)', population: '3,000,000 (metro)', elevation: '17m (Naples)', bestTimeToVisit: 'May-Jun, Sep-Oct (avoid Jul-Aug peak crowds on coast)',
+      avgTempHighC: 25, avgTempLowC: 14, rainyDaysPerMonth: 5,
+      weatherNotes: 'Mediterranean climate. Summers hot (30°C+) and crowded on the coast. September is arguably the sweet spot — warm sea, thinner crowds, lower prices. Winter is mild but some coastal services shut down.',
+      dailyBudgetLow: '55', dailyBudgetMid: '120', dailyBudgetHigh: '300', budgetCurrency: 'USD',
+      costNotes: 'Naples itself is very affordable (pizza €4-5!). Amalfi Coast and Capri are significantly pricier — Positano hotels can be 3-5x Naples prices. Train from Vicenza RT €80-140. 3-day total: €400-600 budget, €650-1000 mid-range, €1200-1700+ splurge.',
+      transportNotes: 'Trenitalia Frecciarossa or Italo from Vicenza → Napoli Centrale (~4h, €40-80 one-way if booked early). Circumvesuviana train for Pompeii/Herculaneum (€4, 30-40 min). Amalfi Coast: ferry (TravelMar/Alilauro, Apr-Oct, €8-15/segment) or SITA bus (€2-3). DO NOT drive the coast road in summer — narrow, terrifying, no parking. Private transfer Naples→Positano ~€120-150.',
+      nearestAirport: 'NAP (Naples Capodichino)',
+      safetyRating: 3,
+      safetyNotes: 'Naples has a reputation worse than reality for tourists. Pickpocketing on Circumvesuviana and around Via Toledo — use cross-body bag, zipped. Phone snatching by scooter happens — keep phone secured. Avoid Piazza Garibaldi (station area) at night. The Camorra operates in the periphery, not the tourist center. Amalfi Coast and Capri are very safe. US Travel Advisory Level 2 (same as all of Italy).',
+      culturalNotes: 'Naples is raw, chaotic, and intensely alive — the anti-Florence. Pizza was born here (UNESCO Intangible Cultural Heritage). Coffee culture is sacred — order "un caffè" at the bar, drink standing. The sfogliatella and babà are essential pastries. Neapolitans are loud, warm, and fiercely proud of their city. Don\'t compare their pizza to anyone else\'s.',
+      summary: 'Naples and the Amalfi Coast represent southern Italy at its most intense — chaotic, beautiful, delicious, and ancient. Naples is the pizza capital of the world (Da Michele, Sorbillo, Starita). Pompeii and Herculaneum offer Roman ruins frozen in time by Vesuvius. The Amalfi Coast (Positano, Amalfi, Ravello) is one of Earth\'s most beautiful coastlines. Add a Capri day trip for island glamour. Budget 3-4 days minimum from Vicenza.',
+      travelTips: JSON.stringify([
+        'Book Pompeii tickets in advance — 20,000/day cap, timed entry required, sells out in summer.',
+        'Visit Naples Archaeological Museum (MANN) BEFORE Pompeii — the context makes the ruins 10x more meaningful.',
+        'Pizza at Da Michele: only Margherita or Marinara. Go at 11am opening to beat the 1-2hr lines. €4-5 per pizza.',
+        'Sorbillo (Via dei Tribunali) for variety, Starita for pizza fritta (fried pizza — a Naples street food staple).',
+        'Cappella Sansevero (Veiled Christ sculpture) — book timed entry ahead, it sells out.',
+        'Amalfi Coast ferry > bus in summer. Bus is cheap but packed and motion-sickness-inducing on hairpin roads.',
+        'Positano is the most photogenic but priciest. Stay in Praiano or Amalfi for better value.',
+        'La Tagliata in Positano: hilltop family restaurant with incredible views and food — MUST book ahead.',
+        'Ravello is the cultured, quieter gem. Villa Cimbrone\'s Terrace of Infinity is one of Italy\'s best viewpoints.',
+        'Capri: take earliest ferry (7:00-7:30 AM). Blue Grotto first (often closed due to waves — check conditions). Bring lunch from mainland to save money.',
+        'September is the best month: warm water, fewer crowds, lower prices.',
+        'Lemon everything: limoncello, delizie al limone (cream cake), lemon granita, lemon salad. Buy from small producers, not tourist shops.',
+        'Path of the Gods hike: Bomerano → Nocelle, 7.8km, 3-4 hours, dramatic cliffside trail. Then 1,700 steps down to Positano.',
+        'Don\'t drive the SS163 coast road in peak summer unless you enjoy white-knuckle terror with tour buses inches from your mirrors.',
+        'Book Amalfi Coast hotels months ahead for July/August. Positano books up fastest.',
+      ]),
+    },
+    highlights: [
+      { title: 'L\'Antica Pizzeria Da Michele', description: 'The purist\'s pilgrimage. Founded 1870, serves only TWO pizzas: Margherita and Marinara. Featured in Eat Pray Love. €4-5 per pizza. Go at 11am opening or expect 1-2hr waits.', category: 'food', rating: 4.9, priceLevel: 1, address: 'Via Cesare Sersale 1, Naples', websiteUrl: 'damichele.net', duration: '1 hour' },
+      { title: 'Gino e Toto Sorbillo', description: 'Celebrity pizzaiolo Gino Sorbillo\'s original Via dei Tribunali location. More variety than Da Michele, creative toppings alongside flawless classics. Also has epic lines.', category: 'food', rating: 4.8, priceLevel: 1, address: 'Via dei Tribunali 32, Naples', duration: '1 hour' },
+      { title: 'Pizzeria Starita a Materdei', description: 'Founded 1901, featured in L\'Oro di Napoli (Sophia Loren). Famous for pizza fritta (fried pizza) and the Montanara. Slightly off-tourist-trail in Materdei.', category: 'food', rating: 4.8, priceLevel: 1, address: 'Via Materdei 27/28, Naples', duration: '1 hour' },
+      { title: '50 Kalò (Ciro Salvo)', description: 'Perfect Margherita on the Naples waterfront at Via Partenope. Less chaotic than the centro storico spots, great views. Modern but traditional.', category: 'food', rating: 4.8, priceLevel: 2, address: 'Via Partenope, Naples', duration: '1 hour' },
+      { title: 'Pompeii', description: 'Roman city frozen in ash by Vesuvius in 79 AD. 170 acres of ruins — Forum, House of the Faun, Garden of the Fugitives, Villa of the Mysteries. 20,000/day cap — book timed entry! Circumvesuviana train 30-40 min from Naples.', category: 'attraction', rating: 4.9, priceLevel: 2, address: 'Pompei Scavi', websiteUrl: 'pompeiisites.org', duration: '3-4 hours' },
+      { title: 'Herculaneum (Ercolano)', description: 'Smaller but better preserved than Pompeii — buried under 20m of volcanic mud, preserving wood, fabric, and upper floors. Far less crowded. The boat houses with 300+ skeletons are haunting.', category: 'attraction', rating: 4.8, priceLevel: 2, duration: '1.5-2 hours' },
+      { title: 'Naples Archaeological Museum (MANN)', description: 'Houses the majority of Pompeii/Herculaneum artifacts. Farnese Collection, Alexander Mosaic, Secret Cabinet (Roman erotic art). Visit BEFORE Pompeii for context. €18.', category: 'cultural', rating: 4.8, priceLevel: 2, websiteUrl: 'museoarcheologiconapoli.it', duration: '2-3 hours' },
+      { title: 'Cappella Sansevero', description: 'The Veiled Christ — one of the most extraordinary marble sculptures ever created. Transparent marble veil over Christ\'s body. Tiny chapel, book timed entry. €10.', category: 'cultural', rating: 4.9, priceLevel: 2, websiteUrl: 'museosansevero.it', duration: '45 min' },
+      { title: 'Spaccanapoli', description: 'The ancient street that "splits Naples" — walk from Via Toledo through the chaotic historic center. Narrow streets, churches every 50 meters, street vendors, laundry overhead. THIS is Naples.', category: 'attraction', rating: 4.7, priceLevel: 1, duration: '2-3 hours' },
+      { title: 'Positano', description: 'The most photogenic Amalfi Coast town — cascading pastel buildings to the beach. Most expensive and touristic. Spiaggia Grande for beach, La Tagliata for hillside dining with views.', category: 'attraction', rating: 4.8, priceLevel: 3, duration: 'Half day' },
+      { title: 'Ravello', description: 'Perched high above the coast — the cultured, quieter alternative. Villa Rufolo (Wagner was inspired here) and Villa Cimbrone (Terrace of Infinity). Summer music festival. Cumpa Cosimo for dinner.', category: 'attraction', rating: 4.7, priceLevel: 2, duration: '3-4 hours' },
+      { title: 'Amalfi', description: 'Historic heart of the coast, once a powerful maritime republic. 9th-century Duomo with Arab-Norman architecture. More affordable than Positano. Paper museum is a unique gem.', category: 'attraction', rating: 4.6, priceLevel: 2, duration: '2-3 hours' },
+      { title: 'Capri & Blue Grotto', description: 'Glamorous island day trip. Blue Grotto (€28 total, weather-dependent), boat tour of Faraglioni, Monte Solaro chairlift (€12 RT), Gardens of Augustus. Take earliest ferry from Naples (~50 min, €22-25).', category: 'attraction', rating: 4.7, priceLevel: 3, duration: 'Full day' },
+      { title: 'Path of the Gods (Sentiero degli Dei)', description: 'Signature Amalfi Coast hike: Bomerano → Nocelle, 7.8km, 3-4 hours along dramatic cliffs above the sea. Then 1,700 steps down to Positano. Not for vertigo sufferers. Go early morning.', category: 'activity', rating: 4.8, priceLevel: 1, duration: '4-5 hours' },
+      { title: 'La Tagliata (Positano)', description: 'Hillside family restaurant above Positano with jaw-dropping coast views. Multi-course feast of local dishes. BOOK AHEAD — always full. One of the most memorable meals on the coast.', category: 'food', rating: 4.9, priceLevel: 2, address: 'Via Tagliata 22, Positano', duration: 'Dinner' },
+      { title: 'Lemon Everything', description: 'Amalfi\'s giant Sfusato Amalfitano lemons are legendary. Limoncello from small producers, delizie al limone (cream cake), lemon granita, lemon salad. Visit a limoneto (lemon grove) for tastings.', category: 'food', rating: 4.6, priceLevel: 1, duration: 'Ongoing' },
+      { title: 'Naples Underground (Napoli Sotterranea)', description: 'Greek-Roman aqueducts 40m below the streets. Guided tours only, ~90 min. Fascinating layers of history beneath the chaotic city above.', category: 'attraction', rating: 4.5, priceLevel: 2, duration: '90 min' },
+      { title: 'Sfogliatella & Babà', description: 'Naples\' essential pastries. Sfogliatella: crispy shell-shaped ricotta pastry (try Sfogliatella Mary or Pintauro). Babà: rum-soaked sponge cake. Pair with espresso at Caffè Gambrinus on Piazza del Plebiscito.', category: 'food', rating: 4.7, priceLevel: 1, duration: 'Snack' },
+    ],
+    weather: [
+      { month: 1, avgHighC: 13, avgLowC: 4, rainyDays: 9, sunshineHours: 4 },
+      { month: 2, avgHighC: 13, avgLowC: 4, rainyDays: 9, sunshineHours: 4 },
+      { month: 3, avgHighC: 16, avgLowC: 6, rainyDays: 8, sunshineHours: 5 },
+      { month: 4, avgHighC: 19, avgLowC: 9, rainyDays: 7, sunshineHours: 7 },
+      { month: 5, avgHighC: 23, avgLowC: 13, rainyDays: 5, sunshineHours: 8 },
+      { month: 6, avgHighC: 27, avgLowC: 17, rainyDays: 3, sunshineHours: 10 },
+      { month: 7, avgHighC: 30, avgLowC: 19, rainyDays: 2, sunshineHours: 11 },
+      { month: 8, avgHighC: 30, avgLowC: 20, rainyDays: 3, sunshineHours: 10 },
+      { month: 9, avgHighC: 27, avgLowC: 17, rainyDays: 5, sunshineHours: 8 },
+      { month: 10, avgHighC: 22, avgLowC: 13, rainyDays: 7, sunshineHours: 6 },
+      { month: 11, avgHighC: 17, avgLowC: 8, rainyDays: 9, sunshineHours: 4 },
+      { month: 12, avgHighC: 14, avgLowC: 5, rainyDays: 10, sunshineHours: 3 },
     ],
   };
 }
