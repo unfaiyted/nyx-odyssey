@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { addTripDestination, deleteTripDestination, updateTripDestination } from '../../server/fns/trip-details';
+import { getDestinationResearchSummaries } from '../../server/trip-destinations';
 import { motion } from 'framer-motion';
 import { Plus, LayoutGrid, List, Filter } from 'lucide-react';
 import type { TripDestination, ResearchStatus } from '../../types/trips';
@@ -26,9 +27,14 @@ export function DestinationsTab({ tripId, items }: Props) {
   const [researchFilter, setResearchFilter] = useState<ResearchStatus | 'all'>('all');
   const [form, setForm] = useState({ name: '', description: '', arrivalDate: '', departureDate: '', lat: '', lng: '', photoUrl: '' });
 
+  const { data: researchSummaries } = useQuery({
+    queryKey: ['trip', tripId, 'research-summaries'],
+    queryFn: () => getDestinationResearchSummaries({ data: { tripId } }),
+  });
+
   const addMutation = useMutation({
     mutationFn: (data: any) => addTripDestination({ data: { tripId, ...data, lat: data.lat ? Number(data.lat) : null, lng: data.lng ? Number(data.lng) : null, orderIndex: items.length } }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['trip', tripId] }); setShowAdd(false); setForm({ name: '', description: '', arrivalDate: '', departureDate: '', lat: '', lng: '', photoUrl: '' }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['trip', tripId] }); queryClient.invalidateQueries({ queryKey: ['trip', tripId, 'research-summaries'] }); setShowAdd(false); setForm({ name: '', description: '', arrivalDate: '', departureDate: '', lat: '', lng: '', photoUrl: '' }); },
   });
 
   const deleteMutation = useMutation({
@@ -142,7 +148,8 @@ export function DestinationsTab({ tripId, items }: Props) {
               onDelete={(id) => deleteMutation.mutate(id)}
               onStatusChange={(id, status) => updateStatusMutation.mutate({ id, status })}
               onResearchStatusChange={(id, researchStatus) => updateResearchStatusMutation.mutate({ id, researchStatus })}
-              onPhotoChange={(id, photoUrl) => updatePhotoMutation.mutate({ id, photoUrl })} />
+              onPhotoChange={(id, photoUrl) => updatePhotoMutation.mutate({ id, photoUrl })}
+              research={researchSummaries?.[dest.id]} />
           ))}
         </div>
       ) : (
@@ -152,7 +159,8 @@ export function DestinationsTab({ tripId, items }: Props) {
               onDelete={(id) => deleteMutation.mutate(id)}
               onStatusChange={(id, status) => updateStatusMutation.mutate({ id, status })}
               onResearchStatusChange={(id, researchStatus) => updateResearchStatusMutation.mutate({ id, researchStatus })}
-              onPhotoChange={(id, photoUrl) => updatePhotoMutation.mutate({ id, photoUrl })} />
+              onPhotoChange={(id, photoUrl) => updatePhotoMutation.mutate({ id, photoUrl })}
+              research={researchSummaries?.[dest.id]} />
           ))}
         </div>
       )}
