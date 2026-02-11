@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { db } from '../db';
-import { tripDestinations, destinationResearch, destinationHighlights, destinationWeatherMonthly, accommodations } from '../db/schema';
+import { tripDestinations, destinationResearch, destinationHighlights, destinationWeatherMonthly, accommodations, destinationPhotos } from '../db/schema';
 import { eq, and, asc } from 'drizzle-orm';
 
 export const getDestinationDetail = createServerFn({ method: 'GET' })
@@ -19,6 +19,9 @@ export const getDestinationDetail = createServerFn({ method: 'GET' })
       .orderBy(asc(destinationWeatherMonthly.month));
     const destAccommodations = await db.select().from(accommodations)
       .where(eq(accommodations.destinationId, destinationId));
+    const photos = await db.select().from(destinationPhotos)
+      .where(eq(destinationPhotos.destinationId, destinationId))
+      .orderBy(asc(destinationPhotos.orderIndex));
 
     return {
       destination: dest,
@@ -26,6 +29,7 @@ export const getDestinationDetail = createServerFn({ method: 'GET' })
       highlights,
       weather,
       accommodations: destAccommodations,
+      photos,
     };
   });
 

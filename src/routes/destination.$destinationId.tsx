@@ -8,9 +8,13 @@ import {
   Shield, Utensils, Camera, Clock, Star, ExternalLink,
   Sun, CloudRain, Info, Lightbulb, Plane, Languages,
   Mountain, Users, ChevronDown, ChevronUp, Navigation,
-  Hotel, ShoppingBag, TreePine, Music, Landmark, Eye
+  Hotel, ShoppingBag, TreePine, Music, Landmark, Eye, Map
 } from 'lucide-react';
+import { lazy, Suspense } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, Legend, Area, AreaChart } from 'recharts';
+const DestinationDetailMap = lazy(() =>
+  import('../components/map/DestinationDetailMap').then(m => ({ default: m.DestinationDetailMap }))
+);
 
 export const Route = createFileRoute('/destination/$destinationId')({
   component: DestinationDetailPage,
@@ -550,22 +554,36 @@ function DestinationDetailPage() {
         </motion.div>
       )}
 
-      {/* Map Link */}
+      {/* Interactive Map */}
       {destination.lat && destination.lng && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-card p-6"
+          className="space-y-4"
         >
-          <a
-            href={`https://www.google.com/maps/search/?api=1&query=${destination.lat},${destination.lng}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 text-ody-accent hover:text-ody-accent-hover transition-colors"
-          >
-            <MapPin size={18} /> View on Google Maps
-            <ExternalLink size={14} />
-          </a>
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Map size={20} className="text-ody-accent" /> Route from Vicenza
+          </h2>
+          <Suspense fallback={<div className="h-[400px] bg-ody-surface rounded-xl animate-pulse" />}>
+            <DestinationDetailMap
+              destinationId={destination.id}
+              destinationName={destination.name}
+              destLat={destination.lat}
+              destLng={destination.lng}
+              highlights={highlights}
+            />
+          </Suspense>
+          <div className="text-center">
+            <a
+              href={`https://www.google.com/maps/dir/Contrà+S.+Rocco+60,+Vicenza/${destination.lat},${destination.lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-ody-accent hover:text-ody-accent-hover transition-colors"
+            >
+              <Navigation size={14} /> Open in Google Maps
+              <ExternalLink size={12} />
+            </a>
+          </div>
         </motion.div>
       )}
     </div>

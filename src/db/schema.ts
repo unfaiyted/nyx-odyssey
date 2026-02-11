@@ -252,6 +252,8 @@ export const destinationHighlights = pgTable('destination_highlights', {
   address: text('address'),
   websiteUrl: text('website_url'),
   duration: text('duration'), // e.g. "2-3 hours"
+  lat: doublePrecision('lat'),
+  lng: doublePrecision('lng'),
   orderIndex: integer('order_index').notNull().default(0),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
@@ -266,6 +268,24 @@ export const destinationWeatherMonthly = pgTable('destination_weather_monthly', 
   sunshineHours: doublePrecision('sunshine_hours'),
 });
 
+// ── Destination Route Cache (from Vicenza) ─────────────
+export const destinationRouteCache = pgTable('destination_route_cache', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  destinationId: text('destination_id').notNull().references(() => tripDestinations.id, { onDelete: 'cascade' }),
+  originLat: doublePrecision('origin_lat').notNull(),
+  originLng: doublePrecision('origin_lng').notNull(),
+  destLat: doublePrecision('dest_lat').notNull(),
+  destLng: doublePrecision('dest_lng').notNull(),
+  distanceKm: doublePrecision('distance_km'),
+  durationMinutes: integer('duration_minutes'),
+  polyline: text('polyline'), // encoded polyline from OSRM
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const destinationRouteCacheRelations = relations(destinationRouteCache, ({ one }) => ({
+  destination: one(tripDestinations, { fields: [destinationRouteCache.destinationId], references: [tripDestinations.id] }),
+}));
+
 // Research relations
 export const destinationResearchRelations = relations(destinationResearch, ({ one }) => ({
   destination: one(tripDestinations, { fields: [destinationResearch.destinationId], references: [tripDestinations.id] }),
@@ -277,6 +297,22 @@ export const destinationHighlightsRelations = relations(destinationHighlights, (
 
 export const destinationWeatherMonthlyRelations = relations(destinationWeatherMonthly, ({ one }) => ({
   destination: one(tripDestinations, { fields: [destinationWeatherMonthly.destinationId], references: [tripDestinations.id] }),
+}));
+
+// ── Destination Photos ─────────────────────────────────
+export const destinationPhotos = pgTable('destination_photos', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  destinationId: text('destination_id').notNull().references(() => tripDestinations.id, { onDelete: 'cascade' }),
+  imageUrl: text('image_url').notNull(),
+  caption: text('caption'),
+  source: text('source'), // credit/attribution
+  isCover: boolean('is_cover').default(false),
+  orderIndex: integer('order_index').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const destinationPhotosRelations = relations(destinationPhotos, ({ one }) => ({
+  destination: one(tripDestinations, { fields: [destinationPhotos.destinationId], references: [tripDestinations.id] }),
 }));
 
 // ── Relations ──────────────────────────────────────────
@@ -421,4 +457,48 @@ export const tripRoutesRelations = relations(tripRoutes, ({ one }) => ({
   trip: one(trips, { fields: [tripRoutes.tripId], references: [trips.id] }),
   fromDestination: one(tripDestinations, { fields: [tripRoutes.fromDestinationId], references: [tripDestinations.id] }),
   toDestination: one(tripDestinations, { fields: [tripRoutes.toDestinationId], references: [tripDestinations.id] }),
+}));
+
+// ── Restaurants ────────────────────────────────────────
+export const restaurants = pgTable('restaurants', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  destinationId: text('destination_id').notNull().references(() => tripDestinations.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  cuisineType: text('cuisine_type'),
+  priceRange: text('price_range'),
+  rating: doublePrecision('rating'),
+  address: text('address'),
+  lat: doublePrecision('lat'),
+  lng: doublePrecision('lng'),
+  photoUrl: text('photo_url'),
+  mustTryDishes: text('must_try_dishes'),
+  reservationNeeded: text('reservation_needed'),
+  bestFor: text('best_for'),
+  sourceNotes: text('source_notes'),
+  websiteUrl: text('website_url'),
+  phoneNumber: text('phone_number'),
+  category: text('restaurant_category').default('restaurant'),
+  orderIndex: integer('order_index').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const localDishes = pgTable('local_dishes', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  destinationId: text('destination_id').notNull().references(() => tripDestinations.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  description: text('description'),
+  category: text('category').default('specialty'),
+  photoUrl: text('photo_url'),
+  whereToTry: text('where_to_try'),
+  priceRange: text('price_range'),
+  orderIndex: integer('order_index').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const restaurantsRelations = relations(restaurants, ({ one }) => ({
+  destination: one(tripDestinations, { fields: [restaurants.destinationId], references: [tripDestinations.id] }),
+}));
+
+export const localDishesRelations = relations(localDishes, ({ one }) => ({
+  destination: one(tripDestinations, { fields: [localDishes.destinationId], references: [tripDestinations.id] }),
 }));
