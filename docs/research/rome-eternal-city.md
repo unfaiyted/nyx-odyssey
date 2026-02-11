@@ -70,21 +70,27 @@
 ## 🎫 Booking Strategy (Summer — Skip-the-Line is ESSENTIAL)
 
 ### Colosseum
-- **Book at:** [parcocolosseo.it](https://www.parcocolosseo.it) (official site only)
-- **Standard ticket:** €18 + €2 booking fee — includes Forum + Palatine Hill, valid 24 hours
+- **Book at:** [ticketing.colosseo.it](https://ticketing.colosseo.it/en) (official site — updated URL)
+- **Standard ticket:** ~€18 + booking fee — includes Forum + Palatine Hill, valid 24 hours
 - **Full Experience (recommended):** ~€24 — adds underground + arena floor access
-- **When to book:** 1–2 months ahead for summer. Tickets release ~30 days out in batches
+- **When to book:** Tickets release **30 days before** the visit date. Set a reminder and book immediately on release day for summer
 - **Time slot:** Book the **earliest slot (8:30 AM)** — significantly fewer people
+- **Summer hours (Mar 29–Sep 30):** Last admission 6:15 PM, closes 7:15 PM
+- **ID required:** Tickets are name-linked; bring ID to the entrance
+- **Name changes:** Allowed once, up to 7 days before visit
+- **Free days:** First Sunday of month, 25 April, 2 June, 4 November (expect massive crowds)
+- **Official app:** MyColosseum (free, iOS/Android) — tickets, routes, audio stories
 - **Avoid:** Third-party resellers charging 2–3x markup unless official is sold out
-- **Tip:** If sold out, check back frequently — cancellations appear. Or book a guided tour through CoopCulture
+- **Tip:** If sold out, check back frequently — cancellations appear. Or book a guided tour
 
 ### Vatican Museums + Sistine Chapel
 - **Book at:** [tickets.museivaticani.va](https://tickets.museivaticani.va) (official)
-- **Standard ticket:** €17 + €4 online booking
+- **Full ticket:** €20 (at door) or €20 + €5 online "Skip the Line" booking
+- **Reduced (students/under-18):** €10 + €5 online booking
 - **Early Entry (7:30 AM):** Available through official site or guided tours — **strongly recommended** in summer
 - **Friday Night openings:** Museums open until 10:30 PM on select Fridays (Apr–Oct) — magical, uncrowded experience
 - **When to book:** 1–2 months ahead minimum for summer
-- **Free entry:** Last Sunday of each month (9 AM–2 PM) — **avoid this**, it's absolute chaos
+- **Free entry:** Last Sunday of each month (check museum calendar) — **avoid this**, absolute chaos
 - **Tip:** Skip-the-line guided tours (€45–65 through GetYourGuide or Walks of Italy) are worth it if official tickets are gone
 
 ### Borghese Gallery
@@ -302,8 +308,8 @@ Rome in July–August regularly hits **35–40°C (95–104°F)** with intense h
 
 | Attraction | How Far Ahead | Cost | Where to Book |
 |-----------|---------------|------|---------------|
-| Colosseum (Full Experience) | 1–2 months | €24 | parcocolosseo.it |
-| Vatican Museums (Early Entry) | 1–2 months | €21 | tickets.museivaticani.va |
+| Colosseum (Full Experience) | 30 days (on release day) | ~€24 | ticketing.colosseo.it |
+| Vatican Museums (Early Entry) | 1–2 months | €25 (online) | tickets.museivaticani.va |
 | Borghese Gallery | 2–3 months | €17 | galleriaborghese.beniculturali.it |
 | Pantheon | 2–3 days | €5 | pantheon.cultura.gov.it |
 | Opera at Caracalla (if interested) | 1–2 months | €25–150 | operaroma.it |
