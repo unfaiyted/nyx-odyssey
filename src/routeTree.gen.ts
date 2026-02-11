@@ -13,6 +13,7 @@ import { Route as MapRouteImport } from './routes/map'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TripsIndexRouteImport } from './routes/trips.index'
 import { Route as TripsTripIdRouteImport } from './routes/trips.$tripId'
+import { Route as DestinationDestinationIdRouteImport } from './routes/destination.$destinationId'
 
 const MapRoute = MapRouteImport.update({
   id: '/map',
@@ -34,16 +35,24 @@ const TripsTripIdRoute = TripsTripIdRouteImport.update({
   path: '/trips/$tripId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DestinationDestinationIdRoute =
+  DestinationDestinationIdRouteImport.update({
+    id: '/destination/$destinationId',
+    path: '/destination/$destinationId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/map': typeof MapRoute
+  '/destination/$destinationId': typeof DestinationDestinationIdRoute
   '/trips/$tripId': typeof TripsTripIdRoute
   '/trips/': typeof TripsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/map': typeof MapRoute
+  '/destination/$destinationId': typeof DestinationDestinationIdRoute
   '/trips/$tripId': typeof TripsTripIdRoute
   '/trips': typeof TripsIndexRoute
 }
@@ -51,20 +60,33 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/map': typeof MapRoute
+  '/destination/$destinationId': typeof DestinationDestinationIdRoute
   '/trips/$tripId': typeof TripsTripIdRoute
   '/trips/': typeof TripsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/map' | '/trips/$tripId' | '/trips/'
+  fullPaths:
+    | '/'
+    | '/map'
+    | '/destination/$destinationId'
+    | '/trips/$tripId'
+    | '/trips/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/map' | '/trips/$tripId' | '/trips'
-  id: '__root__' | '/' | '/map' | '/trips/$tripId' | '/trips/'
+  to: '/' | '/map' | '/destination/$destinationId' | '/trips/$tripId' | '/trips'
+  id:
+    | '__root__'
+    | '/'
+    | '/map'
+    | '/destination/$destinationId'
+    | '/trips/$tripId'
+    | '/trips/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   MapRoute: typeof MapRoute
+  DestinationDestinationIdRoute: typeof DestinationDestinationIdRoute
   TripsTripIdRoute: typeof TripsTripIdRoute
   TripsIndexRoute: typeof TripsIndexRoute
 }
@@ -99,12 +121,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TripsTripIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/destination/$destinationId': {
+      id: '/destination/$destinationId'
+      path: '/destination/$destinationId'
+      fullPath: '/destination/$destinationId'
+      preLoaderRoute: typeof DestinationDestinationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   MapRoute: MapRoute,
+  DestinationDestinationIdRoute: DestinationDestinationIdRoute,
   TripsTripIdRoute: TripsTripIdRoute,
   TripsIndexRoute: TripsIndexRoute,
 }

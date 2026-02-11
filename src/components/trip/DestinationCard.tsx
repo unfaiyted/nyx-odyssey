@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Trash2, Navigation, CheckCircle, Bookmark, Search, Camera, ExternalLink } from 'lucide-react';
+import { MapPin, Trash2, Navigation, CheckCircle, Bookmark, Search, Camera, ExternalLink, Eye } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
 import type { TripDestination } from '../../types/trips';
 
 interface Props {
@@ -99,9 +100,25 @@ export function DestinationCard({ destination, index, baseLat, baseLng, onDelete
           </button>
         )}
 
+        {/* Detail link */}
+        <Link
+          to="/destination/$destinationId"
+          params={{ destinationId: destination.id }}
+          className="absolute top-3 right-20 w-7 h-7 rounded-full bg-black/50 text-white/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:text-white"
+          title="View details"
+        >
+          <Eye size={12} />
+        </Link>
+
         {/* Name overlay */}
         <div className="absolute bottom-3 left-3 right-3">
-          <h4 className="font-semibold text-white text-lg leading-tight drop-shadow-lg">{destination.name}</h4>
+          <Link
+            to="/destination/$destinationId"
+            params={{ destinationId: destination.id }}
+            className="font-semibold text-white text-lg leading-tight drop-shadow-lg hover:text-ody-accent transition-colors"
+          >
+            {destination.name}
+          </Link>
         </div>
       </div>
 

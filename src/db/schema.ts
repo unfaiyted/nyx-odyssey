@@ -202,6 +202,83 @@ export const tripCronJobs = pgTable('trip_cron_jobs', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// ── Destination Research ───────────────────────────────
+export const destinationResearch = pgTable('destination_research', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  destinationId: text('destination_id').notNull().references(() => tripDestinations.id, { onDelete: 'cascade' }),
+  // Overview
+  country: text('country'),
+  region: text('region'),
+  timezone: text('timezone'),
+  language: text('language'),
+  currency: text('local_currency'),
+  population: text('population'),
+  elevation: text('elevation'),
+  bestTimeToVisit: text('best_time_to_visit'),
+  // Weather
+  avgTempHighC: doublePrecision('avg_temp_high_c'),
+  avgTempLowC: doublePrecision('avg_temp_low_c'),
+  rainyDaysPerMonth: integer('rainy_days_per_month'),
+  weatherNotes: text('weather_notes'),
+  // Cost
+  dailyBudgetLow: numeric('daily_budget_low', { precision: 10, scale: 2 }),
+  dailyBudgetMid: numeric('daily_budget_mid', { precision: 10, scale: 2 }),
+  dailyBudgetHigh: numeric('daily_budget_high', { precision: 10, scale: 2 }),
+  budgetCurrency: text('budget_currency').default('USD'),
+  costNotes: text('cost_notes'),
+  // Transport
+  transportNotes: text('transport_notes'),
+  nearestAirport: text('nearest_airport'),
+  // Safety & Culture
+  safetyRating: integer('safety_rating'), // 1-5
+  safetyNotes: text('safety_notes'),
+  culturalNotes: text('cultural_notes'),
+  // Summary
+  summary: text('summary'),
+  travelTips: text('travel_tips'), // JSON array of tips
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const destinationHighlights = pgTable('destination_highlights', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  destinationId: text('destination_id').notNull().references(() => tripDestinations.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  description: text('description'),
+  category: text('category').default('attraction'), // attraction, food, activity, nightlife, shopping, nature, cultural
+  rating: doublePrecision('rating'),
+  priceLevel: integer('price_level'), // 1-4 ($-$$$$)
+  imageUrl: text('image_url'),
+  address: text('address'),
+  websiteUrl: text('website_url'),
+  duration: text('duration'), // e.g. "2-3 hours"
+  orderIndex: integer('order_index').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const destinationWeatherMonthly = pgTable('destination_weather_monthly', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  destinationId: text('destination_id').notNull().references(() => tripDestinations.id, { onDelete: 'cascade' }),
+  month: integer('month').notNull(), // 1-12
+  avgHighC: doublePrecision('avg_high_c'),
+  avgLowC: doublePrecision('avg_low_c'),
+  rainyDays: integer('rainy_days'),
+  sunshineHours: doublePrecision('sunshine_hours'),
+});
+
+// Research relations
+export const destinationResearchRelations = relations(destinationResearch, ({ one }) => ({
+  destination: one(tripDestinations, { fields: [destinationResearch.destinationId], references: [tripDestinations.id] }),
+}));
+
+export const destinationHighlightsRelations = relations(destinationHighlights, ({ one }) => ({
+  destination: one(tripDestinations, { fields: [destinationHighlights.destinationId], references: [tripDestinations.id] }),
+}));
+
+export const destinationWeatherMonthlyRelations = relations(destinationWeatherMonthly, ({ one }) => ({
+  destination: one(tripDestinations, { fields: [destinationWeatherMonthly.destinationId], references: [tripDestinations.id] }),
+}));
+
 // ── Relations ──────────────────────────────────────────
 export const tripsRelations = relations(trips, ({ many }) => ({
   itineraryItems: many(itineraryItems),
