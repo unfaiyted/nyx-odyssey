@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { getDestinationDetail } from '../server/destination-detail';
+import { getDestinationDetail, calculateTransportFromHome } from '../server/destination-detail';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import {
@@ -11,6 +11,8 @@ import {
   Hotel, ShoppingBag, TreePine, Music, Landmark, Eye, CalendarPlus
 } from 'lucide-react';
 import { AddToItineraryModal } from '../components/destination/AddToItineraryModal';
+import { TransportMap } from '../components/destination/TransportMap';
+import { TransportModeCards } from '../components/destination/TransportModeCards';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, Legend, Area, AreaChart } from 'recharts';
 
 export const Route = createFileRoute('/destination/$destinationId')({
@@ -77,11 +79,32 @@ function DestinationDetailPage() {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [activeHighlightCategory, setActiveHighlightCategory] = useState<string | null>(null);
   const [itineraryHighlight, setItineraryHighlight] = useState<any>(null);
+  const [isCalculatingTransport, setIsCalculatingTransport] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ['destination-detail', destinationId],
     queryFn: () => getDestinationDetail({ data: { destinationId } }),
   });
+
+  const handleCalculateTransport = async () => {
+    if (!data?.destination?.lat || !data?.destination?.lng) return;
+    
+    setIsCalculatingTransport(true);
+    try {
+      await calculateTransportFromHome({
+        data: {
+          destinationId,
+          destinationLat: data.destination.lat,
+          destinationLng: data.destination.lng,
+        },
+      });
+      await refetch();
+    } catch (e) {
+      console.error('Failed to calculate transport:', e);
+    } finally {
+      setIsCalculatingTransport(false);
+    }
+  };
 
   // We need trip dates for the itinerary modal - derive from destination
   const tripId = data?.destination?.tripId;
@@ -508,17 +531,70 @@ function DestinationDetailPage() {
         </motion.div>
       )}
 
-      {/* Transport Notes */}
-      {research?.transportNotes && (
+      {/* Transport Section - Map + Mode Comparison */}
+      {destination.lat && destination.lng && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-card p-6 space-y-3"
+          className="glass-card p-6 space-y-6"
         >
           <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Navigation size={20} className="text-ody-accent" /> Getting Around
+            <Navigation size={20} className="text-ody-accent" /> Getting There
           </h2>
-          <p className="text-sm text-ody-text-muted whitespace-pre-line">{research.transportNotes}</p>
+
+          {/* Transport Map */}
+          <TransportMap
+            destinationLat={destination.lat}
+            destinationLng={destination.lng}
+            destinationName={destination.name}
+            polyline={research?.routePolyline}
+            distanceKm={research?.driveDistanceKm}
+            className="h-72"
+          />
+
+          {/* Transport Mode Cards */}
+          <TransportModeCards
+            transportModes={[
+              {
+                mode: 'drive',
+                timeMinutes: research?.driveTimeMinutes ?? null,
+                costEuros: research?.driveCostEuros ? parseFloat(research.driveCostEuros) : null,
+                notes: research?.driveRouteNotes ?? null,
+              },
+              {
+                mode: 'train',
+                timeMinutes: research?.trainTimeMinutes ?? null,
+                costEuros: research?.trainCostEuros ? parseFloat(research.trainCostEuros) : null,
+                notes: research?.trainRouteNotes ?? null,
+              },
+              {
+                mode: 'bus',
+                timeMinutes: research?.busTimeMinutes ?? null,
+                costEuros: research?.busCostEuros ? parseFloat(research.busCostEuros) : null,
+                notes: research?.busRouteNotes ?? null,
+              },
+              {
+                mode: 'taxi',
+                timeMinutes: research?.taxiTimeMinutes ?? null,
+                costEuros: research?.taxiCostEuros ? parseFloat(research.taxiCostEuros) : null,
+                notes: research?.taxiRouteNotes ?? null,
+              },
+            ]}
+            destinationName={destination.name}
+            destinationId={destinationId}
+            destinationLat={destination.lat}
+            destinationLng={destination.lng}
+            onCalculate={handleCalculateTransport}
+            isCalculating={isCalculatingTransport}
+          />
+
+          {/* Legacy Transport Notes (if any) */}
+          {research?.transportNotes && (
+            <div className="p-4 rounded-lg bg-ody-bg border border-ody-border-subtle">
+              <h3 className="text-sm font-medium text-ody-text mb-2">Additional Transport Notes</h3>
+              <p className="text-sm text-ody-text-muted whitespace-pre-line">{research.transportNotes}</p>
+            </div>
+          )}
         </motion.div>
       )}
 
