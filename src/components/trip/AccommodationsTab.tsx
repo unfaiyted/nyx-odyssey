@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { addAccommodation, updateAccommodation, deleteAccommodation } from '../../server/fns/trip-details';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Calendar, DollarSign, Trash2, MapPin, Star, ExternalLink,
@@ -67,9 +68,7 @@ export function AccommodationsTab({ tripId, items, destinations = [] }: Props) {
 
   // Mutations
   const addMutation = useMutation({
-    mutationFn: (data: any) => fetch(`/api/trips/${tripId}/accommodations`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
-    }).then(r => r.json()),
+    mutationFn: (data: any) => addAccommodation({ data: { tripId, ...data } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
       setShowAdd(false);
@@ -78,9 +77,7 @@ export function AccommodationsTab({ tripId, items, destinations = [] }: Props) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) => fetch(`/api/trips/${tripId}/accommodations`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
-    }).then(r => r.json()),
+    mutationFn: (data: any) => updateAccommodation({ data: { tripId, ...data } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
       setEditingId(null);
@@ -89,9 +86,7 @@ export function AccommodationsTab({ tripId, items, destinations = [] }: Props) {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => fetch(`/api/trips/${tripId}/accommodations`, {
-      method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }),
-    }).then(r => r.json()),
+    mutationFn: (id: string) => deleteAccommodation({ data: { tripId, id } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 

@@ -1,13 +1,32 @@
-import { json, createAPIFileRoute } from '@tanstack/react-start/api';
+import { createServerFn } from '@tanstack/react-start';
 import { db } from '../../db';
 import { trips, itineraryItems, tripDestinations, accommodations, budgetItems, budgetCategories, packingItems, flights, rentalCars, tripRoutes, tripCronJobs } from '../../db/schema';
-import { eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 
-export const APIRoute = createAPIFileRoute('/api/trips/$tripId')({
-  GET: async ({ params }) => {
-    const { tripId } = params;
+export const getTrips = createServerFn({ method: 'GET' }).handler(async () => {
+  return await db.select().from(trips).orderBy(desc(trips.createdAt));
+});
+
+export const createTrip = createServerFn({ method: 'POST' })
+  .handler(async ({ data }) => {
+    const [trip] = await db.insert(trips).values({
+      name: data.name,
+      description: data.description,
+      coverImage: data.coverImage,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      status: data.status || 'planning',
+      totalBudget: data.totalBudget,
+      currency: data.currency || 'USD',
+    }).returning();
+    return trip;
+  });
+
+export const getTrip = createServerFn({ method: 'GET' })
+  .handler(async ({ data }) => {
+    const { tripId } = data;
     const [trip] = await db.select().from(trips).where(eq(trips.id, tripId));
-    if (!trip) return json({ error: 'Trip not found' }, { status: 404 });
+    if (!trip) throw new Error('Trip not found');
 
     const [itin, dests, accom, budget, budgetCats, packing, flightRows, rentalCarRows, routeRows, cronJobRows] = await Promise.all([
       db.select().from(itineraryItems).where(eq(itineraryItems.tripId, tripId)),
@@ -22,7 +41,7 @@ export const APIRoute = createAPIFileRoute('/api/trips/$tripId')({
       db.select().from(tripCronJobs).where(eq(tripCronJobs.tripId, tripId)),
     ]);
 
-    return json({
+    return {
       ...trip,
       itineraryItems: itin,
       destinations: dests,
@@ -34,18 +53,20 @@ export const APIRoute = createAPIFileRoute('/api/trips/$tripId')({
       rentalCars: rentalCarRows,
       routes: routeRows,
       cronJobs: cronJobRows,
-    });
-  },
-  PUT: async ({ request, params }) => {
-    const body = await request.json();
+    };
+  });
+
+export const updateTrip = createServerFn({ method: 'POST' })
+  .handler(async ({ data }) => {
     const [updated] = await db.update(trips).set({
-      ...body,
+      ...data.data,
       updatedAt: new Date(),
-    }).where(eq(trips.id, params.tripId)).returning();
-    return json(updated);
-  },
-  DELETE: async ({ params }) => {
-    await db.delete(trips).where(eq(trips.id, params.tripId));
-    return json({ ok: true });
-  },
-});
+    }).where(eq(trips.id, data.tripId)).returning();
+    return updated;
+  });
+
+export const deleteTrip = createServerFn({ method: 'POST' })
+  .handler(async ({ data }) => {
+    await db.delete(trips).where(eq(trips.id, data.tripId));
+    return { ok: true };
+  });

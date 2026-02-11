@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { addBudgetItem, updateBudgetItem, deleteBudgetItem, addBudgetCategory, updateBudgetCategory } from '../../server/fns/trip-details';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Trash2, CheckCircle, Circle, TrendingUp, TrendingDown,
@@ -62,9 +63,7 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
 
   // ── Mutations ──────────────────────────────────
   const addMutation = useMutation({
-    mutationFn: (data: any) => fetch(`/api/trips/${tripId}/budget`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
-    }).then(r => r.json()),
+    mutationFn: (data: any) => addBudgetItem({ data: { tripId, ...data } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
       setShowAdd(false);
@@ -73,17 +72,12 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
   });
 
   const togglePaidMutation = useMutation({
-    mutationFn: (item: BudgetItem) => fetch(`/api/trips/${tripId}/budget`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: item.id, paid: !item.paid }),
-    }).then(r => r.json()),
+    mutationFn: (item: BudgetItem) => updateBudgetItem({ data: { tripId, id: item.id, paid: !item.paid } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 
   const updateItemMutation = useMutation({
-    mutationFn: (data: Partial<BudgetItem> & { id: string }) => fetch(`/api/trips/${tripId}/budget`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
-    }).then(r => r.json()),
+    mutationFn: (data: Partial<BudgetItem> & { id: string }) => updateBudgetItem({ data: { tripId, ...data } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
       setEditingItem(null);
@@ -91,20 +85,17 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => fetch(`/api/trips/${tripId}/budget`, {
-      method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }),
-    }).then(r => r.json()),
+    mutationFn: (id: string) => deleteBudgetItem({ data: { tripId, id } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 
   const saveCategoryBudget = useMutation({
     mutationFn: (data: { category: string; allocatedBudget: string; id?: string }) => {
       const existing = catAllocations.find(c => c.category === data.category);
-      const method = existing ? 'PUT' : 'POST';
-      const body = existing ? { id: existing.id, allocatedBudget: data.allocatedBudget } : data;
-      return fetch(`/api/trips/${tripId}/budget-categories`, {
-        method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
-      }).then(r => r.json());
+      if (existing) {
+        return updateBudgetCategory({ data: { tripId, id: existing.id, allocatedBudget: data.allocatedBudget } });
+      }
+      return addBudgetCategory({ data: { tripId, ...data } });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });

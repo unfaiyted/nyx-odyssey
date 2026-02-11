@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { addBudgetItem, updateBudgetItem } from '../../server/fns/trip-details';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Utensils, Car, Compass, ShoppingBag, Plus,
@@ -92,16 +93,12 @@ export function DailyBudgetSpreadsheet({ tripId, items, startDate, endDate, curr
 
   // Mutations
   const addMutation = useMutation({
-    mutationFn: (data: any) => fetch(`/api/trips/${tripId}/budget`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
-    }).then(r => r.json()),
+    mutationFn: (data: any) => addBudgetItem({ data: { tripId, ...data } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) => fetch(`/api/trips/${tripId}/budget`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
-    }).then(r => r.json()),
+    mutationFn: (data: any) => updateBudgetItem({ data: { tripId, ...data } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 

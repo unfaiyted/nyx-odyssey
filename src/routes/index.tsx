@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
+import { getTripOverview } from '../server/fns/trip-overview';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plane, Calendar, Clock, ChevronRight, MapPin,
@@ -543,7 +544,7 @@ function LoadingSkeleton() {
 function TripOverviewDashboard() {
   const { data, isLoading } = useQuery<OverviewData>({
     queryKey: ['trip-overview'],
-    queryFn: () => fetch('/api/trip-overview').then(r => r.json()),
+    queryFn: () => getTripOverview(),
     refetchInterval: 60_000,
   });
 

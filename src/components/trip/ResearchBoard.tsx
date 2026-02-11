@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { updateTripDestination } from '../../server/fns/trip-details';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, MapPin, Calendar, GripVertical, ChevronRight, ChevronLeft,
@@ -177,11 +178,7 @@ export function ResearchBoard({ tripId, items }: Props) {
 
   const updateMutation = useMutation({
     mutationFn: (data: { id: string; researchStatus: ResearchStatus }) =>
-      fetch(`/api/trips/${tripId}/destinations`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      }).then(r => r.json()),
+      updateTripDestination({ data: { tripId, ...data } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 

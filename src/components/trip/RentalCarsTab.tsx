@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { addRentalCar, deleteRentalCar, updateRentalCar } from '../../server/fns/trip-details';
 import { motion } from 'framer-motion';
 import { Plus, Car, Trash2, ExternalLink, MapPin, Calendar, Shield, Fuel, Gauge, Star, ChevronDown, ChevronUp } from 'lucide-react';
 import type { RentalCar } from '../../types/trips';
@@ -236,36 +237,23 @@ export function RentalCarsTab({ tripId, items }: Props) {
 
   const createMut = useMutation({
     mutationFn: (data: typeof form) =>
-      fetch(`/api/trips/${tripId}/rental-cars`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          rating: data.rating ? parseFloat(data.rating) : undefined,
-          dailyRate: data.dailyRate || undefined,
-          totalCost: data.totalCost || undefined,
-        }),
-      }).then(r => r.json()),
+      addRentalCar({ data: {
+        tripId, ...data,
+        rating: data.rating ? parseFloat(data.rating) : undefined,
+        dailyRate: data.dailyRate || undefined,
+        totalCost: data.totalCost || undefined,
+      } }),
     onSuccess: () => { invalidate(); setForm(defaultForm); setShowForm(false); },
   });
 
   const deleteMut = useMutation({
-    mutationFn: (id: string) =>
-      fetch(`/api/trips/${tripId}/rental-cars`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
-      }).then(r => r.json()),
+    mutationFn: (id: string) => deleteRentalCar({ data: { tripId, id } }),
     onSuccess: invalidate,
   });
 
   const updateMut = useMutation({
     mutationFn: ({ id, ...data }: { id: string } & Partial<RentalCar>) =>
-      fetch(`/api/trips/${tripId}/rental-cars`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, ...data }),
-      }).then(r => r.json()),
+      updateRentalCar({ data: { tripId, id, ...data } }),
     onSuccess: invalidate,
   });
 
