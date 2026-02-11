@@ -446,3 +446,55 @@ export const tripRoutesRelations = relations(tripRoutes, ({ one }) => ({
   fromDestination: one(tripDestinations, { fields: [tripRoutes.fromDestinationId], references: [tripDestinations.id] }),
   toDestination: one(tripDestinations, { fields: [tripRoutes.toDestinationId], references: [tripDestinations.id] }),
 }));
+
+// ── Trip Recommendations ───────────────────────────────
+export const tripRecommendations = pgTable('trip_recommendations', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  tripId: text('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  destinationId: text('destination_id').references(() => tripDestinations.id, { onDelete: 'set null' }),
+  recommendationNumber: text('recommendation_number').notNull(), // e.g. "001", "002"
+  title: text('title').notNull(),
+  description: text('description'),
+  what: text('what'),
+  whySpecial: text('why_special'), // JSON array
+  logistics: text('logistics'), // JSON object
+  notes: text('notes'),
+  proTips: text('pro_tips'), // JSON array
+  events: text('events'), // JSON array
+  status: text('status').default('pending'), // pending, maybe, approved, booked, no-go
+  addedDate: text('added_date'),
+  screenshotPath: text('screenshot_path'),
+  homeBaseAddress: text('home_base_address'),
+  homeBaseLat: doublePrecision('home_base_lat'),
+  homeBaseLng: doublePrecision('home_base_lng'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const tripRecommendationsRelations = relations(tripRecommendations, ({ one }) => ({
+  trip: one(trips, { fields: [tripRecommendations.tripId], references: [trips.id] }),
+  destination: one(tripDestinations, { fields: [tripRecommendations.destinationId], references: [tripDestinations.id] }),
+}));
+
+// ── Destination Events ─────────────────────────────────
+export const destinationEvents = pgTable('destination_events', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  destinationId: text('destination_id').notNull().references(() => tripDestinations.id, { onDelete: 'cascade' }),
+  recommendationId: text('recommendation_id').references(() => tripRecommendations.id, { onDelete: 'set null' }),
+  name: text('name').notNull(),
+  description: text('description'),
+  eventType: text('event_type').default('performance'), // performance, festival, exhibition, market, other
+  dates: text('dates'), // e.g. "June 19, 25; July 2, 10"
+  startDate: text('start_date'),
+  endDate: text('end_date'),
+  websiteUrl: text('website_url'),
+  bookingUrl: text('booking_url'),
+  price: text('price'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const destinationEventsRelations = relations(destinationEvents, ({ one }) => ({
+  destination: one(tripDestinations, { fields: [destinationEvents.destinationId], references: [tripDestinations.id] }),
+  recommendation: one(tripRecommendations, { fields: [destinationEvents.recommendationId], references: [tripRecommendations.id] }),
+}));
