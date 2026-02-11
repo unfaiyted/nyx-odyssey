@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getDestinationDetail } from '../server/destination-detail';
+import { researchDestinationImages } from '../server/research-images';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import {
@@ -8,7 +9,7 @@ import {
   Shield, Utensils, Camera, Clock, Star, ExternalLink,
   Sun, CloudRain, Info, Lightbulb, Plane, Languages,
   Mountain, Users, ChevronDown, ChevronUp, Navigation,
-  Hotel, ShoppingBag, TreePine, Music, Landmark, Eye
+  Hotel, ShoppingBag, TreePine, Music, Landmark, Eye, ImagePlus, Loader2
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, Legend, Area, AreaChart } from 'recharts';
 
@@ -75,6 +76,12 @@ function DestinationDetailPage() {
   const { destinationId } = Route.useParams();
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [activeHighlightCategory, setActiveHighlightCategory] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const researchMutation = useMutation({
+    mutationFn: () => researchDestinationImages({ data: { destinationId } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['destination-detail', destinationId] }),
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ['destination-detail', destinationId],
@@ -129,7 +136,7 @@ function DestinationDetailPage() {
         <img src={photoUrl} alt={destination.name} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-ody-bg via-ody-bg/40 to-transparent" />
 
-        <div className="absolute top-4 left-4">
+        <div className="absolute top-4 left-4 flex items-center gap-2">
           <Link
             to="/trips/$tripId"
             params={{ tripId: destination.tripId }}
@@ -137,6 +144,23 @@ function DestinationDetailPage() {
           >
             <ArrowLeft size={16} /> Back to Trip
           </Link>
+          <button
+            onClick={() => researchMutation.mutate()}
+            disabled={researchMutation.isPending}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/40 backdrop-blur-sm text-white/90 text-sm hover:bg-black/60 transition-colors disabled:opacity-50"
+            title="Fetch real photos for this destination and its highlights"
+          >
+            {researchMutation.isPending ? (
+              <><Loader2 size={16} className="animate-spin" /> Fetching Images...</>
+            ) : (
+              <><ImagePlus size={16} /> Fetch Images</>
+            )}
+          </button>
+          {researchMutation.isSuccess && (
+            <span className="px-2 py-1 rounded-lg bg-green-500/30 backdrop-blur-sm text-green-200 text-xs">
+              ✓ {researchMutation.data.highlightsUpdated}/{researchMutation.data.totalHighlights} highlights updated
+            </span>
+          )}
         </div>
 
         <div className="absolute bottom-6 left-6 right-6">

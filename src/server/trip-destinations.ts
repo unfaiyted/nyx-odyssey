@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '../db';
 import { tripDestinations } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
+import { getDestinationPhoto } from './image-search';
 
 const createSchema = z.object({
   tripId: z.string().min(1),
@@ -34,6 +35,15 @@ export const getTripDestinations = createServerFn({ method: 'GET' })
 export const createTripDestination = createServerFn({ method: 'POST' })
   .inputValidator(createSchema)
   .handler(async ({ data }) => {
+    // Auto-fetch a real photo if none provided
+    if (!data.photoUrl && data.name) {
+      try {
+        const photo = await getDestinationPhoto(data.name);
+        if (photo) data.photoUrl = photo;
+      } catch (e) {
+        console.error('Failed to auto-fetch destination photo:', e);
+      }
+    }
     const [item] = await db.insert(tripDestinations).values(data).returning();
     return item;
   });
