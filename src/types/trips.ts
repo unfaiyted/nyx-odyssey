@@ -87,6 +87,11 @@ export interface PackingItem {
   category: string;
   quantity: number;
   packed: boolean;
+  priority: string;
+  purchased: boolean;
+  purchaseUrl: string | null;
+  estimatedPrice: string | null;
+  notes: string | null;
   createdAt: string;
 }
 

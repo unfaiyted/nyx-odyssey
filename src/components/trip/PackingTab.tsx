@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Trash2, Check, Package, Search, ChevronRight,
   CheckCircle2, Circle, PackageCheck, Filter, X, Sparkles,
+  ShoppingCart, ExternalLink, AlertTriangle,
 } from 'lucide-react';
 import type { PackingItem } from '../../types/trips';
 
@@ -24,7 +25,7 @@ const CATEGORIES = [
   { value: 'general', label: 'General', emoji: '📦' },
 ];
 
-type FilterMode = 'all' | 'packed' | 'unpacked';
+type FilterMode = 'all' | 'packed' | 'unpacked' | 'to-purchase';
 
 export function PackingTab({ tripId, items }: Props) {
   const queryClient = useQueryClient();
@@ -80,6 +81,7 @@ export function PackingTab({ tripId, items }: Props) {
     }
     if (filterMode === 'packed') result = result.filter(i => i.packed);
     if (filterMode === 'unpacked') result = result.filter(i => !i.packed);
+    if (filterMode === 'to-purchase') result = result.filter(i => !i.purchased && i.purchaseUrl);
     return result;
   }, [items, search, filterMode]);
 
@@ -184,16 +186,19 @@ export function PackingTab({ tripId, items }: Props) {
         </div>
         <div className="flex gap-2">
           <div className="flex bg-ody-bg border border-ody-border rounded-lg overflow-hidden">
-            {(['all', 'unpacked', 'packed'] as FilterMode[]).map(mode => (
-              <button
-                key={mode}
-                onClick={() => setFilterMode(mode)}
-                className={`px-3 py-2 text-xs font-medium capitalize transition-colors
-                  ${filterMode === mode ? 'bg-ody-accent text-white' : 'text-ody-text-muted hover:bg-ody-surface-hover'}`}
-              >
-                {mode === 'all' ? `All (${total})` : mode === 'packed' ? `Packed (${packed})` : `To Pack (${total - packed})`}
-              </button>
-            ))}
+            {(['all', 'unpacked', 'packed', 'to-purchase'] as FilterMode[]).map(mode => {
+              const toBuyCount = items.filter(i => !i.purchased && i.purchaseUrl).length;
+              return (
+                <button
+                  key={mode}
+                  onClick={() => setFilterMode(mode)}
+                  className={`px-3 py-2 text-xs font-medium capitalize transition-colors
+                    ${filterMode === mode ? 'bg-ody-accent text-white' : 'text-ody-text-muted hover:bg-ody-surface-hover'}`}
+                >
+                  {mode === 'all' ? `All (${total})` : mode === 'packed' ? `Packed (${packed})` : mode === 'unpacked' ? `To Pack (${total - packed})` : `Buy (${toBuyCount})`}
+                </button>
+              );
+            })}
           </div>
           <button
             onClick={() => setShowAdd(!showAdd)}
@@ -394,6 +399,29 @@ export function PackingTab({ tripId, items }: Props) {
                                 </span>
                                 {item.quantity > 1 && (
                                   <span className="text-xs text-ody-text-dim bg-ody-bg px-1.5 py-0.5 rounded">×{item.quantity}</span>
+                                )}
+                                {item.priority === 'essential' && (
+                                  <span className="text-xs bg-red-500/15 text-red-400 px-1.5 py-0.5 rounded font-medium">Essential</span>
+                                )}
+                                {item.purchaseUrl && (
+                                  <a
+                                    href={item.purchaseUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`flex items-center gap-1 text-xs px-1.5 py-0.5 rounded transition-colors ${
+                                      item.purchased
+                                        ? 'bg-ody-success/15 text-ody-success'
+                                        : 'bg-amber-500/15 text-amber-400 hover:bg-amber-500/25'
+                                    }`}
+                                    onClick={e => e.stopPropagation()}
+                                  >
+                                    {item.purchased ? <CheckCircle2 size={10} /> : <ShoppingCart size={10} />}
+                                    {item.purchased ? 'Bought' : 'Buy'}
+                                    <ExternalLink size={8} />
+                                  </a>
+                                )}
+                                {item.estimatedPrice && (
+                                  <span className="text-xs text-ody-text-dim">${item.estimatedPrice}</span>
                                 )}
                                 <button
                                   onClick={() => deleteMutation.mutate(item.id)}
