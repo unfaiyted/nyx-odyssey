@@ -13,6 +13,7 @@ import {
   rentalCars,
   tripRoutes,
   tripCronJobs,
+  tripRecommendations,
 } from '../db/schema';
 import { desc, eq } from 'drizzle-orm';
 
@@ -45,7 +46,7 @@ export const getTrip = createServerFn({ method: 'GET' })
     const [trip] = await db.select().from(trips).where(eq(trips.id, tripId));
     if (!trip) throw new Error('Trip not found');
 
-    const [itin, dests, accom, budget, budgetCats, packing, flightRows, rentalCarRows, routeRows, cronJobRows] =
+    const [itin, dests, accom, budget, budgetCats, packing, flightRows, rentalCarRows, routeRows, cronJobRows, recs] =
       await Promise.all([
         db.select().from(itineraryItems).where(eq(itineraryItems.tripId, tripId)),
         db.select().from(tripDestinations).where(eq(tripDestinations.tripId, tripId)),
@@ -57,6 +58,7 @@ export const getTrip = createServerFn({ method: 'GET' })
         db.select().from(rentalCars).where(eq(rentalCars.tripId, tripId)),
         db.select().from(tripRoutes).where(eq(tripRoutes.tripId, tripId)),
         db.select().from(tripCronJobs).where(eq(tripCronJobs.tripId, tripId)),
+        db.select().from(tripRecommendations).where(eq(tripRecommendations.tripId, tripId)),
       ]);
 
     return {
@@ -71,6 +73,7 @@ export const getTrip = createServerFn({ method: 'GET' })
       rentalCars: rentalCarRows,
       routes: routeRows,
       cronJobs: cronJobRows,
+      recommendations: recs,
     };
   });
 

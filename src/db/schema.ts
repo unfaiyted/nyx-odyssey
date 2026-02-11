@@ -290,14 +290,17 @@ export const tripsRelations = relations(trips, ({ many }) => ({
   flights: many(flights),
   rentalCars: many(rentalCars),
   cronJobs: many(tripCronJobs),
+  recommendations: many(tripRecommendations),
 }));
 
 export const itineraryItemsRelations = relations(itineraryItems, ({ one }) => ({
   trip: one(trips, { fields: [itineraryItems.tripId], references: [trips.id] }),
 }));
 
-export const tripDestinationsRelations = relations(tripDestinations, ({ one }) => ({
+export const tripDestinationsRelations = relations(tripDestinations, ({ one, many }) => ({
   trip: one(trips, { fields: [tripDestinations.tripId], references: [trips.id] }),
+  events: many(destinationEvents),
+  recommendations: many(tripRecommendations),
 }));
 
 export const accommodationsRelations = relations(accommodations, ({ one }) => ({
@@ -322,6 +325,70 @@ export const rentalCarsRelations = relations(rentalCars, ({ one }) => ({
 
 export const tripCronJobsRelations = relations(tripCronJobs, ({ one }) => ({
   trip: one(trips, { fields: [tripCronJobs.tripId], references: [trips.id] }),
+}));
+
+// ── Trip Recommendations ───────────────────────────────
+export const tripRecommendations = pgTable('trip_recommendations', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  tripId: text('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  destinationId: text('destination_id').references(() => tripDestinations.id, { onDelete: 'set null' }),
+  // Recommendation metadata
+  recommendationNumber: text('recommendation_number').notNull(), // e.g., "001", "002"
+  title: text('title').notNull(),
+  description: text('description'),
+  addedDate: text('added_date'), // ISO date when added to markdown
+  status: text('status').default('pending'), // pending, maybe, approved, booked, no-go
+  // Source data from markdown
+  what: text('what'), // What is it
+  whySpecial: text('why_special'), // JSON array of reasons
+  logistics: text('logistics'), // JSON object with distance, duration, train, tickets, etc.
+  notes: text('notes'),
+  proTips: text('pro_tips'), // JSON array of pro tips
+  events: text('events'), // JSON array of events/dates
+  // Media
+  screenshotPath: text('screenshot_path'), // Path to screenshot in memory folder
+  // Home base reference for distance calculation
+  homeBaseAddress: text('home_base_address'),
+  homeBaseLat: doublePrecision('home_base_lat'),
+  homeBaseLng: doublePrecision('home_base_lng'),
+  // Timestamps
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// ── Destination Events (Opera schedule, Il Palio, etc.) ───────────────────────────────
+export const destinationEvents = pgTable('destination_events', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  destinationId: text('destination_id').notNull().references(() => tripDestinations.id, { onDelete: 'cascade' }),
+  recommendationId: text('recommendation_id').references(() => tripRecommendations.id, { onDelete: 'set null' }),
+  // Event details
+  name: text('name').notNull(),
+  description: text('description'),
+  eventType: text('event_type').default('performance'), // performance, festival, race, exhibition, other
+  startDate: text('start_date'), // ISO date or date range start
+  endDate: text('end_date'), // ISO date or date range end
+  startTime: text('start_time'),
+  ticketUrl: text('ticket_url'),
+  ticketPriceFrom: text('ticket_price_from'),
+  ticketPriceTo: text('ticket_price_to'),
+  currency: text('currency').default('EUR'),
+  // Status
+  interested: boolean('interested').default(false),
+  booked: boolean('booked').default(false),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Relations for recommendations
+export const tripRecommendationsRelations = relations(tripRecommendations, ({ one, many }) => ({
+  trip: one(trips, { fields: [tripRecommendations.tripId], references: [trips.id] }),
+  destination: one(tripDestinations, { fields: [tripRecommendations.destinationId], references: [tripDestinations.id] }),
+  events: many(destinationEvents),
+}));
+
+export const destinationEventsRelations = relations(destinationEvents, ({ one }) => ({
+  destination: one(tripDestinations, { fields: [destinationEvents.destinationId], references: [tripDestinations.id] }),
+  recommendation: one(tripRecommendations, { fields: [destinationEvents.recommendationId], references: [tripRecommendations.id] }),
 }));
 
 // ── Weight Tracking ────────────────────────────────────

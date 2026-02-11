@@ -187,6 +187,7 @@ export interface TripDetail extends Trip {
   rentalCars: RentalCar[];
   routes: TripRoute[];
   cronJobs: TripCronJob[];
+  recommendations: TripRecommendation[];
 }
 
 export interface BudgetCategory {
@@ -199,4 +200,51 @@ export interface BudgetCategory {
   createdAt: string;
 }
 
-export type TripTab = 'itinerary' | 'destinations' | 'research' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'rental-cars' | 'routes' | 'schedule';
+export type TripTab = 'itinerary' | 'destinations' | 'research' | 'recommendations' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'rental-cars' | 'routes' | 'schedule';
+
+export type RecommendationStatus = 'pending' | 'maybe' | 'approved' | 'booked' | 'no-go';
+
+export interface TripRecommendation {
+  id: string;
+  tripId: string;
+  destinationId: string | null;
+  recommendationNumber: string;
+  title: string;
+  description: string | null;
+  addedDate: string | null;
+  status: RecommendationStatus;
+  what: string | null;
+  whySpecial: string | null; // JSON array
+  logistics: string | null; // JSON object
+  notes: string | null;
+  proTips: string | null; // JSON array
+  events: string | null; // JSON array
+  screenshotPath: string | null;
+  homeBaseAddress: string | null;
+  homeBaseLat: number | null;
+  homeBaseLng: number | null;
+  createdAt: string;
+  updatedAt: string;
+  // Joined fields
+  destination?: TripDestination;
+}
+
+export interface DestinationEvent {
+  id: string;
+  destinationId: string;
+  recommendationId: string | null;
+  name: string;
+  description: string | null;
+  eventType: string;
+  startDate: string | null;
+  endDate: string | null;
+  startTime: string | null;
+  ticketUrl: string | null;
+  ticketPriceFrom: string | null;
+  ticketPriceTo: string | null;
+  currency: string;
+  interested: boolean;
+  booked: boolean;
+  notes: string | null;
+  createdAt: string;
+}
