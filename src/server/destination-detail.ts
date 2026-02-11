@@ -4,6 +4,53 @@ import { db } from '../db';
 import { tripDestinations, destinationResearch, destinationHighlights, destinationWeatherMonthly, accommodations } from '../db/schema';
 import { eq, and, asc } from 'drizzle-orm';
 
+// Home base: Vicenza, Contrà S. Rocco #60
+const HOME_BASE = { lat: 45.5485, lng: 11.5479 };
+
+interface OSRMRoute {
+  durationMinutes: number;
+  distanceKm: number;
+  polyline?: string;
+}
+
+async function getOSRMRoute(
+  fromLat: number, fromLng: number,
+  toLat: number, toLng: number,
+  profile: 'car' | 'foot' = 'car'
+): Promise<OSRMRoute | null> {
+  try {
+    const profileMap = { car: 'driving', foot: 'foot' };
+    const url = `https://router.project-osrm.org/route/v1/${profileMap[profile]}/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=polyline`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.code !== 'Ok' || !data.routes?.length) return null;
+    return {
+      durationMinutes: Math.round(data.routes[0].duration / 60),
+      distanceKm: Math.round(data.routes[0].distance / 1000 * 10) / 10,
+      polyline: data.routes[0].geometry,
+    };
+  } catch (e) {
+    console.error('OSRM route error:', e);
+    return null;
+  }
+}
+
+// Estimate fuel cost based on distance (€0.15/km)
+function estimateFuelCost(distanceKm: number): number {
+  return Math.round(distanceKm * 0.15 * 100) / 100;
+}
+
+// Estimate tolls based on distance in Italy (rough estimate: €0.08/km on highways)
+function estimateTolls(distanceKm: number): number {
+  return Math.round(distanceKm * 0.08 * 100) / 100;
+}
+
+// Calculate drive cost (fuel + tolls)
+function estimateDriveCost(distanceKm: number): number {
+  return estimateFuelCost(distanceKm) + estimateTolls(distanceKm);
+}
+
 export const getDestinationDetail = createServerFn({ method: 'GET' })
   .inputValidator(z.object({ destinationId: z.string().min(1) }))
   .handler(async ({ data: { destinationId } }) => {
@@ -56,6 +103,21 @@ export const upsertDestinationResearch = createServerFn({ method: 'POST' })
     culturalNotes: z.string().optional(),
     summary: z.string().optional(),
     travelTips: z.string().optional(),
+    // Transport fields
+    driveTimeMinutes: z.number().optional(),
+    driveDistanceKm: z.number().optional(),
+    driveCostEuros: z.string().optional(),
+    driveRouteNotes: z.string().optional(),
+    trainTimeMinutes: z.number().optional(),
+    trainCostEuros: z.string().optional(),
+    trainRouteNotes: z.string().optional(),
+    busTimeMinutes: z.number().optional(),
+    busCostEuros: z.string().optional(),
+    busRouteNotes: z.string().optional(),
+    taxiTimeMinutes: z.number().optional(),
+    taxiCostEuros: z.string().optional(),
+    taxiRouteNotes: z.string().optional(),
+    routePolyline: z.string().optional(),
   }))
   .handler(async ({ data }) => {
     const { destinationId, ...values } = data;
@@ -100,4 +162,108 @@ export const deleteDestinationHighlight = createServerFn({ method: 'POST' })
   .handler(async ({ data: { id } }) => {
     await db.delete(destinationHighlights).where(eq(destinationHighlights.id, id));
     return { ok: true };
+  });
+
+export const calculateTransportFromHome = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ 
+    destinationId: z.string().min(1),
+    destinationLat: z.number(),
+    destinationLng: z.number(),
+  }))
+  .handler(async ({ data }) => {
+    const { destinationId, destinationLat, destinationLng } = data;
+
+    // Get driving route from OSRM
+    const carRoute = await getOSRMRoute(
+      HOME_BASE.lat, HOME_BASE.lng,
+      destinationLat, destinationLng,
+      'car'
+    );
+
+    if (!carRoute) {
+      throw new Error('Could not calculate route from Vicenza to destination');
+    }
+
+    const distanceKm = carRoute.distanceKm;
+    const driveTimeMinutes = carRoute.durationMinutes;
+    const driveCost = estimateDriveCost(distanceKm);
+    
+    // Estimate train time (typically 0.7x car time + 15 min for station access)
+    const trainTimeMinutes = Math.round(driveTimeMinutes * 0.7 + 15);
+    // Estimate train cost (roughly €0.10/km for regional trains in Italy)
+    const trainCost = Math.round(distanceKm * 0.10 * 100) / 100;
+
+    // Estimate bus time (typically 1.3x car time + 10 min for stops)
+    const busTimeMinutes = Math.round(driveTimeMinutes * 1.3 + 10);
+    // Estimate bus cost (roughly €0.06/km for FlixBus/regional buses)
+    const busCost = Math.round(distanceKm * 0.06 * 100) / 100;
+
+    // Estimate taxi time (similar to car)
+    const taxiTimeMinutes = driveTimeMinutes;
+    // Estimate taxi cost (roughly €2.50 base + €1.50/km)
+    const taxiCost = Math.round((2.50 + distanceKm * 1.50) * 100) / 100;
+
+    // Generate route notes
+    const driveRouteNotes = `Via highway from Vicenza. Approx €${estimateTolls(distanceKm).toFixed(2)} in tolls, €${estimateFuelCost(distanceKm).toFixed(2)} fuel cost. Distance: ${distanceKm.toFixed(1)} km.`;
+    const trainRouteNotes = `Check Trenitalia or Italo from Vicenza station. Typical journey time ~${Math.round(trainTimeMinutes / 60)}h ${trainTimeMinutes % 60}m. Book in advance for best prices.`;
+    const busRouteNotes = `Check FlixBus or regional bus services. May require transfer depending on destination.`;
+    const taxiRouteNotes = `Direct door-to-door service. Consider rideshare apps like Uber or local taxi services. Best for groups or late-night travel.`;
+
+    // Update the database
+    const existing = await db.select().from(destinationResearch)
+      .where(eq(destinationResearch.destinationId, destinationId));
+
+    const values = {
+      driveTimeMinutes,
+      driveDistanceKm: distanceKm,
+      driveCostEuros: driveCost.toString(),
+      driveRouteNotes,
+      trainTimeMinutes,
+      trainCostEuros: trainCost.toString(),
+      trainRouteNotes,
+      busTimeMinutes,
+      busCostEuros: busCost.toString(),
+      busRouteNotes,
+      taxiTimeMinutes,
+      taxiCostEuros: taxiCost.toString(),
+      taxiRouteNotes,
+      routePolyline: carRoute.polyline,
+      updatedAt: new Date(),
+    };
+
+    if (existing.length > 0) {
+      await db.update(destinationResearch)
+        .set(values)
+        .where(eq(destinationResearch.destinationId, destinationId));
+    } else {
+      await db.insert(destinationResearch).values({
+        destinationId,
+        ...values,
+      });
+    }
+
+    return {
+      drive: {
+        timeMinutes: driveTimeMinutes,
+        distanceKm,
+        costEuros: driveCost,
+        notes: driveRouteNotes,
+      },
+      train: {
+        timeMinutes: trainTimeMinutes,
+        costEuros: trainCost,
+        notes: trainRouteNotes,
+      },
+      bus: {
+        timeMinutes: busTimeMinutes,
+        costEuros: busCost,
+        notes: busRouteNotes,
+      },
+      taxi: {
+        timeMinutes: taxiTimeMinutes,
+        costEuros: taxiCost,
+        notes: taxiRouteNotes,
+      },
+      polyline: carRoute.polyline,
+    };
   });
