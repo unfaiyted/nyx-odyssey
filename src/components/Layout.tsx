@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { NotificationBadge } from './NotificationBadge';
+import { AnimatedPage } from './AnimatedOutlet';
 
 interface LayoutProps {
   children: ReactNode;
@@ -19,7 +20,9 @@ export function Layout({ children }: LayoutProps) {
           </div>
         </div>
       </nav>
-      <main className="p-6">{children}</main>
+      <main className="p-6">
+        <AnimatedPage>{children}</AnimatedPage>
+      </main>
     </div>
   );
 }

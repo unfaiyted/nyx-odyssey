@@ -387,10 +387,10 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
                 <Legend formatter={(value: string) => <span className="text-xs text-ody-text-muted">{value}</span>} />
               </PieChart>
             </ResponsiveContainer>
-          </div>
+          </StaggeredChartItem>
 
           {/* Bar: budget vs estimated vs actual */}
-          <div className="glass-card p-4">
+          <StaggeredChartItem className="glass-card p-4">
             <h4 className="text-sm font-semibold mb-3 text-ody-text-muted">Budget vs Actual</h4>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={barData}>
@@ -407,11 +407,11 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
                 <Bar dataKey="actual" fill="#34d399" radius={[3, 3, 0, 0]} name="Actual" />
               </BarChart>
             </ResponsiveContainer>
-          </div>
+          </StaggeredChartItem>
 
           {/* Spending timeline */}
           {timelineData.length > 1 && (
-            <div className="glass-card p-4 lg:col-span-2">
+            <StaggeredChartItem className="glass-card p-4 lg:col-span-2">
               <h4 className="text-sm font-semibold mb-3 text-ody-text-muted">Spending Over Time</h4>
               <ResponsiveContainer width="100%" height={200}>
                 <AreaChart data={timelineData}>
@@ -428,9 +428,9 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                 </AreaChart>
               </ResponsiveContainer>
-            </div>
+            </StaggeredChartItem>
           )}
-        </div>
+        </StaggeredCharts>
       )}
 
       {/* ── Expense List ── */}

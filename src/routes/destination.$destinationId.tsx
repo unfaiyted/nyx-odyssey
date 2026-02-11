@@ -11,6 +11,7 @@ import {
   Hotel, ShoppingBag, TreePine, Music, Landmark, Eye
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, Legend, Area, AreaChart } from 'recharts';
+import { AnimatedChart } from '../components/AnimatedChart';
 
 export const Route = createFileRoute('/destination/$destinationId')({
   component: DestinationDetailPage,
@@ -279,11 +280,7 @@ function DestinationDetailPage() {
 
       {/* Weather Chart */}
       {weatherData.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass-card p-6 space-y-4"
-        >
+        <AnimatedChart className="glass-card p-6 space-y-4">
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <Thermometer size={20} className="text-ody-accent" /> Climate
           </h2>
@@ -354,7 +351,7 @@ function DestinationDetailPage() {
               </ResponsiveContainer>
             </div>
           )}
-        </motion.div>
+        </AnimatedChart>
       )}
 
       {/* Highlights / Things to Do */}
