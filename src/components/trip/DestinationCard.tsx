@@ -12,6 +12,7 @@ interface Props {
   onDelete?: (id: string) => void;
   onStatusChange?: (id: string, status: string) => void;
   onPhotoChange?: (id: string, photoUrl: string) => void;
+  fromTab?: string; // Current tab to pass when navigating to destination
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof Search; bg: string }> = {
@@ -45,7 +46,7 @@ const PLACEHOLDER_PHOTOS = [
   'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=600&h=400&fit=crop',
 ];
 
-export function DestinationCard({ destination, index, baseLat, baseLng, onDelete, onStatusChange, onPhotoChange }: Props) {
+export function DestinationCard({ destination, index, baseLat, baseLng, onDelete, onStatusChange, onPhotoChange, fromTab = 'destinations' }: Props) {
   const navigate = useNavigate();
   const [showPhotoEdit, setShowPhotoEdit] = useState(false);
   const [photoInput, setPhotoInput] = useState('');
@@ -62,13 +63,24 @@ export function DestinationCard({ destination, index, baseLat, baseLng, onDelete
 
   const statusOptions = ['researched', 'booked', 'visited'];
 
+  // Build the destination link with fromTab query param
+  const destinationLink = {
+    to: '/destination/$destinationId' as const,
+    params: { destinationId: destination.id },
+    search: { fromTab },
+  };
+
+  const handleCardClick = () => {
+    navigate(destinationLink);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.08, type: 'spring', stiffness: 300, damping: 30 }}
       className="group relative overflow-hidden rounded-xl border border-ody-border bg-ody-surface hover:border-ody-accent/40 transition-all duration-300 cursor-pointer"
-      onClick={() => navigate({ to: '/destination/$destinationId', params: { destinationId: destination.id } })}
+      onClick={handleCardClick}
     >
       {/* Photo section */}
       <div className="relative h-44 overflow-hidden">
