@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { addPackingItem, updatePackingItem, deletePackingItem } from '../../server/fns/trip-details';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Trash2, Check, Package, Search, ChevronRight,
@@ -39,45 +40,29 @@ export function PackingTab({ tripId, items }: Props) {
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
 
   const addMutation = useMutation({
-    mutationFn: (data: typeof form) => fetch(`/api/trips/${tripId}/packing`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, quantity: Number(data.quantity) || 1 }),
-    }).then(r => r.json()),
+    mutationFn: (data: typeof form) => addPackingItem({ data: { tripId, ...data, quantity: Number(data.quantity) || 1 } }),
     onSuccess: () => { invalidate(); setShowAdd(false); setForm({ name: '', category: 'general', quantity: '1' }); },
   });
 
   const toggleMutation = useMutation({
-    mutationFn: (item: PackingItem) => fetch(`/api/trips/${tripId}/packing`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: item.id, packed: !item.packed }),
-    }).then(r => r.json()),
+    mutationFn: (item: PackingItem) => updatePackingItem({ data: { tripId, id: item.id, packed: !item.packed } }),
     onSuccess: invalidate,
   });
 
   const updateMutation = useMutation({
     mutationFn: (data: { id: string; name: string; category: string; quantity: number }) =>
-      fetch(`/api/trips/${tripId}/packing`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      }).then(r => r.json()),
+      updatePackingItem({ data: { tripId, ...data } }),
     onSuccess: () => { invalidate(); setEditingId(null); },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => fetch(`/api/trips/${tripId}/packing`, {
-      method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }),
-    }).then(r => r.json()),
+    mutationFn: (id: string) => deletePackingItem({ data: { tripId, id } }),
     onSuccess: invalidate,
   });
 
   const bulkToggleMutation = useMutation({
     mutationFn: async ({ ids, packed }: { ids: string[]; packed: boolean }) => {
-      await Promise.all(ids.map(id =>
-        fetch(`/api/trips/${tripId}/packing`, {
-          method: 'PUT', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, packed }),
-        })
-      ));
+      await Promise.all(ids.map(id => updatePackingItem({ data: { tripId, id, packed } })));
     },
     onSuccess: invalidate,
   });

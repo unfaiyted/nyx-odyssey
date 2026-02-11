@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Plus, MapPin, Calendar, DollarSign } from 'lucide-react';
 import { useState } from 'react';
 import type { Trip } from '../types/trips';
+import { getTrips, createTrip } from '../server/fns/trips';
 
 export const Route = createFileRoute('/trips/')({
   component: TripsListPage,
@@ -16,13 +17,11 @@ function TripsListPage() {
 
   const { data: trips = [], isLoading } = useQuery<Trip[]>({
     queryKey: ['trips'],
-    queryFn: () => fetch('/api/trips').then(r => r.json()),
+    queryFn: () => getTrips(),
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: typeof newTrip) => fetch('/api/trips', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
-    }).then(r => r.json()),
+    mutationFn: (data: typeof newTrip) => createTrip({ data }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trips'] });
       setShowCreate(false);

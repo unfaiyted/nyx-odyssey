@@ -8,6 +8,9 @@ import { AddDestinationModal } from '../components/map/AddDestinationModal';
 import { RouteDetailPanel } from '../components/map/RouteDetailPanel';
 import type { Destination, Route as RouteType } from '../types/destinations';
 import type { Trip, TripDestination, TripRoute } from '../types/trips';
+import { getTrips } from '../server/fns/trips';
+import { getDestinations, createDestination, deleteDestination, updateDestination } from '../server/fns/destinations';
+import { getTripDestinations, getTripRoutes } from '../server/fns/trip-details';
 
 const DestinationMap = lazy(() =>
   import('../components/map/DestinationMap').then((m) => ({ default: m.DestinationMap }))
@@ -35,10 +38,7 @@ function MapPage() {
   // Fetch trips for selector
   const { data: tripsData } = useQuery({
     queryKey: ['trips'],
-    queryFn: async () => {
-      const res = await fetch('/api/trips');
-      return res.json() as Promise<Trip[]>;
-    },
+    queryFn: () => getTrips() as Promise<Trip[]>,
   });
 
   // Auto-select first trip
@@ -48,48 +48,34 @@ function MapPage() {
   // Fetch global destinations
   const { data: globalData, isLoading: globalLoading } = useQuery({
     queryKey: ['destinations'],
-    queryFn: async () => {
-      const res = await fetch('/api/destinations');
-      return res.json() as Promise<{ destinations: Destination[]; routes: RouteType[] }>;
-    },
+    queryFn: () => getDestinations() as Promise<{ destinations: Destination[]; routes: RouteType[] }>,
     enabled: mode === 'global',
   });
 
   // Fetch trip destinations + routes
   const { data: tripDestsData, isLoading: tripDestsLoading } = useQuery({
     queryKey: ['trip-destinations', activeTripId],
-    queryFn: async () => {
-      const res = await fetch(`/api/trips/${activeTripId}/destinations`);
-      return res.json() as Promise<TripDestination[]>;
-    },
+    queryFn: () => getTripDestinations({ data: { tripId: activeTripId! } }) as Promise<TripDestination[]>,
     enabled: mode === 'trip' && !!activeTripId,
   });
 
   const { data: tripRoutesData, isLoading: tripRoutesLoading } = useQuery({
     queryKey: ['trip-routes', activeTripId],
-    queryFn: async () => {
-      const res = await fetch(`/api/trips/${activeTripId}/routes`);
-      return res.json() as Promise<{ routes: TripRoute[] }>;
-    },
+    queryFn: () => getTripRoutes({ data: { tripId: activeTripId! } }) as Promise<{ routes: TripRoute[] }>,
     enabled: mode === 'trip' && !!activeTripId,
   });
 
   // Global mutations
   const addMutation = useMutation({
     mutationFn: async (dest: Partial<Destination>) => {
-      const res = await fetch('/api/destinations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...dest, orderIndex: (globalData?.destinations.length ?? 0) }),
-      });
-      return res.json();
+      return createDestination({ data: { ...dest, orderIndex: (globalData?.destinations.length ?? 0) } as any });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['destinations'] }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await fetch(`/api/destinations/${id}`, { method: 'DELETE' });
+      await deleteDestination({ data: { id } });
     },
     onSuccess: () => {
       setSelectedId(null);
@@ -99,11 +85,7 @@ function MapPage() {
 
   const toggleVisitedMutation = useMutation({
     mutationFn: async (dest: Destination) => {
-      await fetch(`/api/destinations/${dest.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ visited: !dest.visited }),
-      });
+      await updateDestination({ data: { id: dest.id, visited: !dest.visited } });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['destinations'] }),
   });

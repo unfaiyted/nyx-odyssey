@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { addTripDestination, deleteTripDestination, updateTripDestination } from '../../server/fns/trip-details';
 import { motion } from 'framer-motion';
 import { Plus, LayoutGrid, List } from 'lucide-react';
 import type { TripDestination } from '../../types/trips';
@@ -17,33 +18,22 @@ export function DestinationsTab({ tripId, items }: Props) {
   const [form, setForm] = useState({ name: '', description: '', arrivalDate: '', departureDate: '', lat: '', lng: '', photoUrl: '' });
 
   const addMutation = useMutation({
-    mutationFn: (data: any) => fetch(`/api/trips/${tripId}/destinations`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, lat: data.lat ? Number(data.lat) : null, lng: data.lng ? Number(data.lng) : null, orderIndex: items.length }),
-    }).then(r => r.json()),
+    mutationFn: (data: any) => addTripDestination({ data: { tripId, ...data, lat: data.lat ? Number(data.lat) : null, lng: data.lng ? Number(data.lng) : null, orderIndex: items.length } }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['trip', tripId] }); setShowAdd(false); setForm({ name: '', description: '', arrivalDate: '', departureDate: '', lat: '', lng: '', photoUrl: '' }); },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => fetch(`/api/trips/${tripId}/destinations`, {
-      method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }),
-    }).then(r => r.json()),
+    mutationFn: (id: string) => deleteTripDestination({ data: { tripId, id } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) => fetch(`/api/trips/${tripId}/destinations`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, status }),
-    }).then(r => r.json()),
+    mutationFn: ({ id, status }: { id: string; status: string }) => updateTripDestination({ data: { tripId, id, status } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 
   const updatePhotoMutation = useMutation({
-    mutationFn: ({ id, photoUrl }: { id: string; photoUrl: string }) => fetch(`/api/trips/${tripId}/destinations`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, photoUrl }),
-    }).then(r => r.json()),
+    mutationFn: ({ id, photoUrl }: { id: string; photoUrl: string }) => updateTripDestination({ data: { tripId, id, photoUrl } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 

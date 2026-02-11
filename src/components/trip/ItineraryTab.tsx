@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { addItineraryItem, updateItineraryItem, deleteItineraryItem, reorderItinerary } from '../../server/fns/trip-details';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Check, Clock, MapPin, Trash2, GripVertical,
@@ -392,9 +393,7 @@ export function ItineraryTab({ tripId, items, startDate, endDate, destinations =
 
   // ── Mutations ──
   const addMutation = useMutation({
-    mutationFn: (data: typeof form) => fetch(`/api/trips/${tripId}/itinerary`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
-    }).then(r => r.json()),
+    mutationFn: (data: typeof form) => addItineraryItem({ data: { tripId, ...data } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
       setShowAdd(false);
@@ -403,35 +402,24 @@ export function ItineraryTab({ tripId, items, startDate, endDate, destinations =
   });
 
   const toggleMutation = useMutation({
-    mutationFn: (item: ItineraryItem) => fetch(`/api/trips/${tripId}/itinerary`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: item.id, completed: !item.completed }),
-    }).then(r => r.json()),
+    mutationFn: (item: ItineraryItem) => updateItineraryItem({ data: { tripId, id: item.id, completed: !item.completed } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => fetch(`/api/trips/${tripId}/itinerary`, {
-      method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }),
-    }).then(r => r.json()),
+    mutationFn: (id: string) => deleteItineraryItem({ data: { tripId, id } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 
   const moveMutation = useMutation({
     mutationFn: ({ id, date, orderIndex }: { id: string; date: string; orderIndex: number }) =>
-      fetch(`/api/trips/${tripId}/itinerary`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, date, orderIndex }),
-      }).then(r => r.json()),
+      updateItineraryItem({ data: { tripId, id, date, orderIndex } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 
   const reorderMutation = useMutation({
     mutationFn: (updates: { id: string; orderIndex: number }[]) =>
-      fetch(`/api/trips/${tripId}/itinerary/reorder`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: updates }),
-      }).then(r => r.json()),
+      reorderItinerary({ data: { tripId, items: updates } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 

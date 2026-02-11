@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
+import { getTrip } from '../server/fns/trips';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car, CarFront, ClipboardList, Clock } from 'lucide-react';
@@ -38,7 +39,7 @@ function TripDetailPage() {
 
   const { data: trip, isLoading } = useQuery<TripDetail>({
     queryKey: ['trip', tripId],
-    queryFn: () => fetch(`/api/trips/${tripId}`).then(r => r.json()),
+    queryFn: () => getTrip({ data: { tripId } }),
   });
 
   if (isLoading) return <div className="text-center py-12 text-ody-text-muted">Loading trip...</div>;

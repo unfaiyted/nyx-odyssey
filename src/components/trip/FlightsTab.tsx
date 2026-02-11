@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { addFlight, deleteFlight } from '../../server/fns/trip-details';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Plane, Clock, Trash2, MapPin, ArrowRight, Calendar, Ticket } from 'lucide-react';
 import type { Flight } from '../../types/trips';
@@ -300,9 +301,7 @@ export function FlightsTab({ tripId, items }: Props) {
   const groups = useMemo(() => groupFlightLegs(items), [items]);
 
   const addMutation = useMutation({
-    mutationFn: (data: any) => fetch(`/api/trips/${tripId}/flights`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
-    }).then(r => r.json()),
+    mutationFn: (data: any) => addFlight({ data: { tripId, ...data } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
       setShowAdd(false);
@@ -313,9 +312,7 @@ export function FlightsTab({ tripId, items }: Props) {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => fetch(`/api/trips/${tripId}/flights`, {
-      method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }),
-    }).then(r => r.json()),
+    mutationFn: (id: string) => deleteFlight({ data: { tripId, id } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 

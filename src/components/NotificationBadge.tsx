@@ -5,7 +5,8 @@ import {
   Bell, Calendar, AlertTriangle, Utensils, Plane, Package,
   X, ChevronRight,
 } from 'lucide-react';
-import type { Notification } from '../routes/api/notifications';
+import type { Notification } from '../server/fns/notifications';
+import { getNotifications } from '../server/fns/notifications';
 
 interface NotificationsResponse {
   notifications: Notification[];
@@ -72,7 +73,7 @@ export function NotificationBadge() {
 
   const { data } = useQuery<NotificationsResponse>({
     queryKey: ['notifications'],
-    queryFn: () => fetch('/api/notifications').then(r => r.json()),
+    queryFn: () => getNotifications(),
     refetchInterval: 120_000, // every 2 min
   });
 
