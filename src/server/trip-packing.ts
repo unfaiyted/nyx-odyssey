@@ -4,12 +4,20 @@ import { db } from '../db';
 import { packingItems } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
 
+const PACKING_CATEGORIES = ['clothing', 'toiletries', 'electronics', 'documents', 'medications', 'accessories', 'snacks', 'general'] as const;
+const PRIORITIES = ['essential', 'high', 'normal', 'low'] as const;
+
 const createSchema = z.object({
   tripId: z.string().min(1),
   name: z.string().min(1),
-  category: z.enum(['clothing', 'toiletries', 'electronics', 'documents', 'general']).default('general'),
+  category: z.enum(PACKING_CATEGORIES).default('general'),
   quantity: z.number().default(1),
   packed: z.boolean().default(false),
+  priority: z.enum(PRIORITIES).default('normal'),
+  purchased: z.boolean().default(false),
+  purchaseUrl: z.string().nullable().optional(),
+  estimatedPrice: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
 });
 
 const updateSchema = createSchema.partial().extend({

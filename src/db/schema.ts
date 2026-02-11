@@ -125,9 +125,14 @@ export const packingItems = pgTable('packing_items', {
   id: text('id').primaryKey().$defaultFn(() => nanoid()),
   tripId: text('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
-  category: text('category').default('general'), // clothing, toiletries, electronics, documents, general
+  category: text('category').default('general'), // clothing, toiletries, electronics, documents, medications, accessories, snacks, general
   quantity: integer('quantity').default(1),
   packed: boolean('packed').default(false),
+  priority: text('priority').default('normal'), // essential, high, normal, low
+  purchased: boolean('purchased').default(false),
+  purchaseUrl: text('purchase_url'),
+  estimatedPrice: numeric('estimated_price', { precision: 8, scale: 2 }),
+  notes: text('notes'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
