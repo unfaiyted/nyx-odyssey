@@ -118,7 +118,7 @@ function TripDetailPage() {
           {activeTab === 'flights' && <FlightsTab tripId={tripId} items={trip.flights} />}
           {activeTab === 'rental-cars' && <RentalCarsTab tripId={tripId} items={trip.rentalCars || []} />}
           {activeTab === 'routes' && <RoutesTab tripId={tripId} routes={trip.routes || []} destinations={trip.destinations} />}
-          {activeTab === 'schedule' && <ScheduleTab cronJobs={trip.cronJobs || []} />}
+          {activeTab === 'schedule' && <ScheduleTab tripId={tripId} cronJobs={trip.cronJobs || []} />}
         </motion.div>
       </AnimatePresence>
     </div>
