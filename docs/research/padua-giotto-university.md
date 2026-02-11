@@ -52,28 +52,38 @@ The cycle narrates the History of Salvation: Stories of the Virgin and Christ al
 - **Phone:** +39 049 2010020 (Mon–Fri 9–19, Sat 9–18)
 - **Reservations for up to June 10, 2026** opened December 11, 2025
 
-### Booking Rules
-- **Same-day reservations are NOT possible** — book days/weeks ahead
-- **Visits are strictly timed** — groups of max 25 people, 15 minutes inside the chapel
-- **Arrive 45 minutes early** for groups; individual visitors should arrive 30 min early
-- **9:00 AM slot:** Collect tickets from 8:30 AM (not earlier)
-- **Climate-controlled airlock:** You spend 15 min in an acclimatization room first (watching an intro video), then 15 min in the chapel itself
+### Booking Rules (from official site, verified Feb 2026)
+- **Same-day reservations are NOT possible** — online reservations require at least 24 hours advance
+- **Credit card payment:** Can book up to the day before
+- **Bank transfer payment:** Must book at least 3 working days before (call the Call Center; excludes day of visit and day of reservation)
+- **No email bookings** — online or phone only
+- **Visits are strictly timed** — 15 minutes inside the chapel, automatic climate-lock doors
+- **Groups:** Arrive at ticket office 30 minutes before your slot
+- **Individual visitors:** Arrive 5 minutes before your slot time at the air-conditioned waiting room outside the Chapel
+- **9:00 AM slot:** Arrive at 8:45 (not earlier)
+- **Late arrivals will NOT be admitted** — you'd have to rebook and pay again
+- **Walk-ins:** Check same-day availability at the Eremitani Museum ticket office (8 Eremitani Square, ~100m from Chapel). Not guaranteed.
 
 ### Ticket Prices
-| Type | Price |
-|------|-------|
-| Full price | €15 + €1 presale fee |
-| Reduced | €11 + €1 presale fee |
-| Evening special (reduced) | Check website |
+| Type | Price | Who |
+|------|-------|-----|
+| Full price | €15 + €1 presale | Adults 18+ |
+| Reduced | €11 + €1 presale | EU 65+, groups 10+, FAI/ACI members, working Mondays (museums closed) |
+| School/Student | €6 + €1 presale | Ages 6–17, all students (incl. university), teachers |
+| Facilitation | €0 + €1 reservation | Under 5, disabled persons + companion |
+| Evening special | €7 + €1 presale | Padua residents/province only |
 
 **Ticket includes:** Eremitani Museum (archaeological + art collections) and Palazzo Zuckermann (applied arts) — except Mondays when museums are closed.
 
+**Payment methods:** Visa, Mastercard, V Pay, Maestro, American Express, Diners, Satispay. Tickets are **non-refundable**.
+
 ### Pro Tips
 - **Book as early as possible** — June slots sell out fast due to summer tourism
-- The website can be glitchy — if it doesn't work, **call the Contact Center** or book at the Padua Train Station Tourist Office
+- The website can be glitchy — if it doesn't work, **call the Contact Center** (+39 049 2010020, Mon–Fri 9–19, Sat 9–18) or book at the Padua Train Station Tourist Office
 - **Early morning slots (9:00–9:15)** are best: fewer crowds, better light
 - **No photos allowed** inside the chapel
 - The 15 minutes inside feel short but are intensely focused — worth every second
+- **Tickets are non-refundable** — be sure of your date before booking
 
 ---
 
@@ -267,3 +277,16 @@ The massive medieval hall that separates the two market piazzas. Built 1218, wit
 - **Tram Line 1** connects the station to the center and Prato della Valle
 - If you love frescoes, Padua has more 14th-century fresco cycles than anywhere else in the world (8 UNESCO-listed sites total)
 - The **Euganean Hills** (Colli Euganei) are just south of Padua — thermal spas, wine tasting, gentle hiking. Could extend a day trip.
+
+---
+
+## 🔗 Useful Links
+
+- **Scrovegni Chapel booking:** [cappelladegliscrovegni.vivaticket.it](https://cappelladegliscrovegni.vivaticket.it/?Language=ENG)
+- **Scrovegni Chapel info:** [cappelladegliscrovegni.it](https://www.cappelladegliscrovegni.it/index.php/en/)
+- **Botanical Garden:** [ortobotanicopd.it](https://www.ortobotanicopd.it/en/)
+- **University tours (Palazzo del Bo):** [unipd.it/en/guidedtours](https://www.unipd.it/en/guidedtours)
+- **Padova Card:** [padovacard.it](https://www.padovacard.it/)
+- **Train schedules:** [trenitalia.com](https://www.trenitalia.com/en.html)
+- **Padova tourism:** [turismopadova.it](https://www.turismopadova.it/en/)
+- **UNESCO Urbs Picta:** [urbs-picta.org](https://www.urbs-picta.org/en/)
