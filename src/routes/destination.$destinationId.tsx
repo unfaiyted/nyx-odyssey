@@ -696,6 +696,7 @@ function DestinationDetailPage() {
           endDate={tripEndDate}
           open={!!itineraryHighlight}
           onClose={() => setItineraryHighlight(null)}
+          destinationPhotoUrl={destination.photoUrl}
         />
       )}
     </div>
