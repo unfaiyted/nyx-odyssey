@@ -12,6 +12,7 @@ interface Highlight {
   category: string;
   duration: string | null;
   address: string | null;
+  imageUrl: string | null;
 }
 
 interface Props {
@@ -21,6 +22,7 @@ interface Props {
   endDate?: string | null;
   open: boolean;
   onClose: () => void;
+  destinationPhotoUrl?: string | null;
 }
 
 const TIME_SLOTS = [
@@ -68,7 +70,7 @@ function parseDurationToMinutes(dur: string | null): number | undefined {
   return undefined;
 }
 
-export function AddToItineraryModal({ highlight, tripId, startDate, endDate, open, onClose }: Props) {
+export function AddToItineraryModal({ highlight, tripId, startDate, endDate, open, onClose, destinationPhotoUrl }: Props) {
   const queryClient = useQueryClient();
   const [date, setDate] = useState('');
   const [timeSlot, setTimeSlot] = useState('09:00');
@@ -113,6 +115,9 @@ export function AddToItineraryModal({ highlight, tripId, startDate, endDate, ope
     }
   }, [travelData?.suggestedDuration]);
 
+  // Get image source - highlight image first, then destination photo as fallback
+  const heroImageUrl = highlight.imageUrl || destinationPhotoUrl;
+
   const addMutation = useMutation({
     mutationFn: () => addHighlightToItinerary({
       data: {
@@ -152,33 +157,66 @@ export function AddToItineraryModal({ highlight, tripId, startDate, endDate, ope
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
         onClick={onClose}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ type: 'spring', duration: 0.4, bounce: 0.15 }}
           onClick={e => e.stopPropagation()}
-          className="w-full max-w-lg glass-card p-6 space-y-5 max-h-[90vh] overflow-y-auto"
+          className="relative w-full max-w-lg max-h-[80vh] overflow-hidden rounded-2xl bg-[#0a0a0f] border border-[#2a2a3a] shadow-2xl flex flex-col"
         >
-          {/* Header */}
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-lg font-semibold">Add to Itinerary</h3>
-              <p className="text-sm text-ody-text-muted mt-0.5">{highlight.title}</p>
-              {highlight.address && (
-                <p className="text-xs text-ody-text-dim mt-1 flex items-center gap-1">
-                  <MapPin size={10} /> {highlight.address}
-                </p>
-              )}
-            </div>
-            <button onClick={onClose} className="p-1 hover:bg-ody-surface-hover rounded-lg transition-colors">
-              <X size={18} className="text-ody-text-dim" />
+          {/* Hero Image Section */}
+          <div className="relative shrink-0">
+            {heroImageUrl ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+                className="relative h-48 overflow-hidden"
+              >
+                <img
+                  src={heroImageUrl}
+                  alt={highlight.title}
+                  className="w-full h-full object-cover"
+                />
+                {/* Gradient fade from transparent at top to solid bg color at bottom */}
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0a0f]" />
+              </motion.div>
+            ) : (
+              <div className="h-24 bg-gradient-to-b from-[#13131a] to-[#0a0a0f]" />
+            )}
+
+            {/* Close button - positioned over image */}
+            <button
+              onClick={onClose}
+              className="absolute top-3 right-3 p-2 rounded-full bg-black/50 backdrop-blur-sm hover:bg-black/70 transition-colors z-10"
+            >
+              <X size={18} className="text-white" />
             </button>
+
+            {/* Title overlay - positioned at bottom of hero area */}
+            <div className={`absolute left-0 right-0 px-6 ${heroImageUrl ? 'bottom-4' : 'bottom-0 pt-4'}`}>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, duration: 0.3 }}
+              >
+                <h3 className="text-xl font-bold text-white drop-shadow-lg">{highlight.title}</h3>
+                {highlight.address && (
+                  <p className="text-sm text-white/70 mt-1 flex items-center gap-1 drop-shadow-md">
+                    <MapPin size={12} /> {highlight.address}
+                  </p>
+                )}
+              </motion.div>
+            </div>
           </div>
 
-          {success ? (
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-5">
+            {success ? (
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -370,7 +408,7 @@ export function AddToItineraryModal({ highlight, tripId, startDate, endDate, ope
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2 pt-2 pb-2">
                 <button
                   onClick={() => addMutation.mutate()}
                   disabled={!date || !startTime || addMutation.isPending}
@@ -391,6 +429,7 @@ export function AddToItineraryModal({ highlight, tripId, startDate, endDate, ope
               </div>
             </>
           )}
+          </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>
