@@ -15,13 +15,20 @@ export interface Trip {
 export interface ItineraryItem {
   id: string;
   tripId: string;
+  destinationHighlightId: string | null;
   title: string;
   description: string | null;
   date: string;
   startTime: string | null;
   endTime: string | null;
   location: string | null;
+  lat: number | null;
+  lng: number | null;
   category: string;
+  travelTimeMinutes: number | null;
+  travelMode: string | null;
+  travelFromLocation: string | null;
+  notes: string | null;
   orderIndex: number;
   completed: boolean;
   createdAt: string;

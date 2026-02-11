@@ -8,8 +8,9 @@ import {
   Shield, Utensils, Camera, Clock, Star, ExternalLink,
   Sun, CloudRain, Info, Lightbulb, Plane, Languages,
   Mountain, Users, ChevronDown, ChevronUp, Navigation,
-  Hotel, ShoppingBag, TreePine, Music, Landmark, Eye
+  Hotel, ShoppingBag, TreePine, Music, Landmark, Eye, CalendarPlus
 } from 'lucide-react';
+import { AddToItineraryModal } from '../components/destination/AddToItineraryModal';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, Legend, Area, AreaChart } from 'recharts';
 
 export const Route = createFileRoute('/destination/$destinationId')({
@@ -75,11 +76,17 @@ function DestinationDetailPage() {
   const { destinationId } = Route.useParams();
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [activeHighlightCategory, setActiveHighlightCategory] = useState<string | null>(null);
+  const [itineraryHighlight, setItineraryHighlight] = useState<any>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['destination-detail', destinationId],
     queryFn: () => getDestinationDetail({ data: { destinationId } }),
   });
+
+  // We need trip dates for the itinerary modal - derive from destination
+  const tripId = data?.destination?.tripId;
+  const tripStartDate = data?.destination?.arrivalDate;
+  const tripEndDate = data?.destination?.departureDate;
 
   if (isLoading) {
     return (
@@ -433,16 +440,24 @@ function DestinationDetailPage() {
                           </span>
                         )}
                       </div>
-                      {h.websiteUrl && (
-                        <a
-                          href={h.websiteUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-ody-accent hover:underline mt-1"
+                      <div className="flex items-center gap-2 mt-2">
+                        {h.websiteUrl && (
+                          <a
+                            href={h.websiteUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-ody-accent hover:underline"
+                          >
+                            <ExternalLink size={12} /> Website
+                          </a>
+                        )}
+                        <button
+                          onClick={() => setItineraryHighlight(h)}
+                          className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-ody-accent/10 text-ody-accent hover:bg-ody-accent/20 transition-colors ml-auto"
                         >
-                          <ExternalLink size={12} /> Website
-                        </a>
-                      )}
+                          <CalendarPlus size={12} /> Add to Itinerary
+                        </button>
+                      </div>
                     </div>
                   </motion.div>
                 );
@@ -567,6 +582,18 @@ function DestinationDetailPage() {
             <ExternalLink size={14} />
           </a>
         </motion.div>
+      )}
+
+      {/* Add to Itinerary Modal */}
+      {itineraryHighlight && tripId && (
+        <AddToItineraryModal
+          highlight={itineraryHighlight}
+          tripId={tripId}
+          startDate={tripStartDate}
+          endDate={tripEndDate}
+          open={!!itineraryHighlight}
+          onClose={() => setItineraryHighlight(null)}
+        />
       )}
     </div>
   );

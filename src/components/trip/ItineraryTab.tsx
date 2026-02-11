@@ -26,6 +26,7 @@ const categoryConfig: Record<string, { icon: string; color: string; bgColor: str
   meal: { icon: '🍽️', color: 'text-green-400', bgColor: 'bg-green-400/10 border-green-400/30' },
   sightseeing: { icon: '📸', color: 'text-purple-400', bgColor: 'bg-purple-400/10 border-purple-400/30' },
   rest: { icon: '😴', color: 'text-indigo-400', bgColor: 'bg-indigo-400/10 border-indigo-400/30' },
+  travel: { icon: '🧭', color: 'text-cyan-400', bgColor: 'bg-cyan-400/10 border-cyan-400/30' },
 };
 
 const categoryOptions = [
@@ -141,7 +142,7 @@ function TimelineItemCard({
         {item.description && (
           <p className="text-xs text-ody-text-muted mt-0.5 line-clamp-2">{item.description}</p>
         )}
-        <div className="flex items-center gap-3 mt-1.5 text-[11px] text-ody-text-dim">
+        <div className="flex items-center gap-3 mt-1.5 text-[11px] text-ody-text-dim flex-wrap">
           {item.startTime && (
             <span className="flex items-center gap-1">
               <Clock size={10} />
@@ -152,6 +153,16 @@ function TimelineItemCard({
             <span className="flex items-center gap-1">
               <MapPin size={10} />{item.location}
             </span>
+          )}
+          {item.travelTimeMinutes && item.travelMode && (
+            <span className="flex items-center gap-1 text-blue-400">
+              <Navigation size={10} />
+              {item.travelTimeMinutes}min by {item.travelMode}
+              {item.travelFromLocation && ` from ${item.travelFromLocation}`}
+            </span>
+          )}
+          {item.notes && (
+            <span className="text-ody-text-dim italic">📝 {item.notes}</span>
           )}
         </div>
       </div>
