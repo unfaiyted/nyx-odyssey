@@ -252,6 +252,8 @@ export const destinationHighlights = pgTable('destination_highlights', {
   address: text('address'),
   websiteUrl: text('website_url'),
   duration: text('duration'), // e.g. "2-3 hours"
+  lat: doublePrecision('lat'),
+  lng: doublePrecision('lng'),
   orderIndex: integer('order_index').notNull().default(0),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
@@ -265,6 +267,24 @@ export const destinationWeatherMonthly = pgTable('destination_weather_monthly', 
   rainyDays: integer('rainy_days'),
   sunshineHours: doublePrecision('sunshine_hours'),
 });
+
+// ── Destination Route Cache (from Vicenza) ─────────────
+export const destinationRouteCache = pgTable('destination_route_cache', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  destinationId: text('destination_id').notNull().references(() => tripDestinations.id, { onDelete: 'cascade' }),
+  originLat: doublePrecision('origin_lat').notNull(),
+  originLng: doublePrecision('origin_lng').notNull(),
+  destLat: doublePrecision('dest_lat').notNull(),
+  destLng: doublePrecision('dest_lng').notNull(),
+  distanceKm: doublePrecision('distance_km'),
+  durationMinutes: integer('duration_minutes'),
+  polyline: text('polyline'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const destinationRouteCacheRelations = relations(destinationRouteCache, ({ one }) => ({
+  destination: one(tripDestinations, { fields: [destinationRouteCache.destinationId], references: [tripDestinations.id] }),
+}));
 
 // Research relations
 export const destinationResearchRelations = relations(destinationResearch, ({ one }) => ({
