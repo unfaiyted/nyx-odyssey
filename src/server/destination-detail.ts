@@ -1,8 +1,8 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { db } from '../db';
-import { tripDestinations, destinationResearch, destinationHighlights, destinationWeatherMonthly, accommodations } from '../db/schema';
-import { eq, and, asc } from 'drizzle-orm';
+import { tripDestinations, destinationResearch, destinationHighlights, destinationWeatherMonthly, accommodations, destinationNotes } from '../db/schema';
+import { eq, and, asc, desc } from 'drizzle-orm';
 
 export const getDestinationDetail = createServerFn({ method: 'GET' })
   .inputValidator(z.object({ destinationId: z.string().min(1) }))
@@ -19,6 +19,9 @@ export const getDestinationDetail = createServerFn({ method: 'GET' })
       .orderBy(asc(destinationWeatherMonthly.month));
     const destAccommodations = await db.select().from(accommodations)
       .where(eq(accommodations.destinationId, destinationId));
+    const notes = await db.select().from(destinationNotes)
+      .where(eq(destinationNotes.destinationId, destinationId))
+      .orderBy(desc(destinationNotes.createdAt));
 
     return {
       destination: dest,
@@ -26,6 +29,7 @@ export const getDestinationDetail = createServerFn({ method: 'GET' })
       highlights,
       weather,
       accommodations: destAccommodations,
+      notes,
     };
   });
 
@@ -99,5 +103,41 @@ export const deleteDestinationHighlight = createServerFn({ method: 'POST' })
   .inputValidator(z.object({ id: z.string().min(1) }))
   .handler(async ({ data: { id } }) => {
     await db.delete(destinationHighlights).where(eq(destinationHighlights.id, id));
+    return { ok: true };
+  });
+
+// ── Destination Notes ──────────────────────────────────
+
+export const addDestinationNote = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    destinationId: z.string().min(1),
+    content: z.string().min(1),
+    author: z.string().default('user'),
+  }))
+  .handler(async ({ data }) => {
+    const [note] = await db.insert(destinationNotes).values(data).returning();
+    await db.update(tripDestinations)
+      .set({ lastResearchedAt: new Date() })
+      .where(eq(tripDestinations.id, data.destinationId));
+    return note;
+  });
+
+export const updateDestinationNote = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    id: z.string().min(1),
+    content: z.string().min(1),
+  }))
+  .handler(async ({ data: { id, content } }) => {
+    const [updated] = await db.update(destinationNotes)
+      .set({ content, updatedAt: new Date() })
+      .where(eq(destinationNotes.id, id))
+      .returning();
+    return updated;
+  });
+
+export const deleteDestinationNote = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ id: z.string().min(1) }))
+  .handler(async ({ data: { id } }) => {
+    await db.delete(destinationNotes).where(eq(destinationNotes.id, id));
     return { ok: true };
   });

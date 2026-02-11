@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Check, Clock, MapPin, Trash2, GripVertical,
   CalendarDays, CalendarRange, ChevronDown, ChevronRight,
-  Navigation, Filter,
+  Navigation, Filter, Eye,
 } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
 import type { ItineraryItem, TripDestination } from '../../types/trips';
 
 interface Props {

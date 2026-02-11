@@ -67,7 +67,8 @@ export const tripDestinations = pgTable('trip_destinations', {
   departureDate: text('departure_date'),
   photoUrl: text('photo_url'),
   status: text('status').default('researched'), // researched, booked, visited
-  researchStatus: text('research_status').default('pending'), // pending, researched, approved, booked
+  researchStatus: text('research_status').default('not_started'), // not_started, basic, fully_researched, booked
+  lastResearchedAt: timestamp('last_researched_at'),
   orderIndex: integer('order_index').notNull().default(0),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
@@ -201,6 +202,20 @@ export const tripCronJobs = pgTable('trip_cron_jobs', {
   nextRun: timestamp('next_run'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+// ── Destination Notes (mini-journal) ───────────────────
+export const destinationNotes = pgTable('destination_notes', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  destinationId: text('destination_id').notNull().references(() => tripDestinations.id, { onDelete: 'cascade' }),
+  content: text('content').notNull(),
+  author: text('author').default('user'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const destinationNotesRelations = relations(destinationNotes, ({ one }) => ({
+  destination: one(tripDestinations, { fields: [destinationNotes.destinationId], references: [tripDestinations.id] }),
+}));
 
 // ── Destination Research ───────────────────────────────
 export const destinationResearch = pgTable('destination_research', {

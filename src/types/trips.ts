@@ -39,11 +39,21 @@ export interface TripDestination {
   photoUrl: string | null;
   status: string;
   researchStatus: string;
+  lastResearchedAt: string | null;
   orderIndex: number;
   createdAt: string;
 }
 
-export type ResearchStatus = 'pending' | 'researched' | 'approved' | 'booked';
+export type ResearchStatus = 'not_started' | 'basic' | 'fully_researched' | 'booked';
+
+export interface DestinationNote {
+  id: string;
+  destinationId: string;
+  content: string;
+  author: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface Accommodation {
   id: string;
@@ -199,4 +209,4 @@ export interface BudgetCategory {
   createdAt: string;
 }
 
-export type TripTab = 'itinerary' | 'destinations' | 'research' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'rental-cars' | 'routes' | 'schedule';
+export type TripTab = 'itinerary' | 'destinations' | 'research' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'rental-cars' | 'routes' | 'schedule' | 'compare';

@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import type { BudgetItem, BudgetCategory } from '../../types/trips';
 import { DailyBudgetSpreadsheet } from './DailyBudgetSpreadsheet';
+import { StaggeredCharts, StaggeredChartItem } from '../AnimatedChart';
 
 interface Props {
   tripId: string;
@@ -368,9 +369,9 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
 
       {/* ── Charts ── */}
       {items.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <StaggeredCharts className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Pie: spending distribution */}
-          <div className="glass-card p-4">
+          <StaggeredChartItem className="glass-card p-4">
             <h4 className="text-sm font-semibold mb-3 text-ody-text-muted">Spending Distribution</h4>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>

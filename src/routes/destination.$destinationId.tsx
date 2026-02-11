@@ -139,6 +139,20 @@ function DestinationDetailPage() {
           </Link>
         </div>
 
+        <div className="absolute top-4 right-4">
+          <button
+            onClick={handleResearch}
+            disabled={researching}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-ody-accent/90 backdrop-blur-sm text-white text-sm font-medium hover:bg-ody-accent disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-lg"
+          >
+            {researching ? (
+              <><Loader2 size={16} className="animate-spin" /> Researching...</>
+            ) : (
+              <><Search size={16} /> 🔍 Research</>
+            )}
+          </button>
+        </div>
+
         <div className="absolute bottom-6 left-6 right-6">
           <div className="flex items-end justify-between">
             <div>
@@ -567,6 +581,16 @@ function DestinationDetailPage() {
             <ExternalLink size={14} />
           </a>
         </motion.div>
+      )}
+
+      {/* Research Preview Modal */}
+      {researchPreview && (
+        <ResearchModal
+          preview={researchPreview}
+          onSave={handleSaveResearch}
+          onClose={() => setResearchPreview(null)}
+          saving={saving}
+        />
       )}
     </div>
   );

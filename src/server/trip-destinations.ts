@@ -14,7 +14,7 @@ const createSchema = z.object({
   departureDate: z.string().optional(),
   photoUrl: z.string().optional(),
   status: z.enum(['researched', 'booked', 'visited']).default('researched'),
-  researchStatus: z.enum(['pending', 'researched', 'approved', 'booked']).default('pending'),
+  researchStatus: z.enum(['not_started', 'basic', 'fully_researched', 'booked']).default('not_started'),
   orderIndex: z.number().default(0),
 });
 
