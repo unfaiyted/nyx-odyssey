@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getTrip } from '../server/fns/trips';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car, CarFront, ClipboardList, Clock } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car, CarFront, ClipboardList, Clock, Sparkles } from 'lucide-react';
 import type { TripDetail, TripTab } from '../types/trips';
 import { ItineraryTab } from '../components/trip/ItineraryTab';
 import { DestinationsTab } from '../components/trip/DestinationsTab';
@@ -13,6 +13,7 @@ import { PackingTab } from '../components/trip/PackingTab';
 import { RoutesTab } from '../components/trip/RoutesTab';
 import { FlightsTab } from '../components/trip/FlightsTab';
 import { ResearchBoard } from '../components/trip/ResearchBoard';
+import { RecommendationsTab } from '../components/trip/RecommendationsTab';
 import { RentalCarsTab } from '../components/trip/RentalCarsTab';
 import { ScheduleTab } from '../components/trip/ScheduleTab';
 
@@ -24,6 +25,7 @@ const tabs: { id: TripTab; label: string; icon: typeof Calendar }[] = [
   { id: 'itinerary', label: 'Itinerary', icon: Calendar },
   { id: 'destinations', label: 'Destinations', icon: MapPin },
   { id: 'research', label: 'Research Board', icon: ClipboardList },
+  { id: 'recommendations', label: 'Recommendations', icon: Sparkles },
   { id: 'accommodations', label: 'Accommodations', icon: Hotel },
   { id: 'budget', label: 'Budget', icon: DollarSign },
   { id: 'packing', label: 'Packing List', icon: Luggage },
@@ -112,6 +114,7 @@ function TripDetailPage() {
           {activeTab === 'itinerary' && <ItineraryTab tripId={tripId} items={trip.itineraryItems} startDate={trip.startDate} endDate={trip.endDate} destinations={trip.destinations} />}
           {activeTab === 'destinations' && <DestinationsTab tripId={tripId} items={trip.destinations} />}
           {activeTab === 'research' && <ResearchBoard tripId={tripId} items={trip.destinations} />}
+          {activeTab === 'recommendations' && <RecommendationsTab tripId={tripId} items={trip.recommendations || []} destinations={trip.destinations} homeBaseLat={trip.destinations[0]?.lat ?? null} homeBaseLng={trip.destinations[0]?.lng ?? null} />}
           {activeTab === 'accommodations' && <AccommodationsTab tripId={tripId} items={trip.accommodations} destinations={trip.destinations} />}
           {activeTab === 'budget' && <BudgetTab tripId={tripId} items={trip.budgetItems} budgetCategories={trip.budgetCategories || []} totalBudget={trip.totalBudget} currency={trip.currency} startDate={trip.startDate} endDate={trip.endDate} />}
           {activeTab === 'packing' && <PackingTab tripId={tripId} items={trip.packingItems} />}
