@@ -334,3 +334,80 @@ Skip Doge's Palace, walk everywhere (no vaporetto), eat cicchetti:
 9. **Free church art:** Many churches have incredible art. Santa Maria Gloriosa dei Frari and San Zaccaria have masterpieces rivaling any museum.
 
 10. **The best time in Venice is 7-9 PM.** Day trippers have left, cruise ships have departed, golden light hits the canals. This is when Venice becomes Venice.
+
+---
+
+## 🗓️ Venice Access Fee — 2025/2026 Peak Dates
+
+The Contributo di Accesso applies on specific high-traffic dates (mostly weekends and holidays April–July). Always check the official calendar before your trip at [cda.veneziaunica.it](https://cda.veneziaunica.it). The fee is enforced via QR code checks at entry points. Fines for non-compliance: €50-300.
+
+**Strategy:** If visiting on a fee day, book 4+ days ahead for the €5 rate. Or simply visit on a weekday to avoid it entirely.
+
+---
+
+## 🎭 Hidden Gems & Lesser-Known Experiences
+
+### Libreria Acqua Alta
+- A bookshop where books are stored in gondolas, bathtubs, and waterproof bins (because flooding). Cats everywhere. Staircase made of old encyclopedias. Instagram-famous but still charming.
+- **Location:** Castello, near Campo Santa Maria Formosa
+- **Cost:** Free to browse
+
+### Scala Contarini del Bovolo
+- Hidden Renaissance spiral staircase with rooftop views. Most tourists never find it.
+- **Location:** Near Campo Manin, San Marco
+- **Cost:** €8
+- **Tip:** Follow the small signs from Campo Manin — it's tucked in an alley
+
+### Traghetto Rides
+- For €2, ride a gondola across the Grand Canal standing up like a local. Seven traghetto crossings exist. The one near Ca' d'Oro → Rialto Market is the most scenic.
+
+### Squero di San Trovaso
+- One of the last working gondola boatyards. You can watch craftsmen from across the canal (best viewed from Osteria Al Squero with a spritz in hand).
+
+### Giudecca Island
+- Just across from Dorsoduro (Vaporetto Line 2). Almost zero tourists. Visit the Molino Stucky (now a Hilton, but the rooftop bar has incredible views). Walk the Fondamenta to Chiesa del Redentore (Palladio).
+
+### Early Morning Fish Market
+- Rialto's Pescheria at 7:30 AM is a sensory explosion — fishmongers unloading the catch, locals haggling, no tourists. Pair with coffee at a nearby bacaro.
+
+---
+
+## 🧭 Navigation Cheat Sheet
+
+### Key Vaporetto Stops
+| Stop | Near | Lines |
+|------|------|-------|
+| **Ferrovia** | Santa Lucia train station | 1, 2, 3, 4.1, 4.2, 5.1, 5.2 |
+| **Rialto** | Rialto Bridge | 1, 2 |
+| **San Marco** (Vallaresso/San Zaccaria) | St. Mark's Square | 1, 2, 5.1, 5.2 |
+| **Accademia** | Accademia Bridge, Dorsoduro | 1, 2 |
+| **Fondamente Nove** | Northern Venice, boats to islands | 4.1, 4.2, 12, 13 |
+| **Murano Colonna** | Main Murano stop | 3, 4.1, 4.2, 12 |
+| **Burano** | Burano island | 12 |
+
+### Walking Distances (Approximate)
+- Station → Rialto: 20-25 min
+- Rialto → St. Mark's: 15-20 min
+- St. Mark's → Accademia: 15 min
+- Station → St. Mark's (direct): 35-40 min
+- Anywhere to anywhere: Max ~45 min on foot
+
+### Yellow Direction Signs
+Venice has yellow signs at major intersections pointing to:
+- **Per Rialto** → Rialto Bridge
+- **Per San Marco** → St. Mark's Square
+- **Per Ferrovia** → Train Station
+- **Per Piazzale Roma** → Bus Terminal
+- Follow these when lost — they always work.
+
+---
+
+## 📸 Best Photo Spots
+
+1. **Ponte dell'Accademia** — Classic Grand Canal + Santa Maria della Salute (sunrise or sunset)
+2. **San Giorgio Maggiore bell tower** — Best panoramic of Venice skyline
+3. **Burano** — Every alley is a photo. Best light: morning
+4. **Rialto Bridge** — Shoot FROM the bridge at golden hour, or from the water
+5. **Ponte dei Sospiri (Bridge of Sighs)** — Best from Ponte della Paglia nearby
+6. **Libreria Acqua Alta** — The book staircase
+7. **Fondamenta della Misericordia at night** — Moody canal reflections, almost no tourists
