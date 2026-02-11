@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Trash2, Navigation, CheckCircle, Bookmark, Search, Camera, ExternalLink, Eye } from 'lucide-react';
-import { Link } from '@tanstack/react-router';
+import { MapPin, Trash2, Navigation, CheckCircle, Bookmark, Search, Camera, ExternalLink } from 'lucide-react';
+import { Link, useNavigate } from '@tanstack/react-router';
 import type { TripDestination } from '../../types/trips';
 
 interface Props {
@@ -46,6 +46,7 @@ const PLACEHOLDER_PHOTOS = [
 ];
 
 export function DestinationCard({ destination, index, baseLat, baseLng, onDelete, onStatusChange, onPhotoChange }: Props) {
+  const navigate = useNavigate();
   const [showPhotoEdit, setShowPhotoEdit] = useState(false);
   const [photoInput, setPhotoInput] = useState('');
   const status = destination.status || 'researched';
@@ -66,7 +67,8 @@ export function DestinationCard({ destination, index, baseLat, baseLng, onDelete
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.08, type: 'spring', stiffness: 300, damping: 30 }}
-      className="group relative overflow-hidden rounded-xl border border-ody-border bg-ody-surface hover:border-ody-accent/40 transition-all duration-300"
+      className="group relative overflow-hidden rounded-xl border border-ody-border bg-ody-surface hover:border-ody-accent/40 transition-all duration-300 cursor-pointer"
+      onClick={() => navigate({ to: '/destination/$destinationId', params: { destinationId: destination.id } })}
     >
       {/* Photo section */}
       <div className="relative h-44 overflow-hidden">
@@ -92,7 +94,7 @@ export function DestinationCard({ destination, index, baseLat, baseLng, onDelete
         {/* Photo edit button */}
         {onPhotoChange && (
           <button
-            onClick={() => { setPhotoInput(destination.photoUrl || ''); setShowPhotoEdit(true); }}
+            onClick={(e) => { e.stopPropagation(); setPhotoInput(destination.photoUrl || ''); setShowPhotoEdit(true); }}
             className="absolute top-3 right-12 w-7 h-7 rounded-full bg-black/50 text-white/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:text-white"
             title="Change photo"
           >
@@ -100,25 +102,11 @@ export function DestinationCard({ destination, index, baseLat, baseLng, onDelete
           </button>
         )}
 
-        {/* Detail link */}
-        <Link
-          to="/destination/$destinationId"
-          params={{ destinationId: destination.id }}
-          className="absolute top-3 right-20 w-7 h-7 rounded-full bg-black/50 text-white/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:text-white"
-          title="View details"
-        >
-          <Eye size={12} />
-        </Link>
-
         {/* Name overlay */}
         <div className="absolute bottom-3 left-3 right-3">
-          <Link
-            to="/destination/$destinationId"
-            params={{ destinationId: destination.id }}
-            className="font-semibold text-white text-lg leading-tight drop-shadow-lg hover:text-ody-accent transition-colors"
-          >
+          <span className="font-semibold text-white text-lg leading-tight drop-shadow-lg">
             {destination.name}
-          </Link>
+          </span>
         </div>
       </div>
 
@@ -129,7 +117,7 @@ export function DestinationCard({ destination, index, baseLat, baseLng, onDelete
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="px-4 pt-3 overflow-hidden"
+            className="px-4 pt-3 overflow-hidden" onClick={(e) => e.stopPropagation()}
           >
             <div className="flex gap-2">
               <input
@@ -174,6 +162,7 @@ export function DestinationCard({ destination, index, baseLat, baseLng, onDelete
                 href={`https://www.google.com/maps/search/?api=1&query=${destination.lat},${destination.lng}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
                 className="flex items-center gap-1 hover:text-ody-accent transition-colors"
                 title="Open in Google Maps"
               >
@@ -192,7 +181,7 @@ export function DestinationCard({ destination, index, baseLat, baseLng, onDelete
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-between pt-2 border-t border-ody-border-subtle">
+        <div className="flex items-center justify-between pt-2 border-t border-ody-border-subtle" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center gap-1">
             {statusOptions.map((s) => {
               const c = STATUS_CONFIG[s];
