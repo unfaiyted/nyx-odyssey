@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useSearch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getDestinationDetail, calculateTransportFromHome } from '../server/destination-detail';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,13 +10,20 @@ import {
   Mountain, Users, ChevronDown, ChevronUp, Navigation,
   Hotel, ShoppingBag, TreePine, Music, Landmark, Eye, CalendarPlus
 } from 'lucide-react';
+import { z } from 'zod';
 import { AddToItineraryModal } from '../components/destination/AddToItineraryModal';
 import { TransportMap } from '../components/destination/TransportMap';
 import { TransportModeCards } from '../components/destination/TransportModeCards';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, Legend, Area, AreaChart } from 'recharts';
 
+// Search params schema for fromTab
+const searchSchema = z.object({
+  fromTab: z.string().optional().catch(undefined),
+});
+
 export const Route = createFileRoute('/destination/$destinationId')({
   component: DestinationDetailPage,
+  validateSearch: searchSchema,
 });
 
 const HIGHLIGHT_CATEGORIES: Record<string, { label: string; icon: typeof Camera; color: string }> = {
@@ -30,6 +37,20 @@ const HIGHLIGHT_CATEGORIES: Record<string, { label: string; icon: typeof Camera;
 };
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// Map tab IDs to display names
+const TAB_NAMES: Record<string, string> = {
+  itinerary: 'Itinerary',
+  destinations: 'Destinations',
+  research: 'Research Board',
+  accommodations: 'Accommodations',
+  budget: 'Budget',
+  packing: 'Packing List',
+  flights: 'Flights',
+  'rental-cars': 'Rental Cars',
+  routes: 'Driving Routes',
+  schedule: 'Schedule',
+};
 
 function SafetyStars({ rating }: { rating: number }) {
   return (
@@ -76,6 +97,7 @@ function StatCard({ icon: Icon, label, value, sublabel, className = '' }: {
 
 function DestinationDetailPage() {
   const { destinationId } = Route.useParams();
+  const search = useSearch({ from: Route.fullPath });
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [activeHighlightCategory, setActiveHighlightCategory] = useState<string | null>(null);
   const [itineraryHighlight, setItineraryHighlight] = useState<any>(null);
@@ -110,6 +132,10 @@ function DestinationDetailPage() {
   const tripId = data?.destination?.tripId;
   const tripStartDate = data?.destination?.arrivalDate;
   const tripEndDate = data?.destination?.departureDate;
+
+  // Get the tab we came from (default to 'destinations' if not specified)
+  const fromTab = search.fromTab || 'destinations';
+  const backTabName = TAB_NAMES[fromTab] || 'Destinations';
 
   if (isLoading) {
     return (
@@ -163,9 +189,10 @@ function DestinationDetailPage() {
           <Link
             to="/trips/$tripId"
             params={{ tripId: destination.tripId }}
+            search={{ tab: fromTab }}
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/40 backdrop-blur-sm text-white/90 text-sm hover:bg-black/60 transition-colors"
           >
-            <ArrowLeft size={16} /> Back to Trip
+            <ArrowLeft size={16} /> Back to {backTabName}
           </Link>
         </div>
 

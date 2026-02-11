@@ -1,9 +1,9 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getTrip } from '../server/fns/trips';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
 import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car, CarFront, ClipboardList, Clock } from 'lucide-react';
+import { z } from 'zod';
 import type { TripDetail, TripTab } from '../types/trips';
 import { ItineraryTab } from '../components/trip/ItineraryTab';
 import { DestinationsTab } from '../components/trip/DestinationsTab';
@@ -16,8 +16,20 @@ import { ResearchBoard } from '../components/trip/ResearchBoard';
 import { RentalCarsTab } from '../components/trip/RentalCarsTab';
 import { ScheduleTab } from '../components/trip/ScheduleTab';
 
+// Define valid tabs
+const validTabs: TripTab[] = [
+  'itinerary', 'destinations', 'research', 'accommodations', 'budget', 
+  'packing', 'flights', 'rental-cars', 'routes', 'schedule'
+];
+
+// Search params schema with tab validation
+const searchSchema = z.object({
+  tab: z.enum(validTabs as [string, ...string[]]).optional().catch('itinerary'),
+});
+
 export const Route = createFileRoute('/trips/$tripId')({
   component: TripDetailPage,
+  validateSearch: searchSchema,
 });
 
 const tabs: { id: TripTab; label: string; icon: typeof Calendar }[] = [
@@ -35,12 +47,24 @@ const tabs: { id: TripTab; label: string; icon: typeof Calendar }[] = [
 
 function TripDetailPage() {
   const { tripId } = Route.useParams();
-  const [activeTab, setActiveTab] = useState<TripTab>('itinerary');
+  const navigate = useNavigate({ from: Route.fullPath });
+  const search = useSearch({ from: Route.fullPath });
+  
+  // Get active tab from URL or default to 'itinerary'
+  const activeTab = search.tab || 'itinerary';
 
   const { data: trip, isLoading } = useQuery<TripDetail>({
     queryKey: ['trip', tripId],
     queryFn: () => getTrip({ data: { tripId } }),
   });
+
+  // Handle tab change - updates URL with replaceState
+  const handleTabChange = (tabId: TripTab) => {
+    navigate({
+      search: (prev) => ({ ...prev, tab: tabId }),
+      replace: true, // Use replaceState so back button doesn't cycle through tabs
+    });
+  };
 
   if (isLoading) return <div className="text-center py-12 text-ody-text-muted">Loading trip...</div>;
   if (!trip) return <div className="text-center py-12 text-ody-text-muted">Trip not found</div>;
@@ -89,7 +113,7 @@ function TripDetailPage() {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              <button key={tab.id} onClick={() => handleTabChange(tab.id)}
                 className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap
                   ${isActive ? 'text-ody-accent' : 'text-ody-text-muted hover:text-ody-text'}`}>
                 <Icon size={16} />
@@ -110,8 +134,8 @@ function TripDetailPage() {
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}>
           {activeTab === 'itinerary' && <ItineraryTab tripId={tripId} items={trip.itineraryItems} startDate={trip.startDate} endDate={trip.endDate} destinations={trip.destinations} />}
-          {activeTab === 'destinations' && <DestinationsTab tripId={tripId} items={trip.destinations} />}
-          {activeTab === 'research' && <ResearchBoard tripId={tripId} items={trip.destinations} />}
+          {activeTab === 'destinations' && <DestinationsTab tripId={tripId} items={trip.destinations} activeTab={activeTab} />}
+          {activeTab === 'research' && <ResearchBoard tripId={tripId} items={trip.destinations} activeTab={activeTab} />}
           {activeTab === 'accommodations' && <AccommodationsTab tripId={tripId} items={trip.accommodations} destinations={trip.destinations} />}
           {activeTab === 'budget' && <BudgetTab tripId={tripId} items={trip.budgetItems} budgetCategories={trip.budgetCategories || []} totalBudget={trip.totalBudget} currency={trip.currency} startDate={trip.startDate} endDate={trip.endDate} />}
           {activeTab === 'packing' && <PackingTab tripId={tripId} items={trip.packingItems} />}

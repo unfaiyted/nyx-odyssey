@@ -9,9 +9,10 @@ import { DestinationCard } from './DestinationCard';
 interface Props {
   tripId: string;
   items: TripDestination[];
+  activeTab?: string;
 }
 
-export function DestinationsTab({ tripId, items }: Props) {
+export function DestinationsTab({ tripId, items, activeTab = 'destinations' }: Props) {
   const queryClient = useQueryClient();
   const [showAdd, setShowAdd] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -111,6 +112,7 @@ export function DestinationsTab({ tripId, items }: Props) {
               onDelete={(id) => deleteMutation.mutate(id)}
               onStatusChange={(id, status) => updateStatusMutation.mutate({ id, status })}
               onPhotoChange={(id, photoUrl) => updatePhotoMutation.mutate({ id, photoUrl })}
+              fromTab={activeTab}
             />
           ))}
         </div>
@@ -126,6 +128,7 @@ export function DestinationsTab({ tripId, items }: Props) {
               onDelete={(id) => deleteMutation.mutate(id)}
               onStatusChange={(id, status) => updateStatusMutation.mutate({ id, status })}
               onPhotoChange={(id, photoUrl) => updatePhotoMutation.mutate({ id, photoUrl })}
+              fromTab={activeTab}
             />
           ))}
         </div>

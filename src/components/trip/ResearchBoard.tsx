@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { updateTripDestination } from '../../server/fns/trip-details';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -12,6 +13,7 @@ import type { TripDestination, ResearchStatus } from '../../types/trips';
 interface Props {
   tripId: string;
   items: TripDestination[];
+  activeTab?: string;
 }
 
 const columns: { id: ResearchStatus; label: string; color: string; bg: string; border: string; icon: string; textColor: string }[] = [
@@ -33,6 +35,7 @@ function DestinationCard({
   onMovePrev,
   isFirst,
   isLast,
+  fromTab,
 }: {
   dest: TripDestination;
   colId: ResearchStatus;
@@ -43,8 +46,18 @@ function DestinationCard({
   onMovePrev: (d: TripDestination) => void;
   isFirst: boolean;
   isLast: boolean;
+  fromTab: string;
 }) {
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
+
+  const handleCardClick = () => {
+    navigate({
+      to: '/destination/$destinationId',
+      params: { destinationId: dest.id },
+      search: { fromTab },
+    });
+  };
 
   return (
     <motion.div
@@ -56,7 +69,8 @@ function DestinationCard({
       draggable
       onDragStart={e => onDragStart(e as unknown as React.DragEvent, dest.id)}
       onDragEnd={onDragEnd}
-      className="glass-card overflow-hidden cursor-grab active:cursor-grabbing group hover:border-ody-accent/30 transition-colors"
+      onClick={handleCardClick}
+      className="glass-card overflow-hidden cursor-pointer hover:border-ody-accent/30 transition-colors group"
     >
       {/* Photo thumbnail */}
       {dest.photoUrl && (
@@ -71,12 +85,15 @@ function DestinationCard({
 
       <div className="p-3">
         <div className="flex items-start gap-2">
-          <GripVertical className="w-4 h-4 text-ody-text-dim mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+          <GripVertical 
+            className="w-4 h-4 text-ody-text-dim mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 cursor-grab active:cursor-grabbing"
+            onClick={(e) => e.stopPropagation()}
+          />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1">
               <p className="font-medium text-sm truncate flex-1">{dest.name}</p>
               <button
-                onClick={() => setExpanded(!expanded)}
+                onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
                 className="text-ody-text-dim hover:text-ody-text transition-colors p-0.5"
               >
                 {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
@@ -111,6 +128,7 @@ function DestinationCard({
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
             >
               <div className="mt-3 pt-3 border-t border-ody-border/50 space-y-2">
                 {dest.description && (
@@ -123,15 +141,26 @@ function DestinationCard({
                   </div>
                 )}
                 {dest.lat && dest.lng && (
-                  <a
-                    href={`https://www.google.com/maps?q=${dest.lat},${dest.lng}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-xs text-ody-accent hover:underline"
-                  >
-                    <ExternalLink size={10} />
-                    View on Google Maps
-                  </a>
+                  <>
+                    <a
+                      href={`https://www.google.com/maps?q=${dest.lat},${dest.lng}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 text-xs text-ody-accent hover:underline"
+                    >
+                      <ExternalLink size={10} />
+                      View on Google Maps
+                    </a>
+                    <Link
+                      to="/destination/$destinationId"
+                      params={{ destinationId: dest.id }}
+                      search={{ fromTab }}
+                      className="flex items-center gap-1.5 text-xs text-ody-accent hover:underline"
+                    >
+                      <ExternalLink size={10} />
+                      Open Destination Details →
+                    </Link>
+                  </>
                 )}
                 {!dest.photoUrl && (
                   <div className="flex items-center gap-1.5 text-xs text-ody-text-dim">
@@ -145,7 +174,7 @@ function DestinationCard({
         </AnimatePresence>
 
         {/* Navigation arrows */}
-        <div className="flex items-center justify-end gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center justify-end gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
           {!isFirst && (
             <button
               onClick={() => onMovePrev(dest)}
@@ -170,7 +199,7 @@ function DestinationCard({
   );
 }
 
-export function ResearchBoard({ tripId, items }: Props) {
+export function ResearchBoard({ tripId, items, activeTab = 'research' }: Props) {
   const queryClient = useQueryClient();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<ResearchStatus | null>(null);
@@ -354,6 +383,7 @@ export function ResearchBoard({ tripId, items }: Props) {
                       onMovePrev={moveToPrev}
                       isFirst={colIdx === 0}
                       isLast={colIdx === columns.length - 1}
+                      fromTab={activeTab}
                     />
                   ))}
                 </AnimatePresence>
