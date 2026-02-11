@@ -8,7 +8,7 @@ import {
   Shield, Utensils, Camera, Clock, Star, ExternalLink,
   Sun, CloudRain, Info, Lightbulb, Plane, Languages,
   Mountain, Users, ChevronDown, ChevronUp, Navigation,
-  Hotel, ShoppingBag, TreePine, Music, Landmark, Eye
+  Hotel, ShoppingBag, TreePine, Music, Landmark, Eye, Loader2, Search
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, Legend, Area, AreaChart } from 'recharts';
 import { AnimatedChart } from '../components/AnimatedChart';
@@ -72,10 +72,19 @@ function StatCard({ icon: Icon, label, value, sublabel, className = '' }: {
   );
 }
 
+function ResearchModal({ preview, onSave, onClose, saving }: any) {
+  return null; // TODO: implement research modal
+}
+
 function DestinationDetailPage() {
   const { destinationId } = Route.useParams();
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [activeHighlightCategory, setActiveHighlightCategory] = useState<string | null>(null);
+  const [researching, setResearching] = useState(false);
+  const [researchPreview, setResearchPreview] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
+  const handleResearch = () => { /* TODO */ };
+  const handleSaveResearch = () => { /* TODO */ };
 
   const { data, isLoading } = useQuery({
     queryKey: ['destination-detail', destinationId],

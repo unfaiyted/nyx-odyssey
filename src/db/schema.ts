@@ -437,3 +437,37 @@ export const tripRoutesRelations = relations(tripRoutes, ({ one }) => ({
   fromDestination: one(tripDestinations, { fields: [tripRoutes.fromDestinationId], references: [tripDestinations.id] }),
   toDestination: one(tripDestinations, { fields: [tripRoutes.toDestinationId], references: [tripDestinations.id] }),
 }));
+
+// ── Destination Transport Options ──────────────────────
+export const destinationTransportOptions = pgTable('destination_transport_options', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  tripId: text('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  destinationId: text('destination_id').notNull().references(() => tripDestinations.id, { onDelete: 'cascade' }),
+  mode: text('mode').notNull(),
+  durationMinutes: integer('duration_minutes'),
+  distanceKm: doublePrecision('distance_km'),
+  estimatedCost: numeric('estimated_cost', { precision: 10, scale: 2 }),
+  currency: text('currency').default('EUR'),
+  pros: text('pros'),
+  cons: text('cons'),
+  recommended: boolean('recommended').default(false),
+  bookingUrl: text('booking_url'),
+  directionsUrl: text('directions_url'),
+  routeName: text('route_name'),
+  tollCost: numeric('toll_cost', { precision: 10, scale: 2 }),
+  parkingNotes: text('parking_notes'),
+  departureStation: text('departure_station'),
+  arrivalStation: text('arrival_station'),
+  transfers: integer('transfers'),
+  trainProvider: text('train_provider'),
+  busProvider: text('bus_provider'),
+  busRoute: text('bus_route'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const destinationTransportOptionsRelations = relations(destinationTransportOptions, ({ one }) => ({
+  trip: one(trips, { fields: [destinationTransportOptions.tripId], references: [trips.id] }),
+  destination: one(tripDestinations, { fields: [destinationTransportOptions.destinationId], references: [tripDestinations.id] }),
+}));

@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { addTripDestination, deleteTripDestination, updateTripDestination } from '../../server/fns/trip-details';
 import { motion } from 'framer-motion';
-import { Plus, LayoutGrid, List } from 'lucide-react';
-import type { TripDestination } from '../../types/trips';
+import { Plus, LayoutGrid, List, Filter } from 'lucide-react';
+import type { TripDestination, ResearchStatus } from '../../types/trips';
 import { DestinationCard } from './DestinationCard';
 
 interface Props {
@@ -11,10 +11,19 @@ interface Props {
   items: TripDestination[];
 }
 
+const RESEARCH_FILTERS: { value: ResearchStatus | 'all'; label: string; emoji: string }[] = [
+  { value: 'all', label: 'All', emoji: '📋' },
+  { value: 'not_started', label: 'Not Started', emoji: '⬜' },
+  { value: 'basic', label: 'Basic', emoji: '🟡' },
+  { value: 'fully_researched', label: 'Fully Researched', emoji: '🟢' },
+  { value: 'booked', label: 'Booked', emoji: '✅' },
+];
+
 export function DestinationsTab({ tripId, items }: Props) {
   const queryClient = useQueryClient();
   const [showAdd, setShowAdd] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [researchFilter, setResearchFilter] = useState<ResearchStatus | 'all'>('all');
   const [form, setForm] = useState({ name: '', description: '', arrivalDate: '', departureDate: '', lat: '', lng: '', photoUrl: '' });
 
   const addMutation = useMutation({
@@ -37,12 +46,24 @@ export function DestinationsTab({ tripId, items }: Props) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 
-  const sorted = [...items].sort((a, b) => a.orderIndex - b.orderIndex);
+  const updateResearchStatusMutation = useMutation({
+    mutationFn: ({ id, researchStatus }: { id: string; researchStatus: ResearchStatus }) => updateTripDestination({ data: { tripId, id, researchStatus } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
+  });
 
-  // Use first destination as base for distance calculation
+  const sorted = [...items].sort((a, b) => a.orderIndex - b.orderIndex);
+  const filtered = researchFilter === 'all'
+    ? sorted
+    : sorted.filter(d => (d.researchStatus || 'not_started') === researchFilter);
+
   const base = sorted[0];
   const baseLat = base?.lat;
   const baseLng = base?.lng;
+
+  const statusCounts = RESEARCH_FILTERS.reduce((acc, f) => {
+    acc[f.value] = f.value === 'all' ? items.length : items.filter(d => (d.researchStatus || 'not_started') === f.value).length;
+    return acc;
+  }, {} as Record<string, number>);
 
   return (
     <div className="space-y-6">
@@ -50,16 +71,12 @@ export function DestinationsTab({ tripId, items }: Props) {
         <h3 className="font-semibold text-lg">Destinations</h3>
         <div className="flex items-center gap-2">
           <div className="flex items-center bg-ody-surface rounded-lg border border-ody-border p-0.5">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-ody-accent/20 text-ody-accent' : 'text-ody-text-dim hover:text-ody-text-muted'}`}
-            >
+            <button onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-ody-accent/20 text-ody-accent' : 'text-ody-text-dim hover:text-ody-text-muted'}`}>
               <LayoutGrid size={14} />
             </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-ody-accent/20 text-ody-accent' : 'text-ody-text-dim hover:text-ody-text-muted'}`}
-            >
+            <button onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-ody-accent/20 text-ody-accent' : 'text-ody-text-dim hover:text-ody-text-muted'}`}>
               <List size={14} />
             </button>
           </div>
@@ -68,6 +85,23 @@ export function DestinationsTab({ tripId, items }: Props) {
             <Plus size={14} /> Add Destination
           </button>
         </div>
+      </div>
+
+      {/* Research status filter */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <Filter size={14} className="text-ody-text-dim" />
+        {RESEARCH_FILTERS.map((f) => (
+          <button key={f.value} onClick={() => setResearchFilter(f.value)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              researchFilter === f.value
+                ? 'bg-ody-accent/20 text-ody-accent border border-ody-accent/40'
+                : 'bg-ody-surface border border-ody-border text-ody-text-muted hover:border-ody-accent/30'
+            }`}>
+            <span>{f.emoji}</span>
+            {f.label}
+            <span className="ml-1 text-ody-text-dim">({statusCounts[f.value]})</span>
+          </button>
+        ))}
       </div>
 
       {showAdd && (
@@ -97,36 +131,28 @@ export function DestinationsTab({ tripId, items }: Props) {
         </motion.div>
       )}
 
-      {sorted.length === 0 ? (
-        <p className="text-ody-text-muted text-center py-8">No destinations added yet.</p>
+      {filtered.length === 0 ? (
+        <p className="text-ody-text-muted text-center py-8">
+          {researchFilter !== 'all' ? `No destinations with "${RESEARCH_FILTERS.find(f => f.value === researchFilter)?.label}" status.` : 'No destinations added yet.'}
+        </p>
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {sorted.map((dest, i) => (
-            <DestinationCard
-              key={dest.id}
-              destination={dest}
-              index={i}
-              baseLat={baseLat}
-              baseLng={baseLng}
+          {filtered.map((dest, i) => (
+            <DestinationCard key={dest.id} destination={dest} index={i} baseLat={baseLat} baseLng={baseLng}
               onDelete={(id) => deleteMutation.mutate(id)}
               onStatusChange={(id, status) => updateStatusMutation.mutate({ id, status })}
-              onPhotoChange={(id, photoUrl) => updatePhotoMutation.mutate({ id, photoUrl })}
-            />
+              onResearchStatusChange={(id, researchStatus) => updateResearchStatusMutation.mutate({ id, researchStatus })}
+              onPhotoChange={(id, photoUrl) => updatePhotoMutation.mutate({ id, photoUrl })} />
           ))}
         </div>
       ) : (
         <div className="space-y-3">
-          {sorted.map((dest, i) => (
-            <DestinationCard
-              key={dest.id}
-              destination={dest}
-              index={i}
-              baseLat={baseLat}
-              baseLng={baseLng}
+          {filtered.map((dest, i) => (
+            <DestinationCard key={dest.id} destination={dest} index={i} baseLat={baseLat} baseLng={baseLng}
               onDelete={(id) => deleteMutation.mutate(id)}
               onStatusChange={(id, status) => updateStatusMutation.mutate({ id, status })}
-              onPhotoChange={(id, photoUrl) => updatePhotoMutation.mutate({ id, photoUrl })}
-            />
+              onResearchStatusChange={(id, researchStatus) => updateResearchStatusMutation.mutate({ id, researchStatus })}
+              onPhotoChange={(id, photoUrl) => updatePhotoMutation.mutate({ id, photoUrl })} />
           ))}
         </div>
       )}
