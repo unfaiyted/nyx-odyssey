@@ -455,59 +455,66 @@ function DestinationDetailPage() {
                     transition={{ delay: i * 0.05 }}
                     className="glass-card overflow-hidden group hover:border-ody-accent/30 transition-colors"
                   >
-                    {h.imageUrl && (
-                      <div className="h-36 overflow-hidden">
-                        <img src={h.imageUrl} alt={h.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
-                      </div>
-                    )}
-                    <div className="p-4 space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-semibold">{h.title}</h3>
-                        <div className="flex items-center gap-2 shrink-0">
-                          {h.priceLevel && <PriceLevel level={h.priceLevel} />}
-                          {h.rating && (
-                            <span className="flex items-center gap-0.5 text-xs text-ody-warning">
-                              <Star size={12} className="fill-ody-warning" /> {h.rating}
+                    <Link
+                      to="/attractions/$attractionId"
+                      params={{ attractionId: h.id }}
+                      className="block"
+                    >
+                      {h.imageUrl && (
+                        <div className="h-36 overflow-hidden">
+                          <img src={h.imageUrl} alt={h.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                        </div>
+                      )}
+                      <div className="p-4 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="font-semibold group-hover:text-ody-accent transition-colors">{h.title}</h3>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {h.priceLevel && <PriceLevel level={h.priceLevel} />}
+                            {h.rating && (
+                              <span className="flex items-center gap-0.5 text-xs text-ody-warning">
+                                <Star size={12} className="fill-ody-warning" /> {h.rating}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {h.description && (
+                          <p className="text-sm text-ody-text-muted line-clamp-3">{h.description}</p>
+                        )}
+                        <div className="flex items-center gap-3 text-xs text-ody-text-dim pt-1">
+                          <span className={`flex items-center gap-1 ${cat.color}`}>
+                            <CatIcon size={12} /> {cat.label}
+                          </span>
+                          {h.duration && (
+                            <span className="flex items-center gap-1">
+                              <Clock size={12} /> {h.duration}
+                            </span>
+                          )}
+                          {h.address && (
+                            <span className="flex items-center gap-1">
+                              <MapPin size={12} /> {h.address}
                             </span>
                           )}
                         </div>
                       </div>
-                      {h.description && (
-                        <p className="text-sm text-ody-text-muted line-clamp-3">{h.description}</p>
-                      )}
-                      <div className="flex items-center gap-3 text-xs text-ody-text-dim pt-1">
-                        <span className={`flex items-center gap-1 ${cat.color}`}>
-                          <CatIcon size={12} /> {cat.label}
-                        </span>
-                        {h.duration && (
-                          <span className="flex items-center gap-1">
-                            <Clock size={12} /> {h.duration}
-                          </span>
-                        )}
-                        {h.address && (
-                          <span className="flex items-center gap-1">
-                            <MapPin size={12} /> {h.address}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 mt-2">
-                        {h.websiteUrl && (
-                          <a
-                            href={h.websiteUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs text-ody-accent hover:underline"
-                          >
-                            <ExternalLink size={12} /> Website
-                          </a>
-                        )}
-                        <button
-                          onClick={() => setItineraryHighlight(h)}
-                          className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-ody-accent/10 text-ody-accent hover:bg-ody-accent/20 transition-colors ml-auto"
+                    </Link>
+                    <div className="px-4 pb-4 flex items-center gap-2">
+                      {h.websiteUrl && (
+                        <a
+                          href={h.websiteUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 text-xs text-ody-accent hover:underline"
                         >
-                          <CalendarPlus size={12} /> Add to Itinerary
-                        </button>
-                      </div>
+                          <ExternalLink size={12} /> Website
+                        </a>
+                      )}
+                      <button
+                        onClick={() => setItineraryHighlight(h)}
+                        className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-ody-accent/10 text-ody-accent hover:bg-ody-accent/20 transition-colors ml-auto"
+                      >
+                        <CalendarPlus size={12} /> Add to Itinerary
+                      </button>
                     </div>
                   </motion.div>
                 );

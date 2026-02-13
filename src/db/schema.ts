@@ -498,3 +498,90 @@ export const destinationEventsRelations = relations(destinationEvents, ({ one })
   destination: one(tripDestinations, { fields: [destinationEvents.destinationId], references: [tripDestinations.id] }),
   recommendation: one(tripRecommendations, { fields: [destinationEvents.recommendationId], references: [tripRecommendations.id] }),
 }));
+
+// ── Attractions ────────────────────────────────────────
+export const attractions = pgTable('attractions', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  destinationId: text('destination_id').notNull().references(() => tripDestinations.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  type: text('type').default('attraction'), // museum, landmark, restaurant, nature, cultural, entertainment, shopping, other
+  description: text('description'),
+  shortDescription: text('short_description'),
+  
+  // Practical info
+  hoursJson: text('hours_json'), // JSON object with opening hours
+  ticketInfo: text('ticket_info'),
+  bookingUrl: text('booking_url'),
+  officialUrl: text('official_url'),
+  
+  // Location
+  address: text('address'),
+  lat: doublePrecision('lat'),
+  lng: doublePrecision('lng'),
+  phone: text('phone'),
+  email: text('email'),
+  
+  // Media
+  heroImageUrl: text('hero_image_url'),
+  photosJson: text('photos_json'), // JSON array of photo URLs
+  
+  // Content
+  history: text('history'),
+  visitorTips: text('visitor_tips'), // JSON array of tips
+  
+  // Research status
+  researchStatus: text('research_status').default('pending'), // pending, in_progress, completed, needs_review
+  researchPriority: text('research_priority').default('low'), // low, medium, high
+  researchRequestedAt: timestamp('research_requested_at'),
+  researchCompletedAt: timestamp('research_completed_at'),
+  researchRequestCount: integer('research_request_count').default(0),
+  
+  // Metadata
+  rating: doublePrecision('rating'),
+  priceLevel: integer('price_level'), // 1-4 ($-$$$$)
+  duration: text('duration'), // e.g., "2-3 hours"
+  
+  // Ordering
+  orderIndex: integer('order_index').notNull().default(0),
+  
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const attractionsRelations = relations(attractions, ({ one, many }) => ({
+  destination: one(tripDestinations, { fields: [attractions.destinationId], references: [tripDestinations.id] }),
+  researchRequests: many(attractionResearchRequests),
+}));
+
+// ── Attraction Research Requests ───────────────────────
+export const attractionResearchRequests = pgTable('attraction_research_requests', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  attractionId: text('attraction_id').references(() => attractions.id, { onDelete: 'cascade' }),
+  destinationId: text('destination_id').notNull().references(() => tripDestinations.id, { onDelete: 'cascade' }),
+  tripId: text('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  
+  // Request details
+  missingHours: boolean('missing_hours').default(false),
+  missingTickets: boolean('missing_tickets').default(false),
+  missingPhotos: boolean('missing_photos').default(false),
+  missingHistory: boolean('missing_history').default(false),
+  missingTips: boolean('missing_tips').default(false),
+  missingBookingLinks: boolean('missing_booking_links').default(false),
+  missingOther: text('missing_other'),
+  
+  priority: text('priority').default('low'), // low, medium, high
+  notes: text('notes'),
+  
+  // Status tracking
+  status: text('status').default('open'), // open, in_progress, completed, closed
+  nyxConsoleIssueId: text('nyx_console_issue_id'),
+  
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const attractionResearchRequestsRelations = relations(attractionResearchRequests, ({ one }) => ({
+  attraction: one(attractions, { fields: [attractionResearchRequests.attractionId], references: [attractions.id] }),
+  destination: one(tripDestinations, { fields: [attractionResearchRequests.destinationId], references: [tripDestinations.id] }),
+  trip: one(trips, { fields: [attractionResearchRequests.tripId], references: [trips.id] }),
+}));

@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-r
 import { useQuery } from '@tanstack/react-query';
 import { getTrip } from '../server/fns/trips';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car, CarFront, ClipboardList, Clock } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car, CarFront, ClipboardList, Clock, Camera } from 'lucide-react';
 import { z } from 'zod';
 import type { TripDetail, TripTab } from '../types/trips';
 import { ItineraryTab } from '../components/trip/ItineraryTab';
@@ -15,11 +15,12 @@ import { FlightsTab } from '../components/trip/FlightsTab';
 import { ResearchBoard } from '../components/trip/ResearchBoard';
 import { RentalCarsTab } from '../components/trip/RentalCarsTab';
 import { ScheduleTab } from '../components/trip/ScheduleTab';
+import { AttractionsQueueDashboard } from '../components/attractions/AttractionsQueueDashboard';
 
 // Define valid tabs
 const validTabs: TripTab[] = [
   'itinerary', 'destinations', 'research', 'accommodations', 'budget', 
-  'packing', 'flights', 'rental-cars', 'routes', 'schedule'
+  'packing', 'flights', 'rental-cars', 'routes', 'schedule', 'attractions'
 ];
 
 // Search params schema with tab validation
@@ -35,6 +36,7 @@ export const Route = createFileRoute('/trips/$tripId')({
 const tabs: { id: TripTab; label: string; icon: typeof Calendar }[] = [
   { id: 'itinerary', label: 'Itinerary', icon: Calendar },
   { id: 'destinations', label: 'Destinations', icon: MapPin },
+  { id: 'attractions', label: 'Attractions', icon: Camera },
   { id: 'research', label: 'Research Board', icon: ClipboardList },
   { id: 'accommodations', label: 'Accommodations', icon: Hotel },
   { id: 'budget', label: 'Budget', icon: DollarSign },
@@ -135,6 +137,7 @@ function TripDetailPage() {
           transition={{ duration: 0.2 }}>
           {activeTab === 'itinerary' && <ItineraryTab tripId={tripId} items={trip.itineraryItems} startDate={trip.startDate} endDate={trip.endDate} destinations={trip.destinations} />}
           {activeTab === 'destinations' && <DestinationsTab tripId={tripId} items={trip.destinations} activeTab={activeTab} />}
+          {activeTab === 'attractions' && <AttractionsQueueDashboard tripId={tripId} />}
           {activeTab === 'research' && <ResearchBoard tripId={tripId} items={trip.destinations} activeTab={activeTab} />}
           {activeTab === 'accommodations' && <AccommodationsTab tripId={tripId} items={trip.accommodations} destinations={trip.destinations} />}
           {activeTab === 'budget' && <BudgetTab tripId={tripId} items={trip.budgetItems} budgetCategories={trip.budgetCategories || []} totalBudget={trip.totalBudget} currency={trip.currency} startDate={trip.startDate} endDate={trip.endDate} />}

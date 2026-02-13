@@ -206,4 +206,4 @@ export interface BudgetCategory {
   createdAt: string;
 }
 
-export type TripTab = 'itinerary' | 'destinations' | 'research' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'rental-cars' | 'routes' | 'schedule';
+export type TripTab = 'itinerary' | 'destinations' | 'research' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'rental-cars' | 'routes' | 'schedule' | 'attractions';
