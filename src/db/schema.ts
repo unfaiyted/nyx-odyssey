@@ -619,3 +619,66 @@ export const destinationEventsRelations = relations(destinationEvents, ({ one })
   destination: one(tripDestinations, { fields: [destinationEvents.destinationId], references: [tripDestinations.id] }),
   recommendation: one(tripRecommendations, { fields: [destinationEvents.recommendationId], references: [tripRecommendations.id] }),
 }));
+
+// ── Trip Travelers ─────────────────────────────────────
+export const tripTravelers = pgTable('trip_travelers', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  tripId: text('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  firstName: text('first_name').notNull(),
+  lastName: text('last_name').notNull(),
+  email: text('email'),
+  phone: text('phone'),
+  dateOfBirth: text('date_of_birth'),
+  gender: text('gender'),
+  passportNumber: text('passport_number'),
+  passportCountry: text('passport_country'),
+  passportExpiry: text('passport_expiry'),
+  tsaPrecheckNumber: text('tsa_precheck_number'),
+  globalEntryNumber: text('global_entry_number'),
+  knownTravelerNumber: text('known_traveler_number'),
+  dietaryNeeds: text('dietary_needs'), // JSON array
+  mealPreference: text('meal_preference'),
+  seatPreference: text('seat_preference'),
+  specialAssistance: text('special_assistance'),
+  notes: text('notes'),
+  isPrimary: boolean('is_primary').default(false),
+  orderIndex: integer('order_index').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const tripTravelersRelations = relations(tripTravelers, ({ one, many }) => ({
+  trip: one(trips, { fields: [tripTravelers.tripId], references: [trips.id] }),
+  loyaltyPrograms: many(travelerLoyaltyPrograms),
+  emergencyContacts: many(travelerEmergencyContacts),
+}));
+
+export const travelerLoyaltyPrograms = pgTable('traveler_loyalty_programs', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  travelerId: text('traveler_id').notNull().references(() => tripTravelers.id, { onDelete: 'cascade' }),
+  programType: text('program_type').notNull(),
+  programName: text('program_name').notNull(),
+  memberNumber: text('member_number').notNull(),
+  tierStatus: text('tier_status'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const travelerLoyaltyProgramsRelations = relations(travelerLoyaltyPrograms, ({ one }) => ({
+  traveler: one(tripTravelers, { fields: [travelerLoyaltyPrograms.travelerId], references: [tripTravelers.id] }),
+}));
+
+export const travelerEmergencyContacts = pgTable('traveler_emergency_contacts', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  travelerId: text('traveler_id').notNull().references(() => tripTravelers.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  relationship: text('relationship'),
+  phone: text('phone').notNull(),
+  email: text('email'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const travelerEmergencyContactsRelations = relations(travelerEmergencyContacts, ({ one }) => ({
+  traveler: one(tripTravelers, { fields: [travelerEmergencyContacts.travelerId], references: [tripTravelers.id] }),
+}));
