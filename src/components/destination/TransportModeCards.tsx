@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Car, Train, Bus, Clock, Euro, MapPin, 
+  Car, Train, Bus, Clock, MapPin, 
   ExternalLink, ChevronDown, ChevronUp, Calculator,
   Navigation, AlertCircle, CarFront
 } from 'lucide-react';
@@ -146,8 +146,7 @@ function TransportModeCard({
           )}
           {mode.costEuros ? (
             <div className="text-sm text-ody-text-muted flex items-center gap-1 justify-end">
-              <Euro size={12} />
-              ~{formatCost(mode.costEuros)}
+              ~{formatCost(mode.costEuros, homeBase?.currency)}
             </div>
           ) : (
             <div className="text-xs text-ody-text-dim">--</div>
