@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-r
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getTrip, updateTrip, deleteTrip } from '../server/fns/trips';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car, CarFront, ClipboardList, Clock, Settings, Activity, Users, Ticket } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car, CarFront, ClipboardList, Clock, Settings, Activity, Users, Ticket, LayoutDashboard } from 'lucide-react';
 import { z } from 'zod';
 import { useState } from 'react';
 import type { Trip, TripDetail, TripTab } from '../types/trips';
@@ -22,16 +22,17 @@ import { EventsTab } from '../components/trip/EventsTab';
 import { TripKebabMenu } from '../components/trip/TripKebabMenu';
 import { EditTripModal } from '../components/trip/EditTripModal';
 import { DeleteTripModal } from '../components/trip/DeleteTripModal';
+import { OverviewTab } from '../components/trip/OverviewTab';
 
 // Define valid tabs
 const validTabs: TripTab[] = [
-  'itinerary', 'destinations', 'research', 'accommodations', 'budget', 
+  'overview', 'itinerary', 'destinations', 'research', 'accommodations', 'budget', 
   'packing', 'flights', 'price-tracking', 'rental-cars', 'routes', 'schedule', 'travelers', 'events'
 ];
 
 // Search params schema with tab validation
 const searchSchema = z.object({
-  tab: z.enum(validTabs as [string, ...string[]]).optional().catch('itinerary'),
+  tab: z.enum(validTabs as [string, ...string[]]).optional().catch('overview'),
 });
 
 export const Route = createFileRoute('/trips/$tripId')({
@@ -40,6 +41,7 @@ export const Route = createFileRoute('/trips/$tripId')({
 });
 
 const tabs: { id: TripTab; label: string; icon: typeof Calendar }[] = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
   { id: 'itinerary', label: 'Itinerary', icon: Calendar },
   { id: 'destinations', label: 'Destinations', icon: MapPin },
   { id: 'research', label: 'Research Board', icon: ClipboardList },
@@ -64,7 +66,7 @@ function TripDetailPage() {
   const [showDelete, setShowDelete] = useState(false);
   
   // Get active tab from URL or default to 'itinerary'
-  const activeTab = search.tab || 'itinerary';
+  const activeTab = search.tab || 'overview';
 
   const { data: trip, isLoading } = useQuery<TripDetail>({
     queryKey: ['trip', tripId],
@@ -181,6 +183,7 @@ function TripDetailPage() {
         <motion.div key={activeTab}
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}>
+          {activeTab === 'overview' && <OverviewTab trip={trip} onNavigate={handleTabChange} />}
           {activeTab === 'itinerary' && <ItineraryTab tripId={tripId} items={trip.itineraryItems} startDate={trip.startDate} endDate={trip.endDate} destinations={trip.destinations} />}
           {activeTab === 'destinations' && <DestinationsTab tripId={tripId} items={trip.destinations} activeTab={activeTab} />}
           {activeTab === 'research' && <ResearchBoard tripId={tripId} items={trip.destinations} activeTab={activeTab} />}

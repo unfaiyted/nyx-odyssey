@@ -372,6 +372,66 @@ export const updateTraveler = createServerFn({ method: 'POST' })
     return updated;
   });
 
-import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car, CarFront, ClipboardList, Clock, Settings, Activity, Users, Ticket } from 'lucide-react';
+export const deleteTraveler = createServerFn({ method: 'POST' })
+  .handler(async ({ data }) => {
+    await db.delete(tripTravelers)
+      .where(and(eq(tripTravelers.id, data.id), eq(tripTravelers.tripId, data.tripId)));
+    return { ok: true };
+  });
+
+// ── Loyalty Programs ───────────────────────────────────
+
+export const addLoyaltyProgram = createServerFn({ method: 'POST' })
+  .handler(async ({ data }) => {
+    const { travelerId, ...rest } = data;
+    const [item] = await db.insert(travelerLoyaltyPrograms).values({ travelerId, ...rest }).returning();
+    return item;
+  });
+
+export const deleteLoyaltyProgram = createServerFn({ method: 'POST' })
+  .handler(async ({ data }) => {
+    await db.delete(travelerLoyaltyPrograms)
+      .where(eq(travelerLoyaltyPrograms.id, data.id));
+    return { ok: true };
+  });
+
+// ── Emergency Contacts ─────────────────────────────────
+
+export const addEmergencyContact = createServerFn({ method: 'POST' })
+  .handler(async ({ data }) => {
+    const { travelerId, ...rest } = data;
+    const [item] = await db.insert(travelerEmergencyContacts).values({ travelerId, ...rest }).returning();
+    return item;
+  });
+
+export const deleteEmergencyContact = createServerFn({ method: 'POST' })
+  .handler(async ({ data }) => {
+    await db.delete(travelerEmergencyContacts)
+      .where(eq(travelerEmergencyContacts.id, data.id));
+    return { ok: true };
+  });
+
+// ── Events ─────────────────────────────────────────────
+
+export const addEvent = createServerFn({ method: 'POST' })
+  .handler(async ({ data }) => {
+    const { destinationId, ...rest } = data;
+    const [item] = await db.insert(destinationEvents).values({ destinationId, ...rest }).returning();
+    return item;
+  });
+
+export const updateEvent = createServerFn({ method: 'POST' })
+  .handler(async ({ data }) => {
+    const { id, ...rest } = data;
+    const [updated] = await db.update(destinationEvents).set(rest)
+      .where(eq(destinationEvents.id, id))
+      .returning();
+    return updated;
+  });
+
+export const deleteEvent = createServerFn({ method: 'POST' })
+  .handler(async ({ data }) => {
+    await db.delete(destinationEvents)
+      .where(eq(destinationEvents.id, data.id));
     return { ok: true };
   });
