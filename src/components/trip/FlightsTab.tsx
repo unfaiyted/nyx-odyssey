@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { addFlight, deleteFlight } from '../../server/fns/trip-details';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Plane, Clock, Trash2, MapPin, ArrowRight, Calendar, Ticket } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Plus, Plane, Clock, Trash2, Calendar, Ticket, Search } from 'lucide-react';
 import type { Flight } from '../../types/trips';
+import { FlightResearchTab } from './FlightResearchTab';
 
 interface Props {
   tripId: string;
@@ -289,7 +290,41 @@ function LayoverBadge({ prevFlight, nextFlight }: { prevFlight: Flight; nextFlig
   );
 }
 
+type SubTab = 'booked' | 'research';
+
 export function FlightsTab({ tripId, items }: Props) {
+  const [subTab, setSubTab] = useState<SubTab>('booked');
+
+  return (
+    <div className="space-y-6">
+      {/* Sub-tab navigation */}
+      <div className="flex items-center gap-1 border-b border-ody-border/50 pb-0">
+        {([
+          { id: 'booked' as SubTab, label: 'Booked Flights', icon: Plane },
+          { id: 'research' as SubTab, label: 'Flight Research', icon: Search },
+        ]).map(tab => (
+          <button key={tab.id} onClick={() => setSubTab(tab.id)}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors relative
+              ${subTab === tab.id ? 'text-ody-accent' : 'text-ody-text-dim hover:text-ody-text-muted'}`}>
+            <tab.icon size={14} />
+            {tab.label}
+            {subTab === tab.id && (
+              <motion.div layoutId="flights-subtab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-ody-accent" />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {subTab === 'booked' ? (
+        <BookedFlightsView tripId={tripId} items={items} />
+      ) : (
+        <FlightResearchTab tripId={tripId} />
+      )}
+    </div>
+  );
+}
+
+function BookedFlightsView({ tripId, items }: Props) {
   const queryClient = useQueryClient();
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({
