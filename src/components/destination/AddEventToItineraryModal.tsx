@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Clock, Calendar, Car, Train, Bus, Footprints, MapPin, Loader2, Check, StickyNote, Ticket } from 'lucide-react';
+import { X, Clock, Calendar, Car, Train, Bus, Footprints, MapPin, Loader2, Check, StickyNote, CalendarDays } from 'lucide-react';
 import { addEventToItinerary } from '../../server/event-detail';
 
 interface EventData {
@@ -62,9 +62,13 @@ function getDaysBetween(start: string, end: string): string[] {
   return days;
 }
 
+function formatDayShort(d: string) {
+  return new Date(d + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
 export function AddEventToItineraryModal({ event, tripId, startDate, endDate, open, onClose }: Props) {
   const queryClient = useQueryClient();
-  const [date, setDate] = useState('');
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [timeSlot, setTimeSlot] = useState('18:00');
   const [customTime, setCustomTime] = useState('');
   const [useCustomTime, setUseCustomTime] = useState(false);
@@ -76,26 +80,46 @@ export function AddEventToItineraryModal({ event, tripId, startDate, endDate, op
 
   const tripDays = startDate && endDate ? getDaysBetween(startDate, endDate) : [];
 
+  // Determine if event has fixed dates
+  const hasFixedDate = !!event.startDate;
+  const isMultiDay = !!(event.startDate && event.endDate && event.endDate !== event.startDate);
+  const eventDays = useMemo(() => {
+    if (event.startDate && event.endDate && event.endDate !== event.startDate) {
+      return getDaysBetween(event.startDate, event.endDate);
+    }
+    if (event.startDate) return [event.startDate];
+    return [];
+  }, [event.startDate, event.endDate]);
+
   // Pre-populate from event data
   useEffect(() => {
-    if (event.startDate) {
-      setDate(event.startDate);
+    if (!open) return;
+    // Reset state on open
+    setSuccess(false);
+    setNotes('');
+
+    if (hasFixedDate) {
+      // Fixed date event — select all event days by default
+      setSelectedDates([...eventDays]);
     } else if (tripDays.length > 0) {
       const today = new Date().toISOString().split('T')[0];
-      setDate(tripDays.find(d => d >= today) || tripDays[0]);
+      setSelectedDates([tripDays.find(d => d >= today) || tripDays[0]]);
     }
+
     if (event.startTime) {
       setCustomTime(event.startTime.slice(0, 5));
       setUseCustomTime(true);
+    } else {
+      setUseCustomTime(false);
     }
-    // Estimate duration from start/end time
+
     if (event.startTime && event.endTime) {
       const [sh, sm] = event.startTime.split(':').map(Number);
       const [eh, em] = event.endTime.split(':').map(Number);
       const dur = ((eh || 0) * 60 + (em || 0)) - ((sh || 0) * 60 + (sm || 0));
       if (dur > 0) setDurationMinutes(dur);
     }
-  }, [event]);
+  }, [open, event.id]);
 
   const startTime = useCustomTime ? customTime : timeSlot;
 
@@ -103,6 +127,13 @@ export function AddEventToItineraryModal({ event, tripId, startDate, endDate, op
   const [sh, sm] = (startTime || '18:00').split(':').map(Number);
   const endMinutes = (sh || 0) * 60 + (sm || 0) + durationMinutes;
   const endTime = `${String(Math.floor(endMinutes / 60) % 24).padStart(2, '0')}:${String(endMinutes % 60).padStart(2, '0')}`;
+
+  // Toggle a date in selection (for non-fixed-date events)
+  function toggleDate(d: string) {
+    setSelectedDates(prev =>
+      prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d].sort()
+    );
+  }
 
   const addMutation = useMutation({
     mutationFn: () => addEventToItinerary({
@@ -112,7 +143,7 @@ export function AddEventToItineraryModal({ event, tripId, startDate, endDate, op
         destinationId: event.destinationId,
         title: event.name,
         description: event.description || undefined,
-        date,
+        dates: selectedDates,
         startTime: startTime || undefined,
         endTime: endTime || undefined,
         durationMinutes,
@@ -136,6 +167,9 @@ export function AddEventToItineraryModal({ event, tripId, startDate, endDate, op
   if (!open) return null;
 
   const emoji = TYPE_EMOJIS[event.eventType || 'other'] || '📅';
+
+  // Dates to show in the picker
+  const pickableDates = hasFixedDate ? eventDays : tripDays;
 
   return (
     <AnimatePresence>
@@ -202,38 +236,99 @@ export function AddEventToItineraryModal({ event, tripId, startDate, endDate, op
                 <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center">
                   <Check size={32} className="text-emerald-400" />
                 </div>
-                <p className="text-emerald-400 font-medium">Added to itinerary!</p>
+                <p className="text-emerald-400 font-medium">
+                  Added to itinerary{selectedDates.length > 1 ? ` (${selectedDates.length} days)` : ''}!
+                </p>
               </motion.div>
             ) : (
               <>
+                {/* Multi-day event banner */}
+                {isMultiDay && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-ody-accent/10 border border-ody-accent/20 text-sm">
+                    <CalendarDays size={16} className="text-ody-accent shrink-0" />
+                    <span className="text-ody-text-muted">
+                      This is a <span className="text-ody-accent font-medium">{eventDays.length}-day event</span> — it will appear on each selected day in your itinerary
+                    </span>
+                  </div>
+                )}
+
                 {/* Date Selection */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium flex items-center gap-1.5">
-                    <Calendar size={14} className="text-ody-accent" /> Date
+                    <Calendar size={14} className="text-ody-accent" />
+                    {hasFixedDate ? 'Event Dates' : 'Date'}
+                    {hasFixedDate && (
+                      <span className="text-xs text-ody-text-dim font-normal ml-1">(fixed)</span>
+                    )}
                   </label>
-                  {tripDays.length > 0 ? (
+
+                  {pickableDates.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
-                      {tripDays.map(d => (
-                        <button
-                          key={d}
-                          onClick={() => setDate(d)}
-                          className={`px-3 py-1.5 rounded-lg text-xs transition-all ${
-                            date === d
-                              ? 'bg-ody-accent text-white shadow-lg shadow-ody-accent/30'
-                              : 'bg-ody-surface border border-ody-border/50 hover:border-ody-accent/50'
-                          }`}
-                        >
-                          {new Date(d + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                        </button>
-                      ))}
+                      {pickableDates.map(d => {
+                        const isSelected = selectedDates.includes(d);
+                        const isFixed = hasFixedDate;
+                        return (
+                          <button
+                            key={d}
+                            onClick={() => {
+                              if (isFixed && isMultiDay) {
+                                // For multi-day events, allow toggling individual days
+                                toggleDate(d);
+                              } else if (isFixed) {
+                                // Single fixed date — can't deselect
+                                return;
+                              } else {
+                                // Free date picking — toggle for multi-select
+                                toggleDate(d);
+                              }
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-xs transition-all ${
+                              isSelected
+                                ? 'bg-ody-accent text-white shadow-lg shadow-ody-accent/30'
+                                : 'bg-ody-surface border border-ody-border/50 hover:border-ody-accent/50'
+                            } ${isFixed && !isMultiDay ? 'cursor-default' : 'cursor-pointer'}`}
+                          >
+                            {formatDayShort(d)}
+                            {isMultiDay && (
+                              <span className="ml-1 opacity-70">
+                                (Day {eventDays.indexOf(d) + 1})
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   ) : (
                     <input
                       type="date"
-                      value={date}
-                      onChange={e => setDate(e.target.value)}
+                      value={selectedDates[0] || ''}
+                      onChange={e => setSelectedDates([e.target.value])}
                       className="w-full bg-ody-bg border border-ody-border rounded-lg px-3 py-2 text-sm outline-none focus:border-ody-accent"
                     />
+                  )}
+
+                  {isMultiDay && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setSelectedDates([...eventDays])}
+                        className="text-xs text-ody-accent hover:underline"
+                      >
+                        Select all days
+                      </button>
+                      <span className="text-xs text-ody-text-dim">·</span>
+                      <button
+                        onClick={() => setSelectedDates([])}
+                        className="text-xs text-ody-text-dim hover:text-ody-text"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  )}
+
+                  {!hasFixedDate && selectedDates.length > 1 && (
+                    <p className="text-xs text-ody-accent">
+                      Adding to {selectedDates.length} days — one itinerary entry per day
+                    </p>
                   )}
                 </div>
 
@@ -241,6 +336,9 @@ export function AddEventToItineraryModal({ event, tripId, startDate, endDate, op
                 <div className="space-y-2">
                   <label className="text-sm font-medium flex items-center gap-1.5">
                     <Clock size={14} className="text-ody-accent" /> Time
+                    {event.startTime && (
+                      <span className="text-xs text-ody-text-dim font-normal ml-1">(from event)</span>
+                    )}
                   </label>
                   <div className="flex items-center gap-2 mb-2">
                     <button
@@ -363,11 +461,13 @@ export function AddEventToItineraryModal({ event, tripId, startDate, endDate, op
                 <div className="flex gap-2 pt-2 pb-2">
                   <button
                     onClick={() => addMutation.mutate()}
-                    disabled={!date || !startTime || addMutation.isPending}
+                    disabled={selectedDates.length === 0 || !startTime || addMutation.isPending}
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-ody-accent text-white text-sm font-medium hover:bg-ody-accent-hover disabled:opacity-50 transition-colors"
                   >
                     {addMutation.isPending ? (
                       <><Loader2 size={14} className="animate-spin" /> Adding...</>
+                    ) : selectedDates.length > 1 ? (
+                      `Add to ${selectedDates.length} Days`
                     ) : (
                       'Add to Itinerary'
                     )}

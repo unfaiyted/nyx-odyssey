@@ -49,7 +49,7 @@ export const addEventToItinerary = createServerFn({ method: 'POST' })
     destinationId: z.string().min(1),
     title: z.string().min(1),
     description: z.string().optional(),
-    date: z.string().min(1),
+    dates: z.array(z.string().min(1)).min(1),
     startTime: z.string().optional(),
     endTime: z.string().optional(),
     durationMinutes: z.number().optional(),
@@ -59,24 +59,35 @@ export const addEventToItinerary = createServerFn({ method: 'POST' })
     travelTimeMinutes: z.number().optional(),
     travelFromLocation: z.string().optional(),
     notes: z.string().optional(),
+    dayLabels: z.record(z.string(), z.string()).optional(), // date -> label like "Day 1 - Practice"
   }))
   .handler(async ({ data }) => {
-    const [item] = await db.insert(itineraryItems).values({
-      tripId: data.tripId,
-      eventId: data.eventId,
-      destinationId: data.destinationId,
-      title: data.title,
-      description: data.description,
-      date: data.date,
-      startTime: data.startTime,
-      endTime: data.endTime,
-      location: data.location,
-      category: data.category,
-      travelMode: data.travelMode,
-      travelTimeMinutes: data.travelTimeMinutes,
-      travelFromLocation: data.travelFromLocation,
-      notes: data.notes,
-      orderIndex: 0,
-    }).returning();
-    return item;
+    const items = await db.insert(itineraryItems).values(
+      data.dates.map((date, i) => {
+        const dayLabel = data.dayLabels?.[date];
+        const title = data.dates.length > 1 && dayLabel
+          ? `${data.title} — ${dayLabel}`
+          : data.dates.length > 1
+          ? `${data.title} (Day ${i + 1})`
+          : data.title;
+        return {
+          tripId: data.tripId,
+          eventId: data.eventId,
+          destinationId: data.destinationId,
+          title,
+          description: data.description,
+          date,
+          startTime: data.startTime,
+          endTime: data.endTime,
+          location: data.location,
+          category: data.category,
+          travelMode: data.travelMode,
+          travelTimeMinutes: data.travelTimeMinutes,
+          travelFromLocation: data.travelFromLocation,
+          notes: data.notes,
+          orderIndex: i,
+        };
+      }),
+    ).returning();
+    return items;
   });
