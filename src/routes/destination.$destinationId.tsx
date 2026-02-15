@@ -586,25 +586,25 @@ function DestinationDetailPage() {
               {
                 mode: 'drive',
                 timeMinutes: research?.driveTimeMinutes ?? null,
-                costEuros: research?.driveCostEuros ? parseFloat(research.driveCostEuros) : null,
+                cost: research?.driveCost ? parseFloat(research.driveCost) : null,
                 notes: research?.driveRouteNotes ?? null,
               },
               {
                 mode: 'train',
                 timeMinutes: research?.trainTimeMinutes ?? null,
-                costEuros: research?.trainCostEuros ? parseFloat(research.trainCostEuros) : null,
+                cost: research?.trainCost ? parseFloat(research.trainCost) : null,
                 notes: research?.trainRouteNotes ?? null,
               },
               {
                 mode: 'bus',
                 timeMinutes: research?.busTimeMinutes ?? null,
-                costEuros: research?.busCostEuros ? parseFloat(research.busCostEuros) : null,
+                cost: research?.busCost ? parseFloat(research.busCost) : null,
                 notes: research?.busRouteNotes ?? null,
               },
               {
                 mode: 'taxi',
                 timeMinutes: research?.taxiTimeMinutes ?? null,
-                costEuros: research?.taxiCostEuros ? parseFloat(research.taxiCostEuros) : null,
+                cost: research?.taxiCost ? parseFloat(research.taxiCost) : null,
                 notes: research?.taxiRouteNotes ?? null,
               },
             ]}

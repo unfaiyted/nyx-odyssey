@@ -9,7 +9,7 @@ import {
 interface TransportMode {
   mode: 'drive' | 'train' | 'bus' | 'taxi';
   timeMinutes: number | null;
-  costEuros: number | null;
+  cost: number | null;
   notes: string | null;
 }
 
@@ -144,9 +144,9 @@ function TransportModeCard({
           ) : (
             <div className="text-ody-text-dim text-sm">--</div>
           )}
-          {mode.costEuros ? (
+          {mode.cost ? (
             <div className="text-sm text-ody-text-muted flex items-center gap-1 justify-end">
-              ~{formatCost(mode.costEuros, homeBase?.currency)}
+              ~{formatCost(mode.cost, homeBase?.currency)}
             </div>
           ) : (
             <div className="text-xs text-ody-text-dim">--</div>
@@ -222,7 +222,7 @@ export function TransportModeCards({
   homeBase,
 }: TransportModeCardsProps) {
   const homeBaseName = homeBase?.name || 'Home Base';
-  const hasAnyData = transportModes.some(m => m.timeMinutes !== null || m.costEuros !== null);
+  const hasAnyData = transportModes.some(m => m.timeMinutes !== null || m.cost !== null);
 
   return (
     <div className="space-y-4">
@@ -261,7 +261,7 @@ export function TransportModeCards({
             key={mode.mode}
             mode={mode}
             destinationName={destinationName}
-            hasData={mode.timeMinutes !== null || mode.costEuros !== null}
+            hasData={mode.timeMinutes !== null || mode.cost !== null}
             homeBase={homeBase}
           />
         ))}

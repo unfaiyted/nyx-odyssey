@@ -245,17 +245,18 @@ export const destinationResearch = pgTable('destination_research', {
   // Transport from Home Base (Vicenza)
   driveTimeMinutes: integer('drive_time_minutes'),
   driveDistanceKm: doublePrecision('drive_distance_km'),
-  driveCostEuros: numeric('drive_cost_euros', { precision: 10, scale: 2 }),
+  driveCost: numeric('drive_cost', { precision: 10, scale: 2 }),
   driveRouteNotes: text('drive_route_notes'), // highways, tolls, scenic routes, parking
   trainTimeMinutes: integer('train_time_minutes'),
-  trainCostEuros: numeric('train_cost_euros', { precision: 10, scale: 2 }),
+  trainCost: numeric('train_cost', { precision: 10, scale: 2 }),
   trainRouteNotes: text('train_route_notes'), // stations, transfers, lines
   busTimeMinutes: integer('bus_time_minutes'),
-  busCostEuros: numeric('bus_cost_euros', { precision: 10, scale: 2 }),
+  busCost: numeric('bus_cost', { precision: 10, scale: 2 }),
   busRouteNotes: text('bus_route_notes'), // bus companies, stops
   taxiTimeMinutes: integer('taxi_time_minutes'),
-  taxiCostEuros: numeric('taxi_cost_euros', { precision: 10, scale: 2 }),
+  taxiCost: numeric('taxi_cost', { precision: 10, scale: 2 }),
   taxiRouteNotes: text('taxi_route_notes'), // rideshare options, availability
+  transportCurrency: text('transport_currency').default('EUR'),
   routePolyline: text('route_polyline'), // encoded polyline for map route
   // Safety & Culture
   safetyRating: integer('safety_rating'), // 1-5
