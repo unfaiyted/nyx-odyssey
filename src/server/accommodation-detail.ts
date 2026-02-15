@@ -83,6 +83,7 @@ export const addAccommodationToItinerary = createServerFn({ method: 'POST' })
         const nightNum = allNights.indexOf(date) + 1;
         return {
           tripId: data.tripId,
+          accommodationId: data.accommodationId,
           destinationId: data.destinationId || null,
           title: totalNights > 1
             ? `🏨 ${data.title} (Night ${nightNum} of ${totalNights})`

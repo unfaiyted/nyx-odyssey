@@ -23,6 +23,7 @@ export interface ItineraryItem {
   destinationHighlightId: string | null;
   destinationId: string | null;
   eventId: string | null;
+  accommodationId: string | null;
   title: string;
   description: string | null;
   date: string;
@@ -44,6 +45,7 @@ export interface ItineraryItem {
   eventName?: string | null;
   eventStatus?: string | null;
   eventBookingUrl?: string | null;
+  accommodationName?: string | null;
 }
 
 export interface TripDestination {

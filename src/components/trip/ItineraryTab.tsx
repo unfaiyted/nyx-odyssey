@@ -26,7 +26,7 @@ const categoryConfig: Record<string, { icon: string; color: string; bgColor: str
   transport: { icon: '🚗', color: 'text-blue-400', bgColor: 'bg-blue-400/10 border-blue-400/30' },
   meal: { icon: '🍽️', color: 'text-green-400', bgColor: 'bg-green-400/10 border-green-400/30' },
   sightseeing: { icon: '📸', color: 'text-purple-400', bgColor: 'bg-purple-400/10 border-purple-400/30' },
-  rest: { icon: '😴', color: 'text-indigo-400', bgColor: 'bg-indigo-400/10 border-indigo-400/30' },
+  rest: { icon: '🏨', color: 'text-rose-400', bgColor: 'bg-rose-400/10 border-rose-400/30' },
   travel: { icon: '🧭', color: 'text-cyan-400', bgColor: 'bg-cyan-400/10 border-cyan-400/30' },
 };
 
@@ -142,6 +142,15 @@ function TimelineItemCard({
               params={{ highlightId: item.destinationHighlightId }}
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
               className={`font-medium text-sm hover:text-ody-accent hover:underline transition-colors ${item.completed ? 'line-through text-ody-text-dim' : ''}`}
+            >
+              {item.title}
+            </Link>
+          ) : item.accommodationId ? (
+            <Link
+              to="/accommodation/$accommodationId"
+              params={{ accommodationId: item.accommodationId }}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              className={`font-medium text-sm hover:text-rose-300 hover:underline transition-colors ${item.completed ? 'line-through text-ody-text-dim' : ''}`}
             >
               {item.title}
             </Link>

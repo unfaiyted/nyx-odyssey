@@ -52,6 +52,7 @@ export const itineraryItems = pgTable('itinerary_items', {
   destinationHighlightId: text('destination_highlight_id'),
   destinationId: text('destination_id').references(() => tripDestinations.id, { onDelete: 'set null' }),
   eventId: text('event_id').references(() => destinationEvents.id, { onDelete: 'set null' }),
+  accommodationId: text('accommodation_id').references(() => accommodations.id, { onDelete: 'set null' }),
   title: text('title').notNull(),
   description: text('description'),
   date: text('date').notNull(),

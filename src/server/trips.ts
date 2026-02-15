@@ -59,10 +59,12 @@ export const getTrip = createServerFn({ method: 'GET' })
           eventName: destinationEvents.name,
           eventStatus: destinationEvents.status,
           eventBookingUrl: destinationEvents.bookingUrl,
+          accommodationName: accommodations.name,
         })
           .from(itineraryItems)
           .leftJoin(tripDestinations, eq(itineraryItems.destinationId, tripDestinations.id))
           .leftJoin(destinationEvents, eq(itineraryItems.eventId, destinationEvents.id))
+          .leftJoin(accommodations, eq(itineraryItems.accommodationId, accommodations.id))
           .where(eq(itineraryItems.tripId, tripId)),
         db.select().from(tripDestinations).where(eq(tripDestinations.tripId, tripId)),
         db.select().from(accommodations).where(eq(accommodations.tripId, tripId)),
@@ -81,6 +83,7 @@ export const getTrip = createServerFn({ method: 'GET' })
       eventName: r.eventName,
       eventStatus: r.eventStatus,
       eventBookingUrl: r.eventBookingUrl,
+      accommodationName: r.accommodationName,
     }));
 
     return {
