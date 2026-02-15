@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-r
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getTrip, updateTrip, deleteTrip } from '../server/fns/trips';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car, CarFront, ClipboardList, Clock, Settings } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car, CarFront, ClipboardList, Clock, Settings, Activity } from 'lucide-react';
 import { z } from 'zod';
 import { useState } from 'react';
 import type { Trip, TripDetail, TripTab } from '../types/trips';
@@ -16,6 +16,7 @@ import { FlightsTab } from '../components/trip/FlightsTab';
 import { ResearchBoard } from '../components/trip/ResearchBoard';
 import { RentalCarsTab } from '../components/trip/RentalCarsTab';
 import { ScheduleTab } from '../components/trip/ScheduleTab';
+import { PriceTrackingTab } from '../components/trip/PriceTrackingTab';
 import { TripKebabMenu } from '../components/trip/TripKebabMenu';
 import { EditTripModal } from '../components/trip/EditTripModal';
 import { DeleteTripModal } from '../components/trip/DeleteTripModal';
@@ -23,7 +24,7 @@ import { DeleteTripModal } from '../components/trip/DeleteTripModal';
 // Define valid tabs
 const validTabs: TripTab[] = [
   'itinerary', 'destinations', 'research', 'accommodations', 'budget', 
-  'packing', 'flights', 'rental-cars', 'routes', 'schedule'
+  'packing', 'flights', 'price-tracking', 'rental-cars', 'routes', 'schedule'
 ];
 
 // Search params schema with tab validation
@@ -44,6 +45,7 @@ const tabs: { id: TripTab; label: string; icon: typeof Calendar }[] = [
   { id: 'budget', label: 'Budget', icon: DollarSign },
   { id: 'packing', label: 'Packing List', icon: Luggage },
   { id: 'flights', label: 'Flights', icon: Plane },
+  { id: 'price-tracking', label: 'Price Tracking', icon: Activity },
   { id: 'rental-cars', label: 'Rental Cars', icon: CarFront },
   { id: 'routes', label: 'Driving Routes', icon: Car },
   { id: 'schedule', label: 'Schedule', icon: Clock },
@@ -177,6 +179,7 @@ function TripDetailPage() {
           {activeTab === 'budget' && <BudgetTab tripId={tripId} items={trip.budgetItems} budgetCategories={trip.budgetCategories || []} totalBudget={trip.totalBudget} currency={trip.currency} startDate={trip.startDate} endDate={trip.endDate} />}
           {activeTab === 'packing' && <PackingTab tripId={tripId} items={trip.packingItems} />}
           {activeTab === 'flights' && <FlightsTab tripId={tripId} items={trip.flights} />}
+          {activeTab === 'price-tracking' && <PriceTrackingTab tripId={tripId} />}
           {activeTab === 'rental-cars' && <RentalCarsTab tripId={tripId} items={trip.rentalCars || []} />}
           {activeTab === 'routes' && <RoutesTab tripId={tripId} routes={trip.routes || []} destinations={trip.destinations} />}
           {activeTab === 'schedule' && <ScheduleTab tripId={tripId} cronJobs={trip.cronJobs || []} />}
