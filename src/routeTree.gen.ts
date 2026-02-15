@@ -13,6 +13,7 @@ import { Route as MapRouteImport } from './routes/map'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TripsIndexRouteImport } from './routes/trips.index'
 import { Route as TripsTripIdRouteImport } from './routes/trips.$tripId'
+import { Route as HighlightHighlightIdRouteImport } from './routes/highlight.$highlightId'
 import { Route as DestinationDestinationIdRouteImport } from './routes/destination.$destinationId'
 
 const MapRoute = MapRouteImport.update({
@@ -35,6 +36,11 @@ const TripsTripIdRoute = TripsTripIdRouteImport.update({
   path: '/trips/$tripId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HighlightHighlightIdRoute = HighlightHighlightIdRouteImport.update({
+  id: '/highlight/$highlightId',
+  path: '/highlight/$highlightId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DestinationDestinationIdRoute =
   DestinationDestinationIdRouteImport.update({
     id: '/destination/$destinationId',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/map': typeof MapRoute
   '/destination/$destinationId': typeof DestinationDestinationIdRoute
+  '/highlight/$highlightId': typeof HighlightHighlightIdRoute
   '/trips/$tripId': typeof TripsTripIdRoute
   '/trips/': typeof TripsIndexRoute
 }
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/map': typeof MapRoute
   '/destination/$destinationId': typeof DestinationDestinationIdRoute
+  '/highlight/$highlightId': typeof HighlightHighlightIdRoute
   '/trips/$tripId': typeof TripsTripIdRoute
   '/trips': typeof TripsIndexRoute
 }
@@ -61,6 +69,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/map': typeof MapRoute
   '/destination/$destinationId': typeof DestinationDestinationIdRoute
+  '/highlight/$highlightId': typeof HighlightHighlightIdRoute
   '/trips/$tripId': typeof TripsTripIdRoute
   '/trips/': typeof TripsIndexRoute
 }
@@ -70,15 +79,23 @@ export interface FileRouteTypes {
     | '/'
     | '/map'
     | '/destination/$destinationId'
+    | '/highlight/$highlightId'
     | '/trips/$tripId'
     | '/trips/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/map' | '/destination/$destinationId' | '/trips/$tripId' | '/trips'
+  to:
+    | '/'
+    | '/map'
+    | '/destination/$destinationId'
+    | '/highlight/$highlightId'
+    | '/trips/$tripId'
+    | '/trips'
   id:
     | '__root__'
     | '/'
     | '/map'
     | '/destination/$destinationId'
+    | '/highlight/$highlightId'
     | '/trips/$tripId'
     | '/trips/'
   fileRoutesById: FileRoutesById
@@ -87,6 +104,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   MapRoute: typeof MapRoute
   DestinationDestinationIdRoute: typeof DestinationDestinationIdRoute
+  HighlightHighlightIdRoute: typeof HighlightHighlightIdRoute
   TripsTripIdRoute: typeof TripsTripIdRoute
   TripsIndexRoute: typeof TripsIndexRoute
 }
@@ -121,6 +139,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TripsTripIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/highlight/$highlightId': {
+      id: '/highlight/$highlightId'
+      path: '/highlight/$highlightId'
+      fullPath: '/highlight/$highlightId'
+      preLoaderRoute: typeof HighlightHighlightIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/destination/$destinationId': {
       id: '/destination/$destinationId'
       path: '/destination/$destinationId'
@@ -135,6 +160,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   MapRoute: MapRoute,
   DestinationDestinationIdRoute: DestinationDestinationIdRoute,
+  HighlightHighlightIdRoute: HighlightHighlightIdRoute,
   TripsTripIdRoute: TripsTripIdRoute,
   TripsIndexRoute: TripsIndexRoute,
 }

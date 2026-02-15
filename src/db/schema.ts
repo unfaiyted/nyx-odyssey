@@ -285,6 +285,22 @@ export const destinationHighlights = pgTable('destination_highlights', {
   lng: doublePrecision('lng'),
   websiteUrl: text('website_url'),
   duration: text('duration'), // e.g. "2-3 hours"
+  openingHours: text('opening_hours'),
+  bookingUrl: text('booking_url'),
+  phone: text('phone'),
+  tips: text('tips'), // JSON array of tips
+  whyVisit: text('why_visit'),
+  estimatedVisitMinutes: integer('estimated_visit_minutes'),
+  notes: text('notes'),
+  orderIndex: integer('order_index').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const highlightPhotos = pgTable('highlight_photos', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  highlightId: text('highlight_id').notNull().references(() => destinationHighlights.id, { onDelete: 'cascade' }),
+  url: text('url').notNull(),
+  caption: text('caption'),
   orderIndex: integer('order_index').notNull().default(0),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
@@ -304,8 +320,13 @@ export const destinationResearchRelations = relations(destinationResearch, ({ on
   destination: one(tripDestinations, { fields: [destinationResearch.destinationId], references: [tripDestinations.id] }),
 }));
 
-export const destinationHighlightsRelations = relations(destinationHighlights, ({ one }) => ({
+export const destinationHighlightsRelations = relations(destinationHighlights, ({ one, many }) => ({
   destination: one(tripDestinations, { fields: [destinationHighlights.destinationId], references: [tripDestinations.id] }),
+  photos: many(highlightPhotos),
+}));
+
+export const highlightPhotosRelations = relations(highlightPhotos, ({ one }) => ({
+  highlight: one(destinationHighlights, { fields: [highlightPhotos.highlightId], references: [destinationHighlights.id] }),
 }));
 
 export const destinationWeatherMonthlyRelations = relations(destinationWeatherMonthly, ({ one }) => ({
