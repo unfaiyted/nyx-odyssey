@@ -194,6 +194,7 @@ export interface TripDetail extends Trip {
   rentalCars: RentalCar[];
   routes: TripRoute[];
   cronJobs: TripCronJob[];
+  travelers: Traveler[];
 }
 
 export interface BudgetCategory {
@@ -206,4 +207,54 @@ export interface BudgetCategory {
   createdAt: string;
 }
 
-export type TripTab = 'itinerary' | 'destinations' | 'research' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'price-tracking' | 'rental-cars' | 'routes' | 'schedule';
+export interface Traveler {
+  id: string;
+  tripId: string;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  phone: string | null;
+  dateOfBirth: string | null;
+  gender: string | null;
+  passportNumber: string | null;
+  passportCountry: string | null;
+  passportExpiry: string | null;
+  tsaPrecheckNumber: string | null;
+  globalEntryNumber: string | null;
+  knownTravelerNumber: string | null;
+  dietaryNeeds: string | null;
+  mealPreference: string | null;
+  seatPreference: string | null;
+  specialAssistance: string | null;
+  notes: string | null;
+  isPrimary: boolean;
+  orderIndex: number;
+  createdAt: string;
+  updatedAt: string;
+  loyaltyPrograms?: LoyaltyProgram[];
+  emergencyContacts?: EmergencyContact[];
+}
+
+export interface LoyaltyProgram {
+  id: string;
+  travelerId: string;
+  programType: string;
+  programName: string;
+  memberNumber: string;
+  tierStatus: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface EmergencyContact {
+  id: string;
+  travelerId: string;
+  name: string;
+  relationship: string | null;
+  phone: string;
+  email: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
+export type TripTab = 'itinerary' | 'destinations' | 'research' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'price-tracking' | 'rental-cars' | 'routes' | 'schedule' | 'travelers';
