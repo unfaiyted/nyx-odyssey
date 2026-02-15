@@ -233,25 +233,27 @@ export function TransportModeCards({
           Getting There from {homeBaseName}
         </h2>
         
-        {!hasAnyData && (
-          <button
-            onClick={onCalculate}
-            disabled={isCalculating}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-ody-accent text-white text-sm font-medium hover:bg-ody-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isCalculating ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Calculating...
-              </>
-            ) : (
-              <>
-                <Calculator size={16} />
-                Calculate Routes
-              </>
-            )}
-          </button>
-        )}
+        <button
+          onClick={onCalculate}
+          disabled={isCalculating}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+            hasAnyData 
+              ? 'bg-ody-surface-hover text-ody-text-muted hover:text-ody-text border border-ody-border' 
+              : 'bg-ody-accent text-white hover:bg-ody-accent-hover'
+          }`}
+        >
+          {isCalculating ? (
+            <>
+              <div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+              Calculating...
+            </>
+          ) : (
+            <>
+              <Calculator size={16} />
+              {hasAnyData ? 'Recalculate' : 'Calculate Routes'}
+            </>
+          )}
+        </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
