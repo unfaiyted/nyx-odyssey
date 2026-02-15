@@ -144,9 +144,20 @@ function TimelineItemCard({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
           <span className="text-base">{cat.icon}</span>
-          <span className={`font-medium text-sm ${item.completed ? 'line-through text-ody-text-dim' : ''}`}>
-            {item.title}
-          </span>
+          {item.destinationHighlightId ? (
+            <Link
+              to="/highlight/$highlightId"
+              params={{ highlightId: item.destinationHighlightId }}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              className={`font-medium text-sm hover:text-ody-accent hover:underline transition-colors ${item.completed ? 'line-through text-ody-text-dim' : ''}`}
+            >
+              {item.title}
+            </Link>
+          ) : (
+            <span className={`font-medium text-sm ${item.completed ? 'line-through text-ody-text-dim' : ''}`}>
+              {item.title}
+            </span>
+          )}
           <span className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-full font-semibold ${cat.color} bg-black/20`}>
             {item.category}
           </span>
