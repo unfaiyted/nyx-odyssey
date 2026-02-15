@@ -314,6 +314,7 @@ export const tripsRelations = relations(trips, ({ many }) => ({
   flights: many(flights),
   rentalCars: many(rentalCars),
   cronJobs: many(tripCronJobs),
+  events: many(events),
 }));
 
 export const itineraryItemsRelations = relations(itineraryItems, ({ one }) => ({
@@ -474,6 +475,35 @@ export const tripRecommendations = pgTable('trip_recommendations', {
 export const tripRecommendationsRelations = relations(tripRecommendations, ({ one }) => ({
   trip: one(trips, { fields: [tripRecommendations.tripId], references: [trips.id] }),
   destination: one(tripDestinations, { fields: [tripRecommendations.destinationId], references: [tripDestinations.id] }),
+}));
+
+// ── Trip Events (Shows, Concerts, Sports, etc.) ───────
+export const events = pgTable('events', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  tripId: text('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  destinationId: text('destination_id').references(() => tripDestinations.id, { onDelete: 'set null' }),
+  name: text('name').notNull(),
+  description: text('description'),
+  venue: text('venue'),
+  category: text('category').default('show'), // show, concert, sport, festival, tour
+  date: text('date'),
+  time: text('time'),
+  durationMinutes: integer('duration_minutes'),
+  priceMin: numeric('price_min', { precision: 10, scale: 2 }),
+  priceMax: numeric('price_max', { precision: 10, scale: 2 }),
+  currency: text('currency').default('EUR'),
+  ticketsNeeded: integer('tickets_needed').default(1),
+  bookingUrl: text('booking_url'),
+  status: text('status').default('researched'), // researched, interested, booked, attended
+  notes: text('notes'),
+  rating: doublePrecision('rating'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const eventsRelations = relations(events, ({ one }) => ({
+  trip: one(trips, { fields: [events.tripId], references: [trips.id] }),
+  destination: one(tripDestinations, { fields: [events.destinationId], references: [tripDestinations.id] }),
 }));
 
 // ── Destination Events ─────────────────────────────────
