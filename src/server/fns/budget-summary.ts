@@ -2,7 +2,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { db } from '../../db';
 import {
-  accommodations, budgetItems, destinationEvents,
+  accommodations, budgetItems, destinationEvents, itineraryItems,
   tripDestinations, flightOptions, flightSearches,
 } from '../../db/schema';
 import { eq, and, inArray } from 'drizzle-orm';
@@ -12,11 +12,12 @@ export const getBudgetSummary = createServerFn({ method: 'GET' })
   .inputValidator(z.object({ tripId: z.string().min(1) }))
   .handler(async ({ data: { tripId } }): Promise<BudgetSummary> => {
     // Fetch all data in parallel
-    const [accomRows, destRows, manualItems, searchRows] = await Promise.all([
+    const [accomRows, destRows, manualItems, searchRows, itinRows] = await Promise.all([
       db.select().from(accommodations).where(eq(accommodations.tripId, tripId)),
       db.select().from(tripDestinations).where(eq(tripDestinations.tripId, tripId)),
       db.select().from(budgetItems).where(eq(budgetItems.tripId, tripId)),
       db.select().from(flightSearches).where(eq(flightSearches.tripId, tripId)),
+      db.select().from(itineraryItems).where(eq(itineraryItems.tripId, tripId)),
     ]);
 
     const destIds = destRows.map(d => d.id);
@@ -33,37 +34,112 @@ export const getBudgetSummary = createServerFn({ method: 'GET' })
         : Promise.resolve([]),
     ]);
 
-    // Build accommodation items (booked/shortlisted/interested only)
-    const accomItems: BudgetSummaryItem[] = accomRows
-      .filter(a => ['booked', 'shortlisted'].includes(a.status || ''))
-      .map(a => ({
-        id: a.id,
-        name: a.name,
-        source: 'accommodation' as const,
-        status: a.status || 'researched',
-        estimatedCost: Number(a.totalCost || 0),
-        actualCost: a.status === 'booked' ? Number(a.totalCost || 0) : 0,
-        category: 'accommodations',
-        currency: a.currency || 'USD',
-        sourceId: a.id,
-      }));
+    // ── Determine what's on the itinerary ──
+    // Unique accommodation IDs on itinerary
+    const itinAccomIds = new Set(itinRows.filter(i => i.accommodationId).map(i => i.accommodationId!));
+    // Unique event IDs on itinerary (dedup multi-day events)
+    const itinEventIds = new Set(itinRows.filter(i => i.eventId).map(i => i.eventId!));
+    // Count nights per accommodation on itinerary
+    const accomNightCounts: Record<string, number> = {};
+    for (const item of itinRows) {
+      if (item.accommodationId) {
+        accomNightCounts[item.accommodationId] = (accomNightCounts[item.accommodationId] || 0) + 1;
+      }
+    }
 
-    // Build event items (booked/interested)
-    const eventItems: BudgetSummaryItem[] = eventRows
-      .filter(e => ['booked', 'interested'].includes(e.status || ''))
-      .map(e => ({
-        id: e.id,
-        name: e.name,
-        source: 'event' as const,
-        status: e.status || 'researched',
-        estimatedCost: Number(e.totalCost || 0),
-        actualCost: e.status === 'booked' ? Number(e.totalCost || 0) : 0,
-        category: e.eventType === 'sports' ? 'activities' : 'activities',
-        currency: e.currency || 'USD',
-        sourceId: e.id,
-      }));
+    // ── Accommodations ──
+    // Priority: on itinerary > booked > shortlisted
+    // Dedup: if on itinerary, use itinerary night count × cost_per_night (more accurate than total_cost)
+    const seenAccomIds = new Set<string>();
+    const accomItems: BudgetSummaryItem[] = [];
 
-    // Build flight items
+    // First: accommodations on the itinerary
+    for (const a of accomRows) {
+      if (itinAccomIds.has(a.id)) {
+        seenAccomIds.add(a.id);
+        const nights = accomNightCounts[a.id] || 0;
+        const perNight = Number(a.costPerNight || 0);
+        const estimated = perNight > 0 && nights > 0 ? perNight * nights : Number(a.totalCost || 0);
+        accomItems.push({
+          id: a.id,
+          name: a.name,
+          source: 'accommodation',
+          status: a.status || 'researched',
+          estimatedCost: estimated,
+          actualCost: a.status === 'booked' ? estimated : 0,
+          category: 'accommodations',
+          currency: a.currency || 'USD',
+          sourceId: a.id,
+          detail: nights > 0 ? `${nights} nights × ${perNight > 0 ? `$${perNight}/night` : 'TBD'}` : undefined,
+          onItinerary: true,
+        });
+      }
+    }
+
+    // Then: booked/shortlisted NOT already on itinerary
+    for (const a of accomRows) {
+      if (!seenAccomIds.has(a.id) && ['booked', 'shortlisted'].includes(a.status || '')) {
+        accomItems.push({
+          id: a.id,
+          name: a.name,
+          source: 'accommodation',
+          status: a.status || 'researched',
+          estimatedCost: Number(a.totalCost || 0),
+          actualCost: a.status === 'booked' ? Number(a.totalCost || 0) : 0,
+          category: 'accommodations',
+          currency: a.currency || 'USD',
+          sourceId: a.id,
+          onItinerary: false,
+        });
+      }
+    }
+
+    // ── Events ──
+    // Priority: on itinerary > booked > interested
+    // Multi-day events: count once (total_cost covers all days)
+    const seenEventIds = new Set<string>();
+    const eventItems: BudgetSummaryItem[] = [];
+
+    // First: events on the itinerary (deduped)
+    for (const e of eventRows) {
+      if (itinEventIds.has(e.id)) {
+        seenEventIds.add(e.id);
+        const itinDays = itinRows.filter(i => i.eventId === e.id).length;
+        eventItems.push({
+          id: e.id,
+          name: e.name,
+          source: 'event',
+          status: e.status || 'researched',
+          estimatedCost: Number(e.totalCost || 0),
+          actualCost: e.status === 'booked' ? Number(e.totalCost || 0) : 0,
+          category: 'activities',
+          currency: e.currency || 'USD',
+          sourceId: e.id,
+          detail: itinDays > 1 ? `${itinDays}-day event (total, not per day)` : undefined,
+          onItinerary: true,
+        });
+      }
+    }
+
+    // Then: booked/interested NOT already on itinerary
+    for (const e of eventRows) {
+      if (!seenEventIds.has(e.id) && ['booked', 'interested'].includes(e.status || '') && Number(e.totalCost || 0) > 0) {
+        eventItems.push({
+          id: e.id,
+          name: e.name,
+          source: 'event',
+          status: e.status || 'researched',
+          estimatedCost: Number(e.totalCost || 0),
+          actualCost: e.status === 'booked' ? Number(e.totalCost || 0) : 0,
+          category: 'activities',
+          currency: e.currency || 'USD',
+          sourceId: e.id,
+          onItinerary: false,
+        });
+      }
+    }
+
+    // ── Flights ──
     const flightItems: BudgetSummaryItem[] = flightOptionRows.map(f => ({
       id: f.id,
       name: `${f.airline} ${f.departureAirport}→${f.arrivalAirport}`,
@@ -74,8 +150,10 @@ export const getBudgetSummary = createServerFn({ method: 'GET' })
       category: 'flights',
       currency: f.currency || 'USD',
       sourceId: f.id,
+      onItinerary: false,
     }));
 
+    // ── Totals ──
     const accomTotal = accomItems.reduce((s, i) => s + i.estimatedCost, 0);
     const eventTotal = eventItems.reduce((s, i) => s + i.estimatedCost, 0);
     const flightTotal = flightItems.reduce((s, i) => s + i.estimatedCost, 0);
@@ -92,7 +170,6 @@ export const getBudgetSummary = createServerFn({ method: 'GET' })
     flightItems.forEach(i => addToCategory('flights', i.estimatedCost));
     manualItems.forEach(i => addToCategory(i.category, Number(i.estimatedCost || i.actualCost || 0)));
 
-    // Grand totals
     const allComputedEstimated = accomTotal + eventTotal + flightTotal;
     const allComputedActual = [...accomItems, ...eventItems, ...flightItems].reduce((s, i) => s + i.actualCost, 0);
     const manualActual = manualItems.reduce((s, i) => s + Number(i.actualCost || 0), 0);

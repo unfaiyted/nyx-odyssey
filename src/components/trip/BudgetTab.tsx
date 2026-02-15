@@ -501,9 +501,19 @@ function ComputedSection({ icon, title, total, items, currency }: {
           >
             {items.map(item => (
               <div key={item.id} className="flex items-center gap-2 py-1.5 px-2 bg-ody-surface/30 rounded text-xs">
-                <span className="flex-1 truncate">{item.name}</span>
+                <span className="flex-1 min-w-0">
+                  <span className="truncate block">{item.name}</span>
+                  {item.detail && (
+                    <span className="text-[10px] text-ody-text-dim block">{item.detail}</span>
+                  )}
+                </span>
+                {item.onItinerary && (
+                  <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-400/15 text-emerald-400 border border-emerald-400/20">
+                    📋 Itinerary
+                  </span>
+                )}
                 {statusBadge(item.status)}
-                <span className={`font-medium ${item.actualCost > 0 ? 'text-ody-success' : 'text-ody-text-dim'}`}>
+                <span className={`font-medium shrink-0 ${item.actualCost > 0 ? 'text-ody-success' : 'text-ody-text-dim'}`}>
                   {item.actualCost > 0 ? formatMoneyFull(item.actualCost, currency) : `~${formatMoneyFull(item.estimatedCost, currency)}`}
                 </span>
               </div>

@@ -312,6 +312,8 @@ export interface BudgetSummaryItem {
   category: string;
   currency: string;
   sourceId?: string;
+  detail?: string;
+  onItinerary?: boolean;
 }
 
 export interface BudgetSummary {
