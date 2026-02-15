@@ -9,6 +9,7 @@ import {
   Eye, Star, ShoppingBag, X,
 } from 'lucide-react';
 import type { DestinationEvent, TripDestination } from '../../types/trips';
+import { Link } from '@tanstack/react-router';
 
 interface Props {
   tripId: string;
@@ -572,7 +573,10 @@ export function EventsTab({ tripId, items, destinations = [] }: Props) {
                       {/* Main content */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold truncate">{ev.name}</h4>
+                          <Link to="/event/$eventId" params={{ eventId: ev.id }}
+                            className="font-semibold truncate hover:text-ody-accent hover:underline transition-colors">
+                            {ev.name}
+                          </Link>
                           <span className={`text-[11px] px-2 py-0.5 rounded-full ${stCfg.bg} ${stCfg.color}`}>
                             {stCfg.label}
                           </span>
@@ -624,6 +628,10 @@ export function EventsTab({ tripId, items, destinations = [] }: Props) {
 
                       {/* Actions */}
                       <div className="flex items-center gap-1 shrink-0">
+                        <Link to="/event/$eventId" params={{ eventId: ev.id }}
+                          className="p-1.5 hover:bg-ody-surface-hover rounded-lg text-ody-text-dim hover:text-ody-accent" title="View Details">
+                          <Eye size={16} />
+                        </Link>
                         {ev.ticketUrl && (
                           <a href={ev.ticketUrl} target="_blank" rel="noopener noreferrer"
                             className="p-1.5 hover:bg-ody-surface-hover rounded-lg text-ody-text-dim hover:text-ody-accent" title="Tickets">

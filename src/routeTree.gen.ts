@@ -14,6 +14,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TripsIndexRouteImport } from './routes/trips.index'
 import { Route as TripsTripIdRouteImport } from './routes/trips.$tripId'
 import { Route as HighlightHighlightIdRouteImport } from './routes/highlight.$highlightId'
+import { Route as EventEventIdRouteImport } from './routes/event.$eventId'
 import { Route as DestinationDestinationIdRouteImport } from './routes/destination.$destinationId'
 
 const MapRoute = MapRouteImport.update({
@@ -41,6 +42,11 @@ const HighlightHighlightIdRoute = HighlightHighlightIdRouteImport.update({
   path: '/highlight/$highlightId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventEventIdRoute = EventEventIdRouteImport.update({
+  id: '/event/$eventId',
+  path: '/event/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DestinationDestinationIdRoute =
   DestinationDestinationIdRouteImport.update({
     id: '/destination/$destinationId',
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/map': typeof MapRoute
   '/destination/$destinationId': typeof DestinationDestinationIdRoute
+  '/event/$eventId': typeof EventEventIdRoute
   '/highlight/$highlightId': typeof HighlightHighlightIdRoute
   '/trips/$tripId': typeof TripsTripIdRoute
   '/trips/': typeof TripsIndexRoute
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/map': typeof MapRoute
   '/destination/$destinationId': typeof DestinationDestinationIdRoute
+  '/event/$eventId': typeof EventEventIdRoute
   '/highlight/$highlightId': typeof HighlightHighlightIdRoute
   '/trips/$tripId': typeof TripsTripIdRoute
   '/trips': typeof TripsIndexRoute
@@ -69,6 +77,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/map': typeof MapRoute
   '/destination/$destinationId': typeof DestinationDestinationIdRoute
+  '/event/$eventId': typeof EventEventIdRoute
   '/highlight/$highlightId': typeof HighlightHighlightIdRoute
   '/trips/$tripId': typeof TripsTripIdRoute
   '/trips/': typeof TripsIndexRoute
@@ -79,6 +88,7 @@ export interface FileRouteTypes {
     | '/'
     | '/map'
     | '/destination/$destinationId'
+    | '/event/$eventId'
     | '/highlight/$highlightId'
     | '/trips/$tripId'
     | '/trips/'
@@ -87,6 +97,7 @@ export interface FileRouteTypes {
     | '/'
     | '/map'
     | '/destination/$destinationId'
+    | '/event/$eventId'
     | '/highlight/$highlightId'
     | '/trips/$tripId'
     | '/trips'
@@ -95,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/map'
     | '/destination/$destinationId'
+    | '/event/$eventId'
     | '/highlight/$highlightId'
     | '/trips/$tripId'
     | '/trips/'
@@ -104,6 +116,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   MapRoute: typeof MapRoute
   DestinationDestinationIdRoute: typeof DestinationDestinationIdRoute
+  EventEventIdRoute: typeof EventEventIdRoute
   HighlightHighlightIdRoute: typeof HighlightHighlightIdRoute
   TripsTripIdRoute: typeof TripsTripIdRoute
   TripsIndexRoute: typeof TripsIndexRoute
@@ -146,6 +159,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HighlightHighlightIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/event/$eventId': {
+      id: '/event/$eventId'
+      path: '/event/$eventId'
+      fullPath: '/event/$eventId'
+      preLoaderRoute: typeof EventEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/destination/$destinationId': {
       id: '/destination/$destinationId'
       path: '/destination/$destinationId'
@@ -160,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   MapRoute: MapRoute,
   DestinationDestinationIdRoute: DestinationDestinationIdRoute,
+  EventEventIdRoute: EventEventIdRoute,
   HighlightHighlightIdRoute: HighlightHighlightIdRoute,
   TripsTripIdRoute: TripsTripIdRoute,
   TripsIndexRoute: TripsIndexRoute,

@@ -185,7 +185,16 @@ function TimelineItemCard({
         {/* Event name if linked */}
         {item.eventName && (
           <p className="text-[11px] text-ody-text-muted mt-0.5 flex items-center gap-1">
-            🎫 {item.eventName}
+            🎫 {item.eventId ? (
+              <Link
+                to="/event/$eventId"
+                params={{ eventId: item.eventId }}
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                className="text-ody-accent hover:underline"
+              >
+                {item.eventName}
+              </Link>
+            ) : item.eventName}
             {item.eventBookingUrl && (
               <a
                 href={item.eventBookingUrl}
