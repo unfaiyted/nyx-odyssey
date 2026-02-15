@@ -100,12 +100,11 @@ const eventStatusConfig: Record<string, { label: string; color: string }> = {
 };
 
 function TimelineItemCard({
-  item, onToggle, onDelete, onDragStart,
+  item, onToggle, onDelete,
 }: {
   item: ItineraryItem;
   onToggle: () => void;
   onDelete: () => void;
-  onDragStart: (e: React.DragEvent, data: DragData) => void;
 }) {
   const cat = categoryConfig[item.category] || categoryConfig.activity;
   const destName = item.destinationName;
@@ -113,21 +112,14 @@ function TimelineItemCard({
   const evtStatus = item.eventStatus ? eventStatusConfig[item.eventStatus] : null;
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, x: -12 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 12, transition: { duration: 0.15 } }}
+    <div
       draggable
-      onDragStart={(e: any) => {
-        onDragStart(e, { id: item.id, date: item.date, orderIndex: item.orderIndex });
-        if (e.dataTransfer) {
-          e.dataTransfer.effectAllowed = 'move';
-          e.dataTransfer.setData('application/json', JSON.stringify({ id: item.id, date: item.date, orderIndex: item.orderIndex }));
-        }
+      onDragStart={(e) => {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('application/json', JSON.stringify({ id: item.id, date: item.date, orderIndex: item.orderIndex }));
         e.currentTarget.style.opacity = '0.4';
       }}
-      onDragEnd={(e: any) => { e.currentTarget.style.opacity = '1'; }}
+      onDragEnd={(e) => { e.currentTarget.style.opacity = '1'; }}
       className={`group relative flex items-start gap-3 p-3 rounded-xl border transition-all cursor-grab active:cursor-grabbing
         ${item.completed ? 'opacity-50' : ''} ${cat.bgColor} hover:shadow-lg hover:shadow-black/10`}
     >
@@ -252,7 +244,7 @@ function TimelineItemCard({
         className="opacity-0 group-hover:opacity-100 text-ody-text-dim hover:text-red-400 transition-all p-1">
         <Trash2 size={13} />
       </button>
-    </motion.div>
+    </div>
   );
 }
 
@@ -394,7 +386,6 @@ function DayColumn({
                       item={item}
                       onToggle={() => onToggle(item)}
                       onDelete={() => onDelete(item.id)}
-                      onDragStart={() => {}}
                     />
                     <div
                       onDragOver={(e) => handleDragOver(e, idx + 1)}
