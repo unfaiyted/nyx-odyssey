@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { addItineraryItem, updateItineraryItem, deleteItineraryItem, reorderItinerary } from '../../server/fns/trip-details';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -7,7 +7,7 @@ import {
   CalendarDays, CalendarRange, ChevronDown, ChevronRight,
   Navigation, Filter,
 } from 'lucide-react';
-import type { ItineraryItem, TripDestination } from '../../types/trips';
+import type { ItineraryItem, TripDestination, DestinationEvent } from '../../types/trips';
 
 interface Props {
   tripId: string;
@@ -15,6 +15,7 @@ interface Props {
   startDate?: string | null;
   endDate?: string | null;
   destinations?: TripDestination[];
+  events?: DestinationEvent[];
 }
 
 type ViewMode = 'day' | 'week';
@@ -90,13 +91,21 @@ function getDestinationForDate(date: string, destinations: TripDestination[]): T
 }
 
 // ─── Drag-and-drop item card ──────────────────────────
+const eventStatusBadge: Record<string, { label: string; className: string }> = {
+  researched: { label: 'Researched', className: 'bg-gray-500/15 text-gray-400' },
+  interested: { label: 'Needs Booking', className: 'bg-orange-500/15 text-orange-400' },
+  booked: { label: 'Confirmed', className: 'bg-emerald-500/15 text-emerald-400' },
+  attended: { label: 'Attended', className: 'bg-purple-500/15 text-purple-400' },
+};
+
 function TimelineItemCard({
-  item, onToggle, onDelete, onDragStart,
+  item, onToggle, onDelete, onDragStart, linkedEvent,
 }: {
   item: ItineraryItem;
   onToggle: () => void;
   onDelete: () => void;
   onDragStart: (e: React.DragEvent, data: DragData) => void;
+  linkedEvent?: DestinationEvent | null;
 }) {
   const cat = categoryConfig[item.category] || categoryConfig.activity;
 
@@ -138,6 +147,17 @@ function TimelineItemCard({
           <span className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-full font-semibold ${cat.color} bg-black/20`}>
             {item.category}
           </span>
+          {linkedEvent && (() => {
+            const badge = eventStatusBadge[linkedEvent.status] || eventStatusBadge.researched;
+            return (
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${badge.className}`}>
+                {badge.label}
+                {linkedEvent.status === 'booked' && linkedEvent.confirmationCode && (
+                  <span className="ml-1 font-mono opacity-80">#{linkedEvent.confirmationCode}</span>
+                )}
+              </span>
+            );
+          })()}
         </div>
         {item.description && (
           <p className="text-xs text-ody-text-muted mt-0.5 line-clamp-2">{item.description}</p>
@@ -187,7 +207,7 @@ function DropIndicator({ isActive }: { isActive: boolean }) {
 // ─── Day Column ───────────────────────────────────────
 function DayColumn({
   date, items, dayNumber, destination, collapsed, onToggleCollapse,
-  onToggle, onDelete, onDrop, onReorder,
+  onToggle, onDelete, onDrop, onReorder, eventMap,
 }: {
   date: string;
   items: ItineraryItem[];
@@ -199,6 +219,7 @@ function DayColumn({
   onDelete: (id: string) => void;
   onDrop: (itemId: string, targetDate: string, targetIndex: number) => void;
   onReorder: (itemId: string, targetDate: string, targetIndex: number) => void;
+  eventMap?: Map<string, DestinationEvent>;
 }) {
   const [dragOverZone, setDragOverZone] = useState<number | null>(null);
   const today = isToday(date);
@@ -314,6 +335,7 @@ function DayColumn({
                       onToggle={() => onToggle(item)}
                       onDelete={() => onDelete(item.id)}
                       onDragStart={() => {}}
+                      linkedEvent={item.eventId && eventMap ? eventMap.get(item.eventId) : null}
                     />
                     <div
                       onDragOver={(e) => handleDragOver(e, idx + 1)}
@@ -337,7 +359,7 @@ function DayColumn({
 function WeekView({
   weekNumber, dates, grouped, tripStartDate, destinations,
   collapsedDays, onToggleCollapse,
-  onToggle, onDelete, onDrop, onReorder,
+  onToggle, onDelete, onDrop, onReorder, eventMap,
 }: {
   weekNumber: number;
   dates: string[];
@@ -350,6 +372,7 @@ function WeekView({
   onDelete: (id: string) => void;
   onDrop: (itemId: string, targetDate: string, targetIndex: number) => void;
   onReorder: (itemId: string, targetDate: string, targetIndex: number) => void;
+  eventMap?: Map<string, DestinationEvent>;
 }) {
   const totalItems = dates.reduce((sum, d) => sum + (grouped[d]?.length || 0), 0);
   const completedItems = dates.reduce((sum, d) =>
@@ -382,6 +405,7 @@ function WeekView({
               onDelete={onDelete}
               onDrop={onDrop}
               onReorder={onReorder}
+              eventMap={eventMap}
             />
           );
         })}
@@ -391,12 +415,19 @@ function WeekView({
 }
 
 // ─── Main Component ───────────────────────────────────
-export function ItineraryTab({ tripId, items, startDate, endDate, destinations = [] }: Props) {
+export function ItineraryTab({ tripId, items, startDate, endDate, destinations = [], events = [] }: Props) {
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<ViewMode>('day');
   const [showAdd, setShowAdd] = useState(false);
   const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
+
+  // Build event map for linked itinerary items
+  const eventMap = useMemo(() => {
+    const m = new Map<string, DestinationEvent>();
+    events.forEach(e => m.set(e.id, e));
+    return m;
+  }, [events]);
   const [form, setForm] = useState({
     title: '', date: '', startTime: '', endTime: '',
     location: '', category: 'activity', description: '',
@@ -714,6 +745,7 @@ export function ItineraryTab({ tripId, items, startDate, endDate, destinations =
                         onDelete={(id) => deleteMutation.mutate(id)}
                         onDrop={handleDrop}
                         onReorder={handleReorder}
+                        eventMap={eventMap}
                       />
                     </div>
                   );
@@ -744,6 +776,7 @@ export function ItineraryTab({ tripId, items, startDate, endDate, destinations =
                 onDelete={(id) => deleteMutation.mutate(id)}
                 onDrop={handleDrop}
                 onReorder={handleReorder}
+                eventMap={eventMap}
               />
               {idx < sortedWeeks.length - 1 && (
                 <div className="border-b border-ody-border/20 mt-6" />

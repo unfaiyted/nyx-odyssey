@@ -65,6 +65,7 @@ export const itineraryItems = pgTable('itinerary_items', {
   notes: text('notes'),
   orderIndex: integer('order_index').notNull().default(0),
   completed: boolean('completed').default(false),
+  eventId: text('event_id'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

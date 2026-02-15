@@ -469,3 +469,45 @@ export const deleteEvent = createServerFn({ method: 'POST' })
       .where(eq(destinationEvents.id, data.id));
     return { ok: true };
   });
+
+// ── Add Event to Itinerary ─────────────────────────────
+
+export const addEventToItinerary = createServerFn({ method: 'POST' })
+  .handler(async ({ data }) => {
+    const { tripId, eventId } = data;
+
+    // Get the event details
+    const [event] = await db.select().from(destinationEvents)
+      .where(eq(destinationEvents.id, eventId));
+    if (!event) throw new Error('Event not found');
+
+    // Check if already added
+    const existing = await db.select().from(itineraryItems)
+      .where(and(eq(itineraryItems.tripId, tripId), eq(itineraryItems.eventId, eventId)));
+    if (existing.length > 0) {
+      return { alreadyExists: true, item: existing[0] };
+    }
+
+    // Create itinerary item from event
+    const [item] = await db.insert(itineraryItems).values({
+      tripId,
+      eventId,
+      title: event.name,
+      description: event.description,
+      date: event.startDate || new Date().toISOString().split('T')[0],
+      startTime: event.startTime,
+      endTime: event.endTime,
+      location: event.venue || event.venueAddress,
+      category: 'activity',
+      orderIndex: 0,
+    }).returning();
+    return { alreadyExists: false, item };
+  });
+
+export const removeEventFromItinerary = createServerFn({ method: 'POST' })
+  .handler(async ({ data }) => {
+    const { tripId, eventId } = data;
+    await db.delete(itineraryItems)
+      .where(and(eq(itineraryItems.tripId, tripId), eq(itineraryItems.eventId, eventId)));
+    return { ok: true };
+  });

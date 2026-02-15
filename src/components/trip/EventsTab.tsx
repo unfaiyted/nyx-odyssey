@@ -1,19 +1,20 @@
 import { useState, useMemo } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { addEvent, updateEvent, deleteEvent } from '../../server/fns/trip-details';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { addEvent, updateEvent, deleteEvent, addEventToItinerary, removeEventFromItinerary } from '../../server/fns/trip-details';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Calendar, DollarSign, Trash2, MapPin, ExternalLink,
   Filter, ChevronDown, ChevronUp, Edit3, Check, Search,
   Music, Trophy, Compass, Ticket, Clock, Users, Copy, CheckCircle,
-  Eye, Star, ShoppingBag, X,
+  Eye, Star, ShoppingBag, X, CalendarPlus, CalendarCheck,
 } from 'lucide-react';
-import type { DestinationEvent, TripDestination } from '../../types/trips';
+import type { DestinationEvent, TripDestination, ItineraryItem } from '../../types/trips';
 
 interface Props {
   tripId: string;
   items: DestinationEvent[];
   destinations?: TripDestination[];
+  itineraryItems?: ItineraryItem[];
 }
 
 const typeConfig: Record<string, { icon: typeof Music; label: string; emoji: string }> = {
@@ -67,7 +68,7 @@ const emptyForm = {
   groupSize: '1', totalCost: '', currency: 'EUR', notes: '', destinationId: '',
 };
 
-export function EventsTab({ tripId, items, destinations = [] }: Props) {
+export function EventsTab({ tripId, items, destinations = [], itineraryItems: itinItems = [] }: Props) {
   const queryClient = useQueryClient();
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -81,6 +82,10 @@ export function EventsTab({ tripId, items, destinations = [] }: Props) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState<[string, string]>(['', '']);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+
+  const eventIdsInItinerary = useMemo(() => {
+    return new Set(itinItems.filter(i => i.eventId).map(i => i.eventId!));
+  }, [itinItems]);
 
   const destMap = useMemo(() => {
     const m = new Map<string, TripDestination>();
@@ -109,6 +114,16 @@ export function EventsTab({ tripId, items, destinations = [] }: Props) {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteEvent({ data: { id } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
+  });
+
+  const addToItineraryMutation = useMutation({
+    mutationFn: (eventId: string) => addEventToItinerary({ data: { tripId, eventId } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
+  });
+
+  const removeFromItineraryMutation = useMutation({
+    mutationFn: (eventId: string) => removeEventFromItinerary({ data: { tripId, eventId } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 
@@ -624,6 +639,20 @@ export function EventsTab({ tripId, items, destinations = [] }: Props) {
 
                       {/* Actions */}
                       <div className="flex items-center gap-1 shrink-0">
+                        {eventIdsInItinerary.has(ev.id) ? (
+                          <button onClick={() => removeFromItineraryMutation.mutate(ev.id)}
+                            title="Remove from Itinerary"
+                            className="flex items-center gap-1 px-2 py-1 text-xs rounded-lg bg-ody-success/15 text-ody-success hover:bg-ody-success/25 transition-colors">
+                            <CalendarCheck size={14} /> <span className="hidden sm:inline">In Itinerary</span>
+                          </button>
+                        ) : (
+                          <button onClick={() => addToItineraryMutation.mutate(ev.id)}
+                            disabled={addToItineraryMutation.isPending}
+                            title="Add to Itinerary"
+                            className="flex items-center gap-1 px-2 py-1 text-xs rounded-lg bg-ody-accent/15 text-ody-accent hover:bg-ody-accent/25 transition-colors disabled:opacity-50">
+                            <CalendarPlus size={14} /> <span className="hidden sm:inline">Add to Itinerary</span>
+                          </button>
+                        )}
                         {ev.ticketUrl && (
                           <a href={ev.ticketUrl} target="_blank" rel="noopener noreferrer"
                             className="p-1.5 hover:bg-ody-surface-hover rounded-lg text-ody-text-dim hover:text-ody-accent" title="Tickets">

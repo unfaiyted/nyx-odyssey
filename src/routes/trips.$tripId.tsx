@@ -182,7 +182,7 @@ function TripDetailPage() {
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}>
           {activeTab === 'overview' && <OverviewTab trip={trip} onNavigate={handleTabChange} />}
-          {activeTab === 'itinerary' && <ItineraryTab tripId={tripId} items={trip.itineraryItems} startDate={trip.startDate} endDate={trip.endDate} destinations={trip.destinations} />}
+          {activeTab === 'itinerary' && <ItineraryTab tripId={tripId} items={trip.itineraryItems} startDate={trip.startDate} endDate={trip.endDate} destinations={trip.destinations} events={trip.events} />}
           {activeTab === 'destinations' && <DestinationsTab tripId={tripId} items={trip.destinations} activeTab={activeTab} />}
           {activeTab === 'research' && <ResearchBoard tripId={tripId} items={trip.destinations} activeTab={activeTab} />}
           {activeTab === 'accommodations' && <AccommodationsTab tripId={tripId} items={trip.accommodations} destinations={trip.destinations} />}
@@ -193,7 +193,7 @@ function TripDetailPage() {
           {activeTab === 'routes' && <RoutesTab tripId={tripId} routes={trip.routes || []} destinations={trip.destinations} homeBaseName={trip.homeBaseName} />}
           {activeTab === 'schedule' && <ScheduleTab tripId={tripId} cronJobs={trip.cronJobs || []} />}
           {activeTab === 'travelers' && <TravelersTab tripId={tripId} items={trip.travelers || []} />}
-          {activeTab === 'events' && <EventsTab tripId={tripId} items={trip.events || []} destinations={trip.destinations} />}
+          {activeTab === 'events' && <EventsTab tripId={tripId} items={trip.events || []} destinations={trip.destinations} itineraryItems={trip.itineraryItems} />}
         </motion.div>
       </AnimatePresence>
 

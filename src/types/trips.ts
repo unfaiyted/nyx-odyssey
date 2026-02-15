@@ -36,6 +36,7 @@ export interface ItineraryItem {
   notes: string | null;
   orderIndex: number;
   completed: boolean;
+  eventId: string | null;
   createdAt: string;
 }
 
