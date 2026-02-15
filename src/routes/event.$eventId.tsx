@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getEventDetail, addEventToItinerary } from '../server/event-detail';
+import { useQuery } from '@tanstack/react-query';
+import { getEventDetail } from '../server/event-detail';
+import { AddEventToItineraryModal } from '../components/destination/AddEventToItineraryModal';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import {
@@ -47,35 +48,12 @@ function formatTime(t: string | null): string {
 
 function EventDetailPage() {
   const { eventId } = Route.useParams();
-  const queryClient = useQueryClient();
   const [showAddToItinerary, setShowAddToItinerary] = useState(false);
-  const [itineraryDate, setItineraryDate] = useState('');
+
 
   const { data, isLoading } = useQuery({
     queryKey: ['event', eventId],
     queryFn: () => getEventDetail({ data: { eventId } }),
-  });
-
-  const addToItineraryMutation = useMutation({
-    mutationFn: (input: { date: string }) => addEventToItinerary({
-      data: {
-        tripId: data!.trip!.id,
-        eventId: data!.event.id,
-        destinationId: data!.event.destinationId,
-        title: data!.event.name,
-        description: data!.event.description || undefined,
-        date: input.date,
-        startTime: data!.event.startTime || undefined,
-        endTime: data!.event.endTime || undefined,
-        location: data!.event.venue || data!.event.venueAddress || undefined,
-        category: 'activity',
-      },
-    }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['event', eventId] });
-      queryClient.invalidateQueries({ queryKey: ['trip'] });
-      setShowAddToItinerary(false);
-    },
   });
 
   if (isLoading) return <div className="p-6 text-center text-ody-text-muted">Loading event...</div>;
@@ -232,41 +210,12 @@ function EventDetailPage() {
         className="flex flex-wrap gap-3 mb-8"
       >
         {!isInItinerary ? (
-          <>
-            {!showAddToItinerary ? (
-              <button
-                onClick={() => {
-                  setItineraryDate(event.startDate || '');
-                  setShowAddToItinerary(true);
-                }}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-ody-accent text-white text-sm font-medium hover:bg-ody-accent-hover transition-colors"
-              >
-                <CalendarPlus size={16} /> Add to Itinerary
-              </button>
-            ) : (
-              <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  value={itineraryDate}
-                  onChange={(e) => setItineraryDate(e.target.value)}
-                  className="px-3 py-2 rounded-lg bg-ody-surface border border-ody-border text-sm text-ody-text"
-                />
-                <button
-                  onClick={() => addToItineraryMutation.mutate({ date: itineraryDate })}
-                  disabled={!itineraryDate || addToItineraryMutation.isPending}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-ody-accent text-white text-sm font-medium hover:bg-ody-accent-hover disabled:opacity-50 transition-colors"
-                >
-                  {addToItineraryMutation.isPending ? 'Adding...' : 'Confirm'}
-                </button>
-                <button
-                  onClick={() => setShowAddToItinerary(false)}
-                  className="px-3 py-2 rounded-lg bg-ody-surface border border-ody-border text-sm text-ody-text-muted hover:text-ody-text transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
-          </>
+          <button
+            onClick={() => setShowAddToItinerary(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-ody-accent text-white text-sm font-medium hover:bg-ody-accent-hover transition-colors"
+          >
+            <CalendarPlus size={16} /> Add to Itinerary
+          </button>
         ) : (
           <span className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 text-sm font-medium border border-emerald-500/20">
             <CheckCircle size={16} /> Already in Itinerary
@@ -300,6 +249,16 @@ function EventDetailPage() {
           {trip && <p className="text-xs text-ody-text-dim mt-1">{trip.name}</p>}
         </motion.div>
       )}
+
+      {/* Add to Itinerary Modal */}
+      <AddEventToItineraryModal
+        event={event}
+        tripId={trip?.id || ''}
+        startDate={trip?.startDate}
+        endDate={trip?.endDate}
+        open={showAddToItinerary}
+        onClose={() => setShowAddToItinerary(false)}
+      />
 
       {/* Related Events */}
       {relatedEvents.length > 0 && (

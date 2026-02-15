@@ -52,8 +52,13 @@ export const addEventToItinerary = createServerFn({ method: 'POST' })
     date: z.string().min(1),
     startTime: z.string().optional(),
     endTime: z.string().optional(),
+    durationMinutes: z.number().optional(),
     location: z.string().optional(),
     category: z.string().default('activity'),
+    travelMode: z.string().optional(),
+    travelTimeMinutes: z.number().optional(),
+    travelFromLocation: z.string().optional(),
+    notes: z.string().optional(),
   }))
   .handler(async ({ data }) => {
     const [item] = await db.insert(itineraryItems).values({
@@ -67,6 +72,10 @@ export const addEventToItinerary = createServerFn({ method: 'POST' })
       endTime: data.endTime,
       location: data.location,
       category: data.category,
+      travelMode: data.travelMode,
+      travelTimeMinutes: data.travelTimeMinutes,
+      travelFromLocation: data.travelFromLocation,
+      notes: data.notes,
       orderIndex: 0,
     }).returning();
     return item;
