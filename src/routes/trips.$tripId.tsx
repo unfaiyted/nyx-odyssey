@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-r
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getTrip, updateTrip, deleteTrip } from '../server/fns/trips';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car, CarFront, ClipboardList, Clock, Settings, Activity } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car, CarFront, ClipboardList, Clock, Settings, Activity, Ticket } from 'lucide-react';
 import { z } from 'zod';
 import { useState } from 'react';
 import type { Trip, TripDetail, TripTab } from '../types/trips';
@@ -17,6 +17,7 @@ import { ResearchBoard } from '../components/trip/ResearchBoard';
 import { RentalCarsTab } from '../components/trip/RentalCarsTab';
 import { ScheduleTab } from '../components/trip/ScheduleTab';
 import { PriceTrackingTab } from '../components/trip/PriceTrackingTab';
+import { EventsTab } from '../components/trip/EventsTab';
 import { TripKebabMenu } from '../components/trip/TripKebabMenu';
 import { EditTripModal } from '../components/trip/EditTripModal';
 import { DeleteTripModal } from '../components/trip/DeleteTripModal';
@@ -24,7 +25,7 @@ import { DeleteTripModal } from '../components/trip/DeleteTripModal';
 // Define valid tabs
 const validTabs: TripTab[] = [
   'itinerary', 'destinations', 'research', 'accommodations', 'budget', 
-  'packing', 'flights', 'price-tracking', 'rental-cars', 'routes', 'schedule'
+  'packing', 'flights', 'price-tracking', 'rental-cars', 'routes', 'schedule', 'events'
 ];
 
 // Search params schema with tab validation
@@ -49,6 +50,7 @@ const tabs: { id: TripTab; label: string; icon: typeof Calendar }[] = [
   { id: 'rental-cars', label: 'Rental Cars', icon: CarFront },
   { id: 'routes', label: 'Driving Routes', icon: Car },
   { id: 'schedule', label: 'Schedule', icon: Clock },
+  { id: 'events', label: 'Events', icon: Ticket },
 ];
 
 function TripDetailPage() {
@@ -183,6 +185,7 @@ function TripDetailPage() {
           {activeTab === 'rental-cars' && <RentalCarsTab tripId={tripId} items={trip.rentalCars || []} />}
           {activeTab === 'routes' && <RoutesTab tripId={tripId} routes={trip.routes || []} destinations={trip.destinations} />}
           {activeTab === 'schedule' && <ScheduleTab tripId={tripId} cronJobs={trip.cronJobs || []} />}
+          {activeTab === 'events' && <EventsTab tripId={tripId} items={trip.events || []} destinations={trip.destinations} />}
         </motion.div>
       </AnimatePresence>
 

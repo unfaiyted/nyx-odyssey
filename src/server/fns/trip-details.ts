@@ -2,7 +2,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { db } from '../../db';
 import {
   itineraryItems, tripDestinations, accommodations, budgetItems,
-  budgetCategories, packingItems, flights, rentalCars, tripRoutes, tripCronJobs,
+  budgetCategories, packingItems, flights, rentalCars, tripRoutes, tripCronJobs, destinationEvents,
 } from '../../db/schema';
 import { eq, and } from 'drizzle-orm';
 
@@ -328,4 +328,28 @@ export const addCronJob = createServerFn({ method: 'POST' })
     const { tripId, ...rest } = data;
     const [job] = await db.insert(tripCronJobs).values({ tripId, ...rest }).returning();
     return job;
+  });
+
+// ── Destination Events ─────────────────────────────────
+
+export const addEvent = createServerFn({ method: 'POST' })
+  .handler(async ({ data }) => {
+    const { ...rest } = data;
+    const [event] = await db.insert(destinationEvents).values(rest).returning();
+    return event;
+  });
+
+export const updateEvent = createServerFn({ method: 'POST' })
+  .handler(async ({ data }) => {
+    const { id, ...rest } = data;
+    const [updated] = await db.update(destinationEvents).set(rest)
+      .where(eq(destinationEvents.id, id))
+      .returning();
+    return updated;
+  });
+
+export const deleteEvent = createServerFn({ method: 'POST' })
+  .handler(async ({ data }) => {
+    await db.delete(destinationEvents).where(eq(destinationEvents.id, data.id));
+    return { ok: true };
   });

@@ -169,6 +169,32 @@ export interface RentalCar {
   createdAt: string;
 }
 
+export interface DestinationEvent {
+  id: string;
+  destinationId: string;
+  recommendationId: string | null;
+  name: string;
+  description: string | null;
+  eventType: string;
+  startDate: string | null;
+  endDate: string | null;
+  startTime: string | null;
+  endTime: string | null;
+  venue: string | null;
+  venueAddress: string | null;
+  status: string;
+  ticketUrl: string | null;
+  bookingUrl: string | null;
+  confirmationCode: string | null;
+  ticketPriceFrom: string | null;
+  ticketPriceTo: string | null;
+  groupSize: number;
+  totalCost: string | null;
+  currency: string;
+  notes: string | null;
+  createdAt: string;
+}
+
 export interface TripCronJob {
   id: string;
   tripId: string;
@@ -194,6 +220,7 @@ export interface TripDetail extends Trip {
   rentalCars: RentalCar[];
   routes: TripRoute[];
   cronJobs: TripCronJob[];
+  events: DestinationEvent[];
 }
 
 export interface BudgetCategory {
@@ -206,4 +233,4 @@ export interface BudgetCategory {
   createdAt: string;
 }
 
-export type TripTab = 'itinerary' | 'destinations' | 'research' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'price-tracking' | 'rental-cars' | 'routes' | 'schedule';
+export type TripTab = 'itinerary' | 'destinations' | 'research' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'price-tracking' | 'rental-cars' | 'routes' | 'schedule' | 'events';

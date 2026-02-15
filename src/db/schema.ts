@@ -604,13 +604,22 @@ export const destinationEvents = pgTable('destination_events', {
   recommendationId: text('recommendation_id').references(() => tripRecommendations.id, { onDelete: 'set null' }),
   name: text('name').notNull(),
   description: text('description'),
-  eventType: text('event_type').default('performance'), // performance, festival, exhibition, market, other
-  dates: text('dates'), // e.g. "June 19, 25; July 2, 10"
+  eventType: text('event_type').default('performance'), // performance, concert, sports, tour, festival, exhibition, market, other
   startDate: text('start_date'),
   endDate: text('end_date'),
-  websiteUrl: text('website_url'),
+  startTime: text('start_time'),
+  endTime: text('end_time'),
+  venue: text('venue'),
+  venueAddress: text('venue_address'),
+  status: text('status').default('researched'), // researched, interested, booked, attended
+  ticketUrl: text('ticket_url'),
   bookingUrl: text('booking_url'),
-  price: text('price'),
+  confirmationCode: text('confirmation_code'),
+  ticketPriceFrom: text('ticket_price_from'),
+  ticketPriceTo: text('ticket_price_to'),
+  groupSize: integer('group_size').default(1),
+  totalCost: numeric('total_cost', { precision: 10, scale: 2 }),
+  currency: text('currency').default('EUR'),
   notes: text('notes'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
