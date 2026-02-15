@@ -39,6 +39,9 @@ export interface ItineraryItem {
   notes: string | null;
   orderIndex: number;
   completed: boolean;
+  estimatedCost: string | null;
+  actualCost: string | null;
+  currency: string;
   createdAt: string;
   // Joined fields for navigation
   destinationName?: string | null;
@@ -297,6 +300,29 @@ export interface EmergencyContact {
   email: string | null;
   notes: string | null;
   createdAt: string;
+}
+
+export interface BudgetSummaryItem {
+  id: string;
+  name: string;
+  source: 'accommodation' | 'event' | 'flight' | 'manual';
+  status: string;
+  estimatedCost: number;
+  actualCost: number;
+  category: string;
+  currency: string;
+  sourceId?: string;
+}
+
+export interface BudgetSummary {
+  computed: {
+    accommodations: { items: BudgetSummaryItem[]; total: number };
+    events: { items: BudgetSummaryItem[]; total: number };
+    flights: { items: BudgetSummaryItem[]; total: number };
+  };
+  manual: { items: BudgetItem[]; total: number };
+  byCategory: Record<string, number>;
+  grandTotal: { estimated: number; actual: number };
 }
 
 export type TripTab = 'overview' | 'itinerary' | 'destinations' | 'research' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'price-tracking' | 'rental-cars' | 'routes' | 'schedule' | 'travelers' | 'events';

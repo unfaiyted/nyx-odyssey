@@ -1,17 +1,18 @@
 import { useState, useMemo } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { addBudgetItem, updateBudgetItem, deleteBudgetItem, addBudgetCategory, updateBudgetCategory } from '../../server/fns/trip-details';
+import { getBudgetSummary } from '../../server/fns/budget-summary';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Trash2, CheckCircle, Circle, TrendingUp, TrendingDown,
   Plane, Home, Utensils, Compass, ShoppingBag, Car, MoreHorizontal,
-  Edit2, X, ChevronDown, ChevronUp, Filter,
+  Edit2, X, ChevronDown, ChevronUp, Filter, ExternalLink, Hotel, Ticket, Fuel,
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis,
-  Tooltip, Legend, AreaChart, Area, CartesianGrid, LineChart, Line,
+  Tooltip, Legend, CartesianGrid,
 } from 'recharts';
-import type { BudgetItem, BudgetCategory } from '../../types/trips';
+import type { BudgetItem, BudgetCategory, BudgetSummary, BudgetSummaryItem } from '../../types/trips';
 import { DailyBudgetSpreadsheet } from './DailyBudgetSpreadsheet';
 
 interface Props {
@@ -29,6 +30,7 @@ const CATEGORIES = [
   { key: 'accommodations', label: 'Accommodations', icon: Home, color: '#a78bfa' },
   { key: 'food', label: 'Food & Dining', icon: Utensils, color: '#34d399' },
   { key: 'activities', label: 'Activities', icon: Compass, color: '#fbbf24' },
+  { key: 'entertainment', label: 'Entertainment', icon: Ticket, color: '#f472b6' },
   { key: 'transport', label: 'Transport', icon: Car, color: '#60a5fa' },
   { key: 'shopping', label: 'Shopping', icon: ShoppingBag, color: '#f87171' },
   { key: 'other', label: 'Other', icon: MoreHorizontal, color: '#9ca3af' },
@@ -48,17 +50,35 @@ function formatMoneyFull(value: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
 }
 
-export function BudgetTab({ tripId, items, budgetCategories: catAllocations, totalBudget, currency, startDate, endDate }: Props) {
-  const [showDailySpreadsheet, setShowDailySpreadsheet] = useState(true);
+function statusBadge(status: string) {
+  const colors: Record<string, string> = {
+    booked: 'bg-emerald-500/20 text-emerald-400',
+    shortlisted: 'bg-amber-500/20 text-amber-400',
+    interested: 'bg-blue-500/20 text-blue-400',
+    researched: 'bg-gray-500/20 text-gray-400',
+  };
+  return (
+    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${colors[status] || colors.researched}`}>
+      {status}
+    </span>
+  );
+}
+
+export function BudgetTab({ tripId, items: manualItems, budgetCategories: catAllocations, totalBudget, currency, startDate, endDate }: Props) {
   const queryClient = useQueryClient();
   const [showAdd, setShowAdd] = useState(false);
-  const [showCategorySetup, setShowCategorySetup] = useState(false);
-  const [filterCategory, setFilterCategory] = useState<string | null>(null);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [showDailySpreadsheet, setShowDailySpreadsheet] = useState(false);
+  const [expandedSection, setExpandedSection] = useState<string | null>('computed');
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<BudgetItem>>({});
   const [form, setForm] = useState({
     category: 'food', description: '', estimatedCost: '', actualCost: '', date: '',
+  });
+
+  // Fetch budget summary
+  const { data: summary } = useQuery<BudgetSummary>({
+    queryKey: ['budget-summary', tripId],
+    queryFn: () => getBudgetSummary({ data: { tripId } }),
   });
 
   // ── Mutations ──────────────────────────────────
@@ -66,6 +86,7 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
     mutationFn: (data: any) => addBudgetItem({ data: { tripId, ...data } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
+      queryClient.invalidateQueries({ queryKey: ['budget-summary', tripId] });
       setShowAdd(false);
       setForm({ category: 'food', description: '', estimatedCost: '', actualCost: '', date: '' });
     },
@@ -73,113 +94,96 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
 
   const togglePaidMutation = useMutation({
     mutationFn: (item: BudgetItem) => updateBudgetItem({ data: { tripId, id: item.id, paid: !item.paid } }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
+      queryClient.invalidateQueries({ queryKey: ['budget-summary', tripId] });
+    },
   });
 
   const updateItemMutation = useMutation({
     mutationFn: (data: Partial<BudgetItem> & { id: string }) => updateBudgetItem({ data: { tripId, ...data } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
+      queryClient.invalidateQueries({ queryKey: ['budget-summary', tripId] });
       setEditingItem(null);
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteBudgetItem({ data: { tripId, id } }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
-  });
-
-  const saveCategoryBudget = useMutation({
-    mutationFn: (data: { category: string; allocatedBudget: string; id?: string }) => {
-      const existing = catAllocations.find(c => c.category === data.category);
-      if (existing) {
-        return updateBudgetCategory({ data: { tripId, id: existing.id, allocatedBudget: data.allocatedBudget } });
-      }
-      return addBudgetCategory({ data: { tripId, ...data } });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
+      queryClient.invalidateQueries({ queryKey: ['budget-summary', tripId] });
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 
   // ── Computed data ──────────────────────────────
   const budget = Number(totalBudget || 0);
-  const totalEstimated = items.reduce((s, i) => s + Number(i.estimatedCost || 0), 0);
-  const totalActual = items.reduce((s, i) => s + Number(i.actualCost || 0), 0);
-  const totalPaid = items.filter(i => i.paid).reduce((s, i) => s + Number(i.actualCost || i.estimatedCost || 0), 0);
-  const remaining = budget - totalActual;
+  const grandEstimated = summary?.grandTotal.estimated || 0;
+  const grandActual = summary?.grandTotal.actual || 0;
+  const remaining = budget - grandEstimated;
 
+  // Trip duration for per-day calc
+  const tripDays = useMemo(() => {
+    if (!startDate || !endDate) return 0;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+  }, [startDate, endDate]);
+
+  // Pie chart data from byCategory
+  const pieData = useMemo(() => {
+    if (!summary) return [];
+    return Object.entries(summary.byCategory)
+      .filter(([, v]) => v > 0)
+      .map(([key, value]) => ({
+        name: getCategoryMeta(key).label,
+        value,
+        color: getCategoryMeta(key).color,
+      }))
+      .sort((a, b) => b.value - a.value);
+  }, [summary]);
+
+  // Bar data
   const allocationMap = useMemo(() =>
     Object.fromEntries(catAllocations.map(c => [c.category, Number(c.allocatedBudget)])),
   [catAllocations]);
 
-  const categoryStats = useMemo(() => {
-    const stats: Record<string, { estimated: number; actual: number; count: number; items: BudgetItem[] }> = {};
-    for (const item of items) {
-      if (!stats[item.category]) stats[item.category] = { estimated: 0, actual: 0, count: 0, items: [] };
-      stats[item.category].estimated += Number(item.estimatedCost || 0);
-      stats[item.category].actual += Number(item.actualCost || 0);
-      stats[item.category].count++;
-      stats[item.category].items.push(item);
-    }
-    return stats;
-  }, [items]);
+  const barData = useMemo(() => {
+    if (!summary) return [];
+    return CATEGORIES
+      .map(c => ({
+        name: c.label.split(' ')[0],
+        budget: allocationMap[c.key] || 0,
+        estimated: summary.byCategory[c.key] || 0,
+      }))
+      .filter(d => d.budget > 0 || d.estimated > 0);
+  }, [summary, allocationMap]);
 
-  // Pie chart data
-  const pieData = CATEGORIES
-    .map(c => ({
-      name: c.label,
-      value: (categoryStats[c.key]?.actual || categoryStats[c.key]?.estimated || 0),
-      color: c.color,
-    }))
-    .filter(d => d.value > 0);
-
-  // Bar chart: budget vs estimated vs actual per category
-  const barData = CATEGORIES
-    .map(c => ({
-      name: c.label.split(' ')[0],
-      budget: allocationMap[c.key] || 0,
-      estimated: categoryStats[c.key]?.estimated || 0,
-      actual: categoryStats[c.key]?.actual || 0,
-    }))
-    .filter(d => d.budget > 0 || d.estimated > 0 || d.actual > 0);
-
-  // Spending timeline (cumulative by date)
-  const timelineData = useMemo(() => {
-    const dated = items
-      .filter(i => i.date)
-      .sort((a, b) => (a.date! > b.date! ? 1 : -1));
-    if (dated.length === 0) return [];
-    let cumulative = 0;
-    let cumEstimated = 0;
-    const points: { date: string; actual: number; estimated: number; budget: number }[] = [];
-    for (const item of dated) {
-      cumulative += Number(item.actualCost || 0);
-      cumEstimated += Number(item.estimatedCost || 0);
-      points.push({ date: item.date!, actual: cumulative, estimated: cumEstimated, budget });
-    }
-    return points;
-  }, [items, budget]);
-
-  const filteredItems = filterCategory ? items.filter(i => i.category === filterCategory) : items;
-
-  const budgetPercent = budget > 0 ? Math.min((totalActual / budget) * 100, 100) : 0;
-  const isOverBudget = totalActual > budget && budget > 0;
+  const budgetPercent = budget > 0 ? Math.min((grandEstimated / budget) * 100, 100) : 0;
+  const isOverBudget = grandEstimated > budget && budget > 0;
 
   return (
     <div className="space-y-6">
       {/* ── Summary Cards ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <SummaryCard label="Total Budget" value={formatMoney(budget, currency)} sub={currency} accent="text-ody-accent" />
-        <SummaryCard label="Estimated" value={formatMoney(totalEstimated, currency)} sub={`${items.length} items`} accent="text-ody-info" />
         <SummaryCard
-          label="Actual Spent"
-          value={formatMoney(totalActual, currency)}
-          sub={`${items.filter(i => i.paid).length} paid`}
+          label="Total Estimated"
+          value={formatMoney(grandEstimated, currency)}
+          sub={`From all sources`}
+          accent="text-ody-info"
+        />
+        <SummaryCard
+          label="Booked / Actual"
+          value={formatMoney(grandActual, currency)}
+          sub={grandEstimated > 0 ? `${Math.round((grandActual / grandEstimated) * 100)}% confirmed` : '—'}
           accent={isOverBudget ? 'text-ody-danger' : 'text-ody-success'}
         />
         <SummaryCard
-          label="Remaining"
-          value={formatMoney(remaining, currency)}
-          sub={budget > 0 ? `${(100 - budgetPercent).toFixed(0)}% left` : 'No budget set'}
+          label={remaining >= 0 ? 'Remaining' : 'Over Budget'}
+          value={formatMoney(Math.abs(remaining), currency)}
+          sub={tripDays > 0 ? `~${formatMoney(grandEstimated / tripDays, currency)}/day` : budget > 0 ? `${(100 - budgetPercent).toFixed(0)}% left` : 'No budget set'}
           accent={remaining < 0 ? 'text-ody-danger' : 'text-ody-success'}
           icon={remaining < 0 ? TrendingDown : TrendingUp}
         />
@@ -191,21 +195,114 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
           <div className="flex justify-between text-xs text-ody-text-dim mb-2">
             <span>Overall Budget Usage</span>
             <span className={isOverBudget ? 'text-ody-danger font-medium' : ''}>
-              {formatMoney(totalActual, currency)} / {formatMoney(budget, currency)}
+              {formatMoney(grandEstimated, currency)} / {formatMoney(budget, currency)}
             </span>
           </div>
-          <div className="h-3 bg-ody-surface rounded-full overflow-hidden">
+          <div className="h-3 bg-ody-surface rounded-full overflow-hidden relative">
+            {/* Actual/booked portion */}
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min((grandActual / budget) * 100, 100)}%` }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+              className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-500 absolute left-0 top-0"
+            />
+            {/* Estimated portion */}
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(budgetPercent, 100)}%` }}
               transition={{ duration: 0.8, ease: 'easeOut' }}
-              className={`h-full rounded-full ${
-                isOverBudget ? 'bg-gradient-to-r from-ody-danger/80 to-ody-danger' :
-                budgetPercent > 80 ? 'bg-gradient-to-r from-amber-500/80 to-amber-500' :
-                'bg-gradient-to-r from-ody-accent/80 to-ody-accent'
+              className={`h-full rounded-full absolute left-0 top-0 ${
+                isOverBudget ? 'bg-gradient-to-r from-ody-danger/40 to-ody-danger/60' :
+                budgetPercent > 80 ? 'bg-gradient-to-r from-amber-500/40 to-amber-500/60' :
+                'bg-gradient-to-r from-ody-accent/30 to-ody-accent/50'
               }`}
             />
           </div>
+          <div className="flex gap-4 mt-1.5 text-[10px] text-ody-text-dim">
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> Booked</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-ody-accent/50 inline-block" /> Estimated</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Computed Costs ── */}
+      {summary && (
+        <div className="space-y-3">
+          {/* Accommodations */}
+          {summary.computed.accommodations.items.length > 0 && (
+            <ComputedSection
+              icon="🏨"
+              title="Accommodations"
+              total={summary.computed.accommodations.total}
+              items={summary.computed.accommodations.items}
+              currency={currency}
+            />
+          )}
+
+          {/* Events & Shows */}
+          {summary.computed.events.items.length > 0 && (
+            <ComputedSection
+              icon="🎫"
+              title="Events & Shows"
+              total={summary.computed.events.total}
+              items={summary.computed.events.items}
+              currency={currency}
+            />
+          )}
+
+          {/* Flights */}
+          {summary.computed.flights.items.length > 0 && (
+            <ComputedSection
+              icon="✈️"
+              title="Flights"
+              total={summary.computed.flights.total}
+              items={summary.computed.flights.items}
+              currency={currency}
+            />
+          )}
+        </div>
+      )}
+
+      {/* ── Charts ── */}
+      {pieData.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="glass-card p-4">
+            <h4 className="text-sm font-semibold mb-3 text-ody-text-muted">Spending Distribution</h4>
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} dataKey="value" paddingAngle={2} strokeWidth={0}>
+                  {pieData.map((entry) => (
+                    <Cell key={entry.name} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{ background: '#13131a', border: '1px solid #2a2a3a', borderRadius: 8, color: '#e4e4ed', fontSize: 12 }}
+                  formatter={(v: any) => formatMoneyFull(Number(v), currency)}
+                />
+                <Legend formatter={(value: string) => <span className="text-xs text-ody-text-muted">{value}</span>} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {barData.length > 0 && (
+            <div className="glass-card p-4">
+              <h4 className="text-sm font-semibold mb-3 text-ody-text-muted">Budget vs Estimated</h4>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={barData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" />
+                  <XAxis dataKey="name" tick={{ fill: '#8888a0', fontSize: 10 }} />
+                  <YAxis tick={{ fill: '#8888a0', fontSize: 10 }} />
+                  <Tooltip
+                    contentStyle={{ background: '#13131a', border: '1px solid #2a2a3a', borderRadius: 8, color: '#e4e4ed', fontSize: 12 }}
+                    formatter={(v: any) => formatMoneyFull(Number(v), currency)}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="budget" fill="#6366f1" radius={[3, 3, 0, 0]} name="Budget" />
+                  <Bar dataKey="estimated" fill="#60a5fa" radius={[3, 3, 0, 0]} name="Estimated" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
       )}
 
@@ -230,7 +327,7 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
             >
               <DailyBudgetSpreadsheet
                 tripId={tripId}
-                items={items}
+                items={manualItems}
                 startDate={startDate || null}
                 endDate={endDate || null}
                 currency={currency}
@@ -240,217 +337,12 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
         </AnimatePresence>
       </div>
 
-      {/* ── Category Breakdown ── */}
-      <div className="glass-card p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h4 className="text-sm font-semibold text-ody-text-muted">Category Breakdown</h4>
-          <button
-            onClick={() => setShowCategorySetup(!showCategorySetup)}
-            className="text-xs text-ody-accent hover:text-ody-accent-hover transition-colors flex items-center gap-1"
-          >
-            <Edit2 size={12} /> Set Budgets
-          </button>
-        </div>
-
-        {/* Category budget setup */}
-        <AnimatePresence>
-          {showCategorySetup && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-              className="mb-4 overflow-hidden"
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 bg-ody-surface/50 rounded-lg">
-                {CATEGORIES.map(cat => {
-                  const Icon = cat.icon;
-                  return (
-                    <div key={cat.key} className="flex items-center gap-2">
-                      <Icon size={14} style={{ color: cat.color }} />
-                      <span className="text-xs text-ody-text-muted w-28">{cat.label}</span>
-                      <input
-                        type="number"
-                        placeholder="0"
-                        defaultValue={allocationMap[cat.key] || ''}
-                        onBlur={e => {
-                          const val = e.target.value;
-                          if (val) saveCategoryBudget.mutate({ category: cat.key, allocatedBudget: val });
-                        }}
-                        className="bg-ody-bg border border-ody-border rounded px-2 py-1 text-xs w-24 outline-none focus:border-ody-accent"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Category progress bars */}
-        <div className="space-y-3">
-          {CATEGORIES.map(cat => {
-            const stats = categoryStats[cat.key];
-            if (!stats && !allocationMap[cat.key]) return null as any;
-            const allocated = allocationMap[cat.key] || 0;
-            const actual = stats?.actual || 0;
-            const estimated = stats?.estimated || 0;
-            const displayValue = actual || estimated;
-            const percent = allocated > 0 ? Math.min((displayValue / allocated) * 100, 100) : 0;
-            const isOver = allocated > 0 && displayValue > allocated;
-            const Icon = cat.icon;
-            const isExpanded = expandedCategory === cat.key;
-
-            return (
-              <div key={cat.key}>
-                <button
-                  onClick={() => setExpandedCategory(isExpanded ? null : cat.key)}
-                  className="w-full text-left"
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <Icon size={14} style={{ color: cat.color }} />
-                    <span className="text-xs font-medium flex-1">{cat.label}</span>
-                    <span className="text-xs text-ody-text-dim">
-                      {formatMoney(displayValue, currency)}
-                      {allocated > 0 && <span className="text-ody-text-dim"> / {formatMoney(allocated, currency)}</span>}
-                    </span>
-                    <span className="text-xs text-ody-text-dim">({stats?.count || 0})</span>
-                    {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                  </div>
-                  {allocated > 0 && (
-                    <div className="h-1.5 bg-ody-surface rounded-full overflow-hidden ml-5">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${Math.min(percent, 100)}%` }}
-                        transition={{ duration: 0.5 }}
-                        className="h-full rounded-full"
-                        style={{ backgroundColor: isOver ? '#f87171' : cat.color }}
-                      />
-                    </div>
-                  )}
-                </button>
-
-                {/* Expanded items for this category */}
-                <AnimatePresence>
-                  {isExpanded && stats && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                      className="ml-5 mt-2 space-y-1 overflow-hidden"
-                    >
-                      {allocated > 0 && (
-                        <div className="flex items-center gap-2 py-1 px-2 mb-1 text-xs">
-                          <span className="text-ody-text-dim">Variance:</span>
-                          <span className={isOver ? 'text-ody-danger font-medium' : 'text-ody-success font-medium'}>
-                            {isOver ? '−' : '+'}{formatMoney(Math.abs(allocated - displayValue), currency)}
-                            {isOver ? ' over budget' : ' under budget'}
-                          </span>
-                        </div>
-                      )}
-                      {stats.items.map(item => (
-                        <div key={item.id} className="flex items-center gap-2 py-1.5 px-2 bg-ody-surface/30 rounded text-xs">
-                          <button onClick={() => togglePaidMutation.mutate(item)}
-                            className={item.paid ? 'text-ody-success' : 'text-ody-text-dim hover:text-ody-accent'}>
-                            {item.paid ? <CheckCircle size={12} /> : <Circle size={12} />}
-                          </button>
-                          <span className="flex-1 truncate">{item.description}</span>
-                          {item.estimatedCost && <span className="text-ody-text-dim">Est: {formatMoneyFull(Number(item.estimatedCost), currency)}</span>}
-                          {item.actualCost && <span className="text-ody-success font-medium">{formatMoneyFull(Number(item.actualCost), currency)}</span>}
-                          <button onClick={() => deleteMutation.mutate(item.id)} className="text-ody-text-dim hover:text-ody-danger">
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ── Charts ── */}
-      {items.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Pie: spending distribution */}
-          <div className="glass-card p-4">
-            <h4 className="text-sm font-semibold mb-3 text-ody-text-muted">Spending Distribution</h4>
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} dataKey="value" paddingAngle={2} strokeWidth={0}>
-                  {pieData.map((entry) => (
-                    <Cell key={entry.name} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{ background: '#13131a', border: '1px solid #2a2a3a', borderRadius: 8, color: '#e4e4ed', fontSize: 12 }}
-                  formatter={(v: any) => formatMoneyFull(Number(v), currency)}
-                />
-                <Legend formatter={(value: string) => <span className="text-xs text-ody-text-muted">{value}</span>} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Bar: budget vs estimated vs actual */}
-          <div className="glass-card p-4">
-            <h4 className="text-sm font-semibold mb-3 text-ody-text-muted">Budget vs Actual</h4>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={barData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" />
-                <XAxis dataKey="name" tick={{ fill: '#8888a0', fontSize: 10 }} />
-                <YAxis tick={{ fill: '#8888a0', fontSize: 10 }} />
-                <Tooltip
-                  contentStyle={{ background: '#13131a', border: '1px solid #2a2a3a', borderRadius: 8, color: '#e4e4ed', fontSize: 12 }}
-                  formatter={(v: any) => formatMoneyFull(Number(v), currency)}
-                />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="budget" fill="#6366f1" radius={[3, 3, 0, 0]} name="Budget" />
-                <Bar dataKey="estimated" fill="#60a5fa" radius={[3, 3, 0, 0]} name="Estimated" />
-                <Bar dataKey="actual" fill="#34d399" radius={[3, 3, 0, 0]} name="Actual" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Spending timeline */}
-          {timelineData.length > 1 && (
-            <div className="glass-card p-4 lg:col-span-2">
-              <h4 className="text-sm font-semibold mb-3 text-ody-text-muted">Spending Over Time</h4>
-              <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={timelineData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" />
-                  <XAxis dataKey="date" tick={{ fill: '#8888a0', fontSize: 10 }} />
-                  <YAxis tick={{ fill: '#8888a0', fontSize: 10 }} />
-                  <Tooltip
-                    contentStyle={{ background: '#13131a', border: '1px solid #2a2a3a', borderRadius: 8, color: '#e4e4ed', fontSize: 12 }}
-                    formatter={(v: any) => formatMoneyFull(Number(v), currency)}
-                  />
-                  {budget > 0 && <Line type="monotone" dataKey="budget" stroke="#6366f1" strokeDasharray="5 5" dot={false} name="Budget" />}
-                  <Area type="monotone" dataKey="estimated" stroke="#60a5fa" fill="#60a5fa" fillOpacity={0.1} name="Estimated" />
-                  <Area type="monotone" dataKey="actual" stroke="#34d399" fill="#34d399" fillOpacity={0.2} name="Actual" />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Expense List ── */}
+      {/* ── Manual Extras ── */}
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <h3 className="font-semibold text-lg">Expenses</h3>
-          {/* Category filter */}
-          <div className="flex items-center gap-1">
-            <Filter size={12} className="text-ody-text-dim" />
-            <select
-              value={filterCategory || ''}
-              onChange={e => setFilterCategory(e.target.value || null)}
-              className="bg-transparent text-xs text-ody-text-muted outline-none cursor-pointer"
-            >
-              <option value="">All</option>
-              {CATEGORIES.map(c => (
-                <option key={c.key} value={c.key}>{c.label}</option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <h3 className="font-semibold text-lg flex items-center gap-2">
+          📝 Manual Extras
+          <span className="text-xs text-ody-text-dim font-normal">({manualItems.length} items • {formatMoney(summary?.manual.total || 0, currency)})</span>
+        </h3>
         <button onClick={() => setShowAdd(!showAdd)}
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-ody-accent/10 text-ody-accent text-sm hover:bg-ody-accent/20 transition-colors">
           <Plus size={14} /> Add Expense
@@ -490,14 +382,16 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
         )}
       </AnimatePresence>
 
-      {filteredItems.length === 0 ? (
-        <p className="text-ody-text-muted text-center py-8">
-          {filterCategory ? `No ${getCategoryMeta(filterCategory).label.toLowerCase()} expenses yet.` : 'No expenses yet. Add one to get started!'}
-        </p>
+      {manualItems.length === 0 ? (
+        <p className="text-ody-text-muted text-center py-4 text-sm">No manual expenses. Costs are computed from events, accommodations & flights.</p>
       ) : (
         <div className="space-y-2">
-          {filteredItems
-            .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+          {manualItems
+            .sort((a, b) => {
+              // Sort by category then description
+              if (a.category !== b.category) return a.category.localeCompare(b.category);
+              return a.description.localeCompare(b.description);
+            })
             .map((item, i) => {
               const meta = getCategoryMeta(item.category);
               const Icon = meta.icon;
@@ -575,6 +469,48 @@ export function BudgetTab({ tripId, items, budgetCategories: catAllocations, tot
             })}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Computed Section Component ──
+function ComputedSection({ icon, title, total, items, currency }: {
+  icon: string; title: string; total: number; items: BudgetSummaryItem[]; currency: string;
+}) {
+  const [expanded, setExpanded] = useState(true);
+
+  return (
+    <div className="glass-card p-4">
+      <button onClick={() => setExpanded(!expanded)} className="w-full flex items-center justify-between">
+        <h4 className="text-sm font-semibold text-ody-text-muted flex items-center gap-2">
+          <span>{icon}</span> {title}
+          <span className="text-xs font-normal text-ody-text-dim">({items.length})</span>
+        </h4>
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-semibold text-ody-accent">{formatMoney(total, currency)}</span>
+          {expanded ? <ChevronUp size={14} className="text-ody-text-dim" /> : <ChevronDown size={14} className="text-ody-text-dim" />}
+        </div>
+      </button>
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mt-3 space-y-1.5 overflow-hidden"
+          >
+            {items.map(item => (
+              <div key={item.id} className="flex items-center gap-2 py-1.5 px-2 bg-ody-surface/30 rounded text-xs">
+                <span className="flex-1 truncate">{item.name}</span>
+                {statusBadge(item.status)}
+                <span className={`font-medium ${item.actualCost > 0 ? 'text-ody-success' : 'text-ody-text-dim'}`}>
+                  {item.actualCost > 0 ? formatMoneyFull(item.actualCost, currency) : `~${formatMoneyFull(item.estimatedCost, currency)}`}
+                </span>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

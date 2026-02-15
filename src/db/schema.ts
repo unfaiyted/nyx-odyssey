@@ -68,6 +68,9 @@ export const itineraryItems = pgTable('itinerary_items', {
   notes: text('notes'),
   orderIndex: integer('order_index').notNull().default(0),
   completed: boolean('completed').default(false),
+  estimatedCost: numeric('estimated_cost', { precision: 10, scale: 2 }),
+  actualCost: numeric('actual_cost', { precision: 10, scale: 2 }),
+  currency: text('currency').default('USD'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
