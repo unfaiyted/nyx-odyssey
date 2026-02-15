@@ -248,11 +248,11 @@ function TimelineItemCard({
   );
 }
 
-// ─── Drop zone between items for reordering ───────────
+// ─── Drop indicator line ───────────────────────────────
 function DropIndicator({ isActive }: { isActive: boolean }) {
   return (
     <div className={`h-1 rounded-full mx-2 transition-all duration-150
-      ${isActive ? 'bg-ody-accent/60 scale-y-150' : 'bg-transparent'}`}
+      ${isActive ? 'bg-ody-accent/60 scale-y-[2]' : 'bg-transparent'}`}
     />
   );
 }
@@ -273,7 +273,8 @@ function DayColumn({
   onDrop: (itemId: string, targetDate: string, targetIndex: number) => void;
   onReorder: (itemId: string, targetDate: string, targetIndex: number) => void;
 }) {
-  const [dragOverZone, setDragOverZone] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   const today = isToday(date);
   const past = isPast(date);
   const sorted = [...items].sort((a, b) => {
@@ -282,34 +283,55 @@ function DayColumn({
   });
   const completedCount = items.filter(i => i.completed).length;
 
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setDragOverZone(index);
+  // Compute drop index from mouse Y position relative to item rects
+  const computeDropIndex = (e: React.DragEvent) => {
+    const container = e.currentTarget;
+    const itemEls = container.querySelectorAll<HTMLElement>('[data-item-index]');
+    const mouseY = e.clientY;
+
+    for (let i = 0; i < itemEls.length; i++) {
+      const rect = itemEls[i].getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      if (mouseY < midY) return i;
+    }
+    return itemEls.length;
   };
 
-  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+  const handleContainerDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    setDragOverZone(null);
+    e.dataTransfer.dropEffect = 'move';
+    setIsDragOver(true);
+    const idx = computeDropIndex(e);
+    setDragOverIndex(idx);
+  };
+
+  const handleContainerDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const targetIndex = computeDropIndex(e);
+    setDragOverIndex(null);
+    setIsDragOver(false);
     try {
       const data: DragData = JSON.parse(e.dataTransfer.getData('application/json'));
       if (data.date === date) {
-        // Intra-day reorder
         onReorder(data.id, date, targetIndex);
       } else {
-        // Cross-day move
         onDrop(data.id, date, targetIndex);
       }
     } catch {}
+  };
+
+  const handleContainerDragLeave = (e: React.DragEvent) => {
+    // Only clear if leaving the container entirely
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragOverIndex(null);
+      setIsDragOver(false);
+    }
   };
 
   return (
     <div
       id={`day-${date}`}
       className="relative transition-all"
-      onDragLeave={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverZone(null);
-      }}
     >
       {/* Day header */}
       <button
@@ -350,7 +372,7 @@ function DayColumn({
         {collapsed ? <ChevronRight size={16} className="text-ody-text-dim" /> : <ChevronDown size={16} className="text-ody-text-dim" />}
       </button>
 
-      {/* Items */}
+      {/* Items — entire area is one big drop zone */}
       <AnimatePresence>
         {!collapsed && (
           <motion.div
@@ -360,43 +382,36 @@ function DayColumn({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="space-y-0.5 min-h-[48px]">
-              {/* Top drop zone */}
-              <div
-                onDragOver={(e) => handleDragOver(e, 0)}
-                onDrop={(e) => handleDrop(e, 0)}
-                className="py-0.5"
-              >
-                <DropIndicator isActive={dragOverZone === 0} />
-              </div>
-
+            <div
+              className={`space-y-1 min-h-[48px] rounded-xl p-1 transition-colors ${
+                isDragOver ? 'bg-ody-accent/5 ring-1 ring-ody-accent/20' : ''
+              }`}
+              onDragOver={handleContainerDragOver}
+              onDrop={handleContainerDrop}
+              onDragLeave={handleContainerDragLeave}
+            >
               {sorted.length === 0 ? (
                 <div
-                  onDragOver={(e) => { e.preventDefault(); setDragOverZone(0); }}
-                  onDrop={(e) => handleDrop(e, 0)}
-                  className={`text-xs text-ody-text-dim text-center py-4 border border-dashed rounded-xl transition-colors
-                    ${dragOverZone !== null ? 'border-ody-accent/50 bg-ody-accent/5' : 'border-ody-border/30'}`}
+                  className={`text-xs text-ody-text-dim text-center py-6 border border-dashed rounded-xl transition-colors
+                    ${isDragOver ? 'border-ody-accent/50 bg-ody-accent/5' : 'border-ody-border/30'}`}
                 >
-                  {dragOverZone !== null ? 'Drop here to schedule' : 'No activities planned'}
+                  {isDragOver ? 'Drop here to schedule' : 'No activities planned'}
                 </div>
               ) : (
                 sorted.map((item, idx) => (
                   <div key={item.id}>
-                    <TimelineItemCard
-                      item={item}
-                      onToggle={() => onToggle(item)}
-                      onDelete={() => onDelete(item.id)}
-                    />
-                    <div
-                      onDragOver={(e) => handleDragOver(e, idx + 1)}
-                      onDrop={(e) => handleDrop(e, idx + 1)}
-                      className="py-0.5"
-                    >
-                      <DropIndicator isActive={dragOverZone === idx + 1} />
+                    {dragOverIndex === idx && <DropIndicator isActive />}
+                    <div data-item-index={idx}>
+                      <TimelineItemCard
+                        item={item}
+                        onToggle={() => onToggle(item)}
+                        onDelete={() => onDelete(item.id)}
+                      />
                     </div>
                   </div>
                 ))
               )}
+              {dragOverIndex === sorted.length && sorted.length > 0 && <DropIndicator isActive />}
             </div>
           </motion.div>
         )}
