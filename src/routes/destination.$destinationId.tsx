@@ -455,6 +455,7 @@ function DestinationDetailPage() {
                     transition={{ delay: i * 0.05 }}
                     className="glass-card overflow-hidden group hover:border-ody-accent/30 transition-colors"
                   >
+                    <Link to="/highlight/$highlightId" params={{ highlightId: h.id }} className="block">
                     {h.imageUrl && (
                       <div className="h-36 overflow-hidden">
                         <img src={h.imageUrl} alt={h.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
@@ -490,19 +491,23 @@ function DestinationDetailPage() {
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 mt-2">
+                    </div>
+                    </Link>
+                    <div className="px-4 pb-4">
+                      <div className="flex items-center gap-2">
                         {h.websiteUrl && (
                           <a
                             href={h.websiteUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-xs text-ody-accent hover:underline"
+                            onClick={e => e.stopPropagation()}
                           >
                             <ExternalLink size={12} /> Website
                           </a>
                         )}
                         <button
-                          onClick={() => setItineraryHighlight(h)}
+                          onClick={(e) => { e.stopPropagation(); setItineraryHighlight(h); }}
                           className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-ody-accent/10 text-ody-accent hover:bg-ody-accent/20 transition-colors ml-auto"
                         >
                           <CalendarPlus size={12} /> Add to Itinerary
