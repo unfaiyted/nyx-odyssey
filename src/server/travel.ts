@@ -210,6 +210,7 @@ export const addHighlightToItinerary = createServerFn({ method: 'POST' })
     const [item] = await db.insert(itineraryItems).values({
       tripId: data.tripId,
       destinationHighlightId: data.highlightId,
+      destinationId: highlight.destinationId,
       title: highlight.title,
       description: highlight.description,
       date: data.date,

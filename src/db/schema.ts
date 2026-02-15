@@ -50,6 +50,8 @@ export const itineraryItems = pgTable('itinerary_items', {
   id: text('id').primaryKey().$defaultFn(() => nanoid()),
   tripId: text('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
   destinationHighlightId: text('destination_highlight_id'),
+  destinationId: text('destination_id').references(() => tripDestinations.id, { onDelete: 'set null' }),
+  eventId: text('event_id').references(() => destinationEvents.id, { onDelete: 'set null' }),
   title: text('title').notNull(),
   description: text('description'),
   date: text('date').notNull(),
@@ -445,6 +447,9 @@ export const tripsRelations = relations(trips, ({ many }) => ({
 
 export const itineraryItemsRelations = relations(itineraryItems, ({ one }) => ({
   trip: one(trips, { fields: [itineraryItems.tripId], references: [trips.id] }),
+  destination: one(tripDestinations, { fields: [itineraryItems.destinationId], references: [tripDestinations.id] }),
+  event: one(destinationEvents, { fields: [itineraryItems.eventId], references: [destinationEvents.id] }),
+  highlight: one(destinationHighlights, { fields: [itineraryItems.destinationHighlightId], references: [destinationHighlights.id] }),
 }));
 
 export const tripDestinationsRelations = relations(tripDestinations, ({ one }) => ({

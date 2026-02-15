@@ -13,6 +13,7 @@ import {
   rentalCars,
   tripRoutes,
   tripCronJobs,
+  destinationEvents,
 } from '../db/schema';
 import { desc, eq } from 'drizzle-orm';
 
@@ -50,9 +51,19 @@ export const getTrip = createServerFn({ method: 'GET' })
     const [trip] = await db.select().from(trips).where(eq(trips.id, tripId));
     if (!trip) throw new Error('Trip not found');
 
-    const [itin, dests, accom, budget, budgetCats, packing, flightRows, rentalCarRows, routeRows, cronJobRows] =
+    const [itinRaw, dests, accom, budget, budgetCats, packing, flightRows, rentalCarRows, routeRows, cronJobRows] =
       await Promise.all([
-        db.select().from(itineraryItems).where(eq(itineraryItems.tripId, tripId)),
+        db.select({
+          item: itineraryItems,
+          destinationName: tripDestinations.name,
+          eventName: destinationEvents.name,
+          eventStatus: destinationEvents.status,
+          eventBookingUrl: destinationEvents.bookingUrl,
+        })
+          .from(itineraryItems)
+          .leftJoin(tripDestinations, eq(itineraryItems.destinationId, tripDestinations.id))
+          .leftJoin(destinationEvents, eq(itineraryItems.eventId, destinationEvents.id))
+          .where(eq(itineraryItems.tripId, tripId)),
         db.select().from(tripDestinations).where(eq(tripDestinations.tripId, tripId)),
         db.select().from(accommodations).where(eq(accommodations.tripId, tripId)),
         db.select().from(budgetItems).where(eq(budgetItems.tripId, tripId)),
@@ -63,6 +74,14 @@ export const getTrip = createServerFn({ method: 'GET' })
         db.select().from(tripRoutes).where(eq(tripRoutes.tripId, tripId)),
         db.select().from(tripCronJobs).where(eq(tripCronJobs.tripId, tripId)),
       ]);
+
+    const itin = itinRaw.map(r => ({
+      ...r.item,
+      destinationName: r.destinationName,
+      eventName: r.eventName,
+      eventStatus: r.eventStatus,
+      eventBookingUrl: r.eventBookingUrl,
+    }));
 
     return {
       ...trip,

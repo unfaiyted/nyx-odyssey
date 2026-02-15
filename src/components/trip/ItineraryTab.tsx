@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Check, Clock, MapPin, Trash2, GripVertical,
   CalendarDays, CalendarRange, ChevronDown, ChevronRight,
-  Navigation, Filter,
+  Navigation, Filter, ExternalLink, Ticket,
 } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
 import type { ItineraryItem, TripDestination } from '../../types/trips';
 
 interface Props {
@@ -90,6 +91,14 @@ function getDestinationForDate(date: string, destinations: TripDestination[]): T
 }
 
 // ─── Drag-and-drop item card ──────────────────────────
+const eventStatusConfig: Record<string, { label: string; color: string }> = {
+  interested: { label: 'Interested', color: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30' },
+  booked: { label: 'Booked', color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30' },
+  confirmed: { label: 'Confirmed', color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30' },
+  cancelled: { label: 'Cancelled', color: 'text-red-400 bg-red-400/10 border-red-400/30' },
+  attended: { label: 'Attended', color: 'text-blue-400 bg-blue-400/10 border-blue-400/30' },
+};
+
 function TimelineItemCard({
   item, onToggle, onDelete, onDragStart,
 }: {
@@ -99,6 +108,9 @@ function TimelineItemCard({
   onDragStart: (e: React.DragEvent, data: DragData) => void;
 }) {
   const cat = categoryConfig[item.category] || categoryConfig.activity;
+  const destName = item.destinationName;
+  const destId = item.destinationId;
+  const evtStatus = item.eventStatus ? eventStatusConfig[item.eventStatus] : null;
 
   return (
     <motion.div
@@ -130,7 +142,7 @@ function TimelineItemCard({
       </button>
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
+        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
           <span className="text-base">{cat.icon}</span>
           <span className={`font-medium text-sm ${item.completed ? 'line-through text-ody-text-dim' : ''}`}>
             {item.title}
@@ -138,7 +150,44 @@ function TimelineItemCard({
           <span className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded-full font-semibold ${cat.color} bg-black/20`}>
             {item.category}
           </span>
+          {/* Destination badge */}
+          {destName && destId && (
+            <Link
+              to="/destination/$destinationId"
+              params={{ destinationId: destId }}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-ody-accent/10 text-ody-accent border border-ody-accent/20 hover:bg-ody-accent/20 hover:border-ody-accent/40 transition-colors cursor-pointer"
+            >
+              <MapPin size={8} />
+              {destName}
+              <ExternalLink size={7} className="opacity-60" />
+            </Link>
+          )}
+          {/* Event booking status badge */}
+          {evtStatus && (
+            <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${evtStatus.color}`}>
+              <Ticket size={8} />
+              {evtStatus.label}
+            </span>
+          )}
         </div>
+        {/* Event name if linked */}
+        {item.eventName && (
+          <p className="text-[11px] text-ody-text-muted mt-0.5 flex items-center gap-1">
+            🎫 {item.eventName}
+            {item.eventBookingUrl && (
+              <a
+                href={item.eventBookingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                className="text-ody-accent hover:underline"
+              >
+                Book →
+              </a>
+            )}
+          </p>
+        )}
         {item.description && (
           <p className="text-xs text-ody-text-muted mt-0.5 line-clamp-2">{item.description}</p>
         )}
@@ -151,7 +200,19 @@ function TimelineItemCard({
           )}
           {item.location && (
             <span className="flex items-center gap-1">
-              <MapPin size={10} />{item.location}
+              <MapPin size={10} />
+              {destId ? (
+                <Link
+                  to="/destination/$destinationId"
+                  params={{ destinationId: destId }}
+                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                  className="hover:text-ody-accent transition-colors"
+                >
+                  {item.location}
+                </Link>
+              ) : (
+                item.location
+              )}
             </span>
           )}
           {item.travelTimeMinutes && item.travelMode && (
