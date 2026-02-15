@@ -614,6 +614,7 @@ function DestinationDetailPage() {
             destinationLng={destination.lng}
             onCalculate={handleCalculateTransport}
             isCalculating={isCalculatingTransport}
+            homeBase={data?.homeBase}
           />
 
           {/* Legacy Transport Notes (if any) */}

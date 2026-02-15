@@ -13,6 +13,14 @@ interface TransportMode {
   notes: string | null;
 }
 
+interface HomeBase {
+  name: string;
+  lat: number;
+  lng: number;
+  address?: string;
+  currency?: string;
+}
+
 interface TransportModeCardsProps {
   transportModes: TransportMode[];
   destinationName: string;
@@ -21,6 +29,7 @@ interface TransportModeCardsProps {
   destinationLng: number;
   onCalculate: () => void;
   isCalculating: boolean;
+  homeBase?: HomeBase | null;
 }
 
 const MODE_CONFIG = {
@@ -31,7 +40,7 @@ const MODE_CONFIG = {
     bgColor: 'bg-blue-500/10',
     borderColor: 'border-blue-500/20',
     textColor: 'text-blue-400',
-    description: 'Via car from Vicenza',
+    description: 'Via car',
     bookingUrl: null,
   },
   train: {
@@ -41,8 +50,8 @@ const MODE_CONFIG = {
     bgColor: 'bg-green-500/10',
     borderColor: 'border-green-500/20',
     textColor: 'text-green-400',
-    description: 'Via Trenitalia or Italo',
-    bookingUrl: 'https://www.trenitalia.com/en.html',
+    description: 'Via rail',
+    bookingUrl: null,
   },
   bus: {
     label: 'Bus',
@@ -74,10 +83,11 @@ function formatDuration(minutes: number): string {
   return `${m}m`;
 }
 
-function formatCost(euros: number): string {
-  if (euros < 1) return `€${euros.toFixed(2)}`;
-  if (euros === Math.floor(euros)) return `€${euros}`;
-  return `€${euros.toFixed(2)}`;
+function formatCost(amount: number, currency?: string): string {
+  const symbol = currency === 'USD' ? '$' : currency === 'GBP' ? '£' : '€';
+  if (amount < 1) return `${symbol}${amount.toFixed(2)}`;
+  if (amount === Math.floor(amount)) return `${symbol}${amount}`;
+  return `${symbol}${amount.toFixed(2)}`;
 }
 
 function TransportModeCard({ 
@@ -93,7 +103,8 @@ function TransportModeCard({
   const config = MODE_CONFIG[mode.mode];
   const Icon = config.icon;
 
-  const googleMapsUrl = `https://www.google.com/maps/dir/Vicenza,+Italy/${encodeURIComponent(destinationName)}`;
+  const fromLocation = homeBase?.address || homeBase?.name || 'Home';
+  const googleMapsUrl = `https://www.google.com/maps/dir/${encodeURIComponent(fromLocation)}/${encodeURIComponent(destinationName)}`;
 
   return (
     <motion.div
@@ -207,7 +218,9 @@ export function TransportModeCards({
   destinationLng,
   onCalculate,
   isCalculating,
+  homeBase,
 }: TransportModeCardsProps) {
+  const homeBaseName = homeBase?.name || 'Home Base';
   const hasAnyData = transportModes.some(m => m.timeMinutes !== null || m.costEuros !== null);
 
   return (
@@ -215,7 +228,7 @@ export function TransportModeCards({
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <Navigation size={20} className="text-ody-accent" />
-          Getting There from Vicenza
+          Getting There from {homeBaseName}
         </h2>
         
         {!hasAnyData && (
