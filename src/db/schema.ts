@@ -104,6 +104,7 @@ export const accommodations = pgTable('accommodations', {
   rating: doublePrecision('rating'),
   notes: text('notes'),
   booked: boolean('booked').default(false),
+  isHomeBase: boolean('is_home_base').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

@@ -4,7 +4,7 @@ import {
   itineraryItems, tripDestinations, accommodations, budgetItems,
   budgetCategories, packingItems, flights, rentalCars, tripRoutes, tripCronJobs,
   tripTravelers, travelerLoyaltyPrograms, travelerEmergencyContacts,
-  destinationEvents,
+  destinationEvents, trips,
 } from '../../db/schema';
 import { eq, and } from 'drizzle-orm';
 
@@ -111,6 +111,40 @@ export const deleteAccommodation = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     await db.delete(accommodations)
       .where(and(eq(accommodations.id, data.id), eq(accommodations.tripId, data.tripId)));
+    return { ok: true };
+  });
+
+export const setHomeBase = createServerFn({ method: 'POST' })
+  .handler(async ({ data }: { data: { tripId: string; accommodationId: string } }) => {
+    const { tripId, accommodationId } = data;
+    // Unset all home bases for this trip
+    await db.update(accommodations).set({ isHomeBase: false })
+      .where(eq(accommodations.tripId, tripId));
+    // Set the selected accommodation as home base
+    const [updated] = await db.update(accommodations).set({ isHomeBase: true })
+      .where(and(eq(accommodations.id, accommodationId), eq(accommodations.tripId, tripId)))
+      .returning();
+    if (!updated) throw new Error('Accommodation not found');
+    // Update trip home base fields
+    await db.update(trips).set({
+      homeBaseName: updated.name,
+      homeBaseAddress: updated.address,
+    }).where(eq(trips.id, tripId));
+    return updated;
+  });
+
+export const unsetHomeBase = createServerFn({ method: 'POST' })
+  .handler(async ({ data }: { data: { tripId: string; accommodationId: string } }) => {
+    const { tripId, accommodationId } = data;
+    await db.update(accommodations).set({ isHomeBase: false })
+      .where(and(eq(accommodations.id, accommodationId), eq(accommodations.tripId, tripId)));
+    // Clear trip home base fields
+    await db.update(trips).set({
+      homeBaseName: null,
+      homeBaseLat: null,
+      homeBaseLng: null,
+      homeBaseAddress: null,
+    }).where(eq(trips.id, tripId));
     return { ok: true };
   });
 

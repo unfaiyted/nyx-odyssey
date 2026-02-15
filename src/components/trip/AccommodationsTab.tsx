@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { addAccommodation, updateAccommodation, deleteAccommodation } from '../../server/fns/trip-details';
+import { addAccommodation, updateAccommodation, deleteAccommodation, setHomeBase, unsetHomeBase } from '../../server/fns/trip-details';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Calendar, DollarSign, Trash2, MapPin, Star, ExternalLink,
@@ -87,6 +87,14 @@ export function AccommodationsTab({ tripId, items, destinations = [] }: Props) {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteAccommodation({ data: { tripId, id } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
+  });
+
+  const homeBaseMutation = useMutation({
+    mutationFn: ({ accommodationId, unset }: { accommodationId: string; unset: boolean }) =>
+      unset
+        ? unsetHomeBase({ data: { tripId, accommodationId } })
+        : setHomeBase({ data: { tripId, accommodationId } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trip', tripId] }),
   });
 
@@ -400,6 +408,11 @@ export function AccommodationsTab({ tripId, items, destinations = [] }: Props) {
                       <span className={`text-xs px-2 py-0.5 rounded-full ${sc.bg} ${sc.color}`}>
                         {sc.label}
                       </span>
+                      {item.isHomeBase && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-ody-accent/15 text-ody-accent flex items-center gap-1 font-medium">
+                          <Home size={10} /> Home Base
+                        </span>
+                      )}
                     </div>
                     {item.address && (
                       <p className="text-xs text-ody-text-dim mt-1 flex items-center gap-1">
@@ -416,6 +429,17 @@ export function AccommodationsTab({ tripId, items, destinations = [] }: Props) {
                         <Star size={12} fill="currentColor" /> {item.rating}
                       </span>
                     )}
+                    <button
+                      onClick={() => homeBaseMutation.mutate({ accommodationId: item.id, unset: !!item.isHomeBase })}
+                      className={`text-xs px-2 py-1 rounded-lg transition-colors ${
+                        item.isHomeBase
+                          ? 'bg-ody-accent text-white hover:bg-ody-accent-hover'
+                          : 'border border-ody-border text-ody-text-dim hover:text-ody-accent hover:border-ody-accent'
+                      }`}
+                      title={item.isHomeBase ? 'Remove as Home Base' : 'Set as Home Base'}
+                    >
+                      <Home size={12} />
+                    </button>
                     <button onClick={() => startEdit(item)}
                       className="text-ody-text-dim hover:text-ody-accent transition-colors p-1">
                       <Edit3 size={14} />

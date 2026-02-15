@@ -77,6 +77,7 @@ export interface Accommodation {
   rating: number | null;
   notes: string | null;
   booked: boolean;
+  isHomeBase: boolean;
   createdAt: string;
 }
 
