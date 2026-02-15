@@ -303,8 +303,54 @@ export const destinationWeatherMonthlyRelations = relations(destinationWeatherMo
   destination: one(tripDestinations, { fields: [destinationWeatherMonthly.destinationId], references: [tripDestinations.id] }),
 }));
 
+// ── Trip Travelers ─────────────────────────────────────
+export const tripTravelers = pgTable('trip_travelers', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  tripId: text('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  // Basic info
+  firstName: text('first_name').notNull(),
+  lastName: text('last_name').notNull(),
+  email: text('email'),
+  phone: text('phone'),
+  dateOfBirth: text('date_of_birth'),
+  gender: text('gender'), // male, female, other, prefer-not-to-say
+  // Passport info (international trips)
+  passportNumber: text('passport_number'),
+  passportExpiry: text('passport_expiry'),
+  passportCountry: text('passport_country'), // issuing country
+  nationality: text('nationality'),
+  // Travel programs
+  tsaPrecheck: text('tsa_precheck'),
+  globalEntryNumber: text('global_entry_number'),
+  knownTravelerNumber: text('known_traveler_number'),
+  // Loyalty programs (JSON arrays: [{program, number}])
+  airlineLoyalty: text('airline_loyalty'), // JSON array
+  hotelLoyalty: text('hotel_loyalty'), // JSON array
+  // Dietary & accessibility
+  dietaryRestrictions: text('dietary_restrictions'), // JSON array or comma-separated
+  accessibilityNeeds: text('accessibility_needs'),
+  medicalNotes: text('medical_notes'),
+  // Emergency contact
+  emergencyContactName: text('emergency_contact_name'),
+  emergencyContactPhone: text('emergency_contact_phone'),
+  emergencyContactRelation: text('emergency_contact_relation'),
+  // Seat & room preferences
+  seatPreference: text('seat_preference'), // window, aisle, middle
+  roomPreference: text('room_preference'), // notes about room preferences
+  // Meta
+  isPrimary: boolean('is_primary').default(false), // primary traveler / trip organizer
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const tripTravelersRelations = relations(tripTravelers, ({ one }) => ({
+  trip: one(trips, { fields: [tripTravelers.tripId], references: [trips.id] }),
+}));
+
 // ── Relations ──────────────────────────────────────────
 export const tripsRelations = relations(trips, ({ many }) => ({
+  travelers: many(tripTravelers),
   itineraryItems: many(itineraryItems),
   destinations: many(tripDestinations),
   accommodations: many(accommodations),
