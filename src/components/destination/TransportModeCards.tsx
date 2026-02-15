@@ -94,10 +94,12 @@ function TransportModeCard({
   mode, 
   destinationName,
   hasData,
+  homeBase,
 }: { 
   mode: TransportMode; 
   destinationName: string;
   hasData: boolean;
+  homeBase?: HomeBase | null;
 }) {
   const [expanded, setExpanded] = useState(false);
   const config = MODE_CONFIG[mode.mode];
@@ -259,6 +261,7 @@ export function TransportModeCards({
             mode={mode}
             destinationName={destinationName}
             hasData={mode.timeMinutes !== null || mode.costEuros !== null}
+            homeBase={homeBase}
           />
         ))}
       </div>
