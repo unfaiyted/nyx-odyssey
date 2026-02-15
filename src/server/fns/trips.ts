@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 import { db } from '../../db';
-import { trips, itineraryItems, tripDestinations, accommodations, budgetItems, budgetCategories, packingItems, flights, rentalCars, tripRoutes, tripCronJobs, tripTravelers } from '../../db/schema';
-import { desc, eq } from 'drizzle-orm';
+import { trips, itineraryItems, tripDestinations, accommodations, budgetItems, budgetCategories, packingItems, flights, rentalCars, tripRoutes, tripCronJobs, tripTravelers, destinationEvents } from '../../db/schema';
+import { desc, eq, inArray } from 'drizzle-orm';
 
 export const getTrips = createServerFn({ method: 'GET' }).handler(async () => {
   return await db.select().from(trips).orderBy(desc(trips.createdAt));
@@ -42,6 +42,12 @@ export const getTrip = createServerFn({ method: 'GET' })
       db.select().from(tripTravelers).where(eq(tripTravelers.tripId, tripId)),
     ]);
 
+    // Load events for all destinations of this trip
+    const destIds = dests.map(d => d.id);
+    const eventRows = destIds.length > 0
+      ? await db.select().from(destinationEvents).where(inArray(destinationEvents.destinationId, destIds))
+      : [];
+
     return {
       ...trip,
       itineraryItems: itin,
@@ -55,6 +61,7 @@ export const getTrip = createServerFn({ method: 'GET' })
       routes: routeRows,
       cronJobs: cronJobRows,
       travelers: travelerRows,
+      events: eventRows,
     };
   });
 

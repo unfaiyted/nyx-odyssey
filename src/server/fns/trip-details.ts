@@ -4,6 +4,7 @@ import {
   itineraryItems, tripDestinations, accommodations, budgetItems,
   budgetCategories, packingItems, flights, rentalCars, tripRoutes, tripCronJobs,
   tripTravelers, travelerLoyaltyPrograms, travelerEmergencyContacts,
+  destinationEvents,
 } from '../../db/schema';
 import { eq, and } from 'drizzle-orm';
 
@@ -371,39 +372,6 @@ export const updateTraveler = createServerFn({ method: 'POST' })
     return updated;
   });
 
-export const deleteTraveler = createServerFn({ method: 'POST' })
-  .handler(async ({ data }) => {
-    await db.delete(tripTravelers)
-      .where(and(eq(tripTravelers.id, data.id), eq(tripTravelers.tripId, data.tripId)));
-    return { ok: true };
-  });
-
-// ── Loyalty Programs ───────────────────────────────────
-
-export const addLoyaltyProgram = createServerFn({ method: 'POST' })
-  .handler(async ({ data }) => {
-    const { travelerId, ...rest } = data;
-    const [program] = await db.insert(travelerLoyaltyPrograms).values({ travelerId, ...rest }).returning();
-    return program;
-  });
-
-export const deleteLoyaltyProgram = createServerFn({ method: 'POST' })
-  .handler(async ({ data }) => {
-    await db.delete(travelerLoyaltyPrograms).where(eq(travelerLoyaltyPrograms.id, data.id));
-    return { ok: true };
-  });
-
-// ── Emergency Contacts ─────────────────────────────────
-
-export const addEmergencyContact = createServerFn({ method: 'POST' })
-  .handler(async ({ data }) => {
-    const { travelerId, ...rest } = data;
-    const [contact] = await db.insert(travelerEmergencyContacts).values({ travelerId, ...rest }).returning();
-    return contact;
-  });
-
-export const deleteEmergencyContact = createServerFn({ method: 'POST' })
-  .handler(async ({ data }) => {
-    await db.delete(travelerEmergencyContacts).where(eq(travelerEmergencyContacts.id, data.id));
+import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car, CarFront, ClipboardList, Clock, Settings, Activity, Users, Ticket } from 'lucide-react';
     return { ok: true };
   });
