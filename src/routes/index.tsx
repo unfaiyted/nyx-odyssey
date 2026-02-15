@@ -7,6 +7,7 @@ import {
   DollarSign, CheckCircle2, Hotel, Car,
   Globe, ArrowRight, Sparkles,
 } from 'lucide-react';
+import { FlightPriceWidget } from '../components/FlightPriceWidget';
 import { useEffect, useState } from 'react';
 
 // ── Types ──────────────────────────────────────────────
@@ -602,6 +603,9 @@ function TripOverviewDashboard() {
 
       {/* Featured trip */}
       <HeroTripCard trip={featured} />
+
+      {/* Flight price tracking widget */}
+      <FlightPriceWidget tripId={featured.id} tripName={featured.name} />
 
       {/* Other upcoming trips */}
       {upcoming.length > 0 && (
