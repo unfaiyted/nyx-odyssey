@@ -21,6 +21,8 @@ export interface ItineraryItem {
   id: string;
   tripId: string;
   destinationHighlightId: string | null;
+  destinationId: string | null;
+  eventId: string | null;
   title: string;
   description: string | null;
   date: string;
@@ -37,6 +39,11 @@ export interface ItineraryItem {
   orderIndex: number;
   completed: boolean;
   createdAt: string;
+  // Joined fields for navigation
+  destinationName?: string | null;
+  eventName?: string | null;
+  eventStatus?: string | null;
+  eventBookingUrl?: string | null;
 }
 
 export interface TripDestination {
