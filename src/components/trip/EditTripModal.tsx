@@ -24,6 +24,11 @@ export function EditTripModal({ trip, open, onClose, onSave, saving }: EditTripM
     totalBudget: '',
     currency: 'USD',
     status: 'planning',
+    homeBaseName: '',
+    homeBaseLat: '',
+    homeBaseLng: '',
+    homeBaseAddress: '',
+    homeBaseCurrency: '',
   });
 
   useEffect(() => {
@@ -37,6 +42,11 @@ export function EditTripModal({ trip, open, onClose, onSave, saving }: EditTripM
         totalBudget: trip.totalBudget || '',
         currency: trip.currency || 'USD',
         status: trip.status || 'planning',
+        homeBaseName: trip.homeBaseName || '',
+        homeBaseLat: trip.homeBaseLat?.toString() || '',
+        homeBaseLng: trip.homeBaseLng?.toString() || '',
+        homeBaseAddress: trip.homeBaseAddress || '',
+        homeBaseCurrency: trip.homeBaseCurrency || '',
       });
     }
   }, [open, trip]);
@@ -52,6 +62,11 @@ export function EditTripModal({ trip, open, onClose, onSave, saving }: EditTripM
       totalBudget: form.totalBudget || null,
       currency: form.currency,
       status: form.status,
+      homeBaseName: form.homeBaseName || null,
+      homeBaseLat: form.homeBaseLat ? parseFloat(form.homeBaseLat) : null,
+      homeBaseLng: form.homeBaseLng ? parseFloat(form.homeBaseLng) : null,
+      homeBaseAddress: form.homeBaseAddress || null,
+      homeBaseCurrency: form.homeBaseCurrency || null,
     } as Partial<Trip>);
   };
 
@@ -121,6 +136,45 @@ export function EditTripModal({ trip, open, onClose, onSave, saving }: EditTripM
                     className={inputClass}>
                     {CURRENCY_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
+                </div>
+              </div>
+
+              {/* Home Base Section */}
+              <div className="border-t border-ody-border pt-4 mt-2">
+                <h4 className="text-sm font-semibold mb-3 text-ody-text-muted">🏠 Home Base</h4>
+                <div className="space-y-3">
+                  <div>
+                    <label className={labelClass}>Name</label>
+                    <input value={form.homeBaseName} onChange={e => setForm(p => ({ ...p, homeBaseName: e.target.value }))}
+                      className={inputClass} placeholder="e.g. Vicenza Home, Cosmopolitan Hotel" />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Address</label>
+                    <input value={form.homeBaseAddress} onChange={e => setForm(p => ({ ...p, homeBaseAddress: e.target.value }))}
+                      className={inputClass} placeholder="Full address" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelClass}>Latitude</label>
+                      <input type="number" step="any" value={form.homeBaseLat}
+                        onChange={e => setForm(p => ({ ...p, homeBaseLat: e.target.value }))}
+                        className={inputClass} placeholder="e.g. 45.5485" />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Longitude</label>
+                      <input type="number" step="any" value={form.homeBaseLng}
+                        onChange={e => setForm(p => ({ ...p, homeBaseLng: e.target.value }))}
+                        className={inputClass} placeholder="e.g. 11.5479" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Local Currency</label>
+                    <select value={form.homeBaseCurrency} onChange={e => setForm(p => ({ ...p, homeBaseCurrency: e.target.value }))}
+                      className={inputClass}>
+                      <option value="">Same as trip currency</option>
+                      {CURRENCY_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
                 </div>
               </div>
 

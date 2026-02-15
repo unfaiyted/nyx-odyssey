@@ -14,13 +14,20 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-// Home base: Vicenza
-const HOME_BASE = {
+// Default home base fallback
+const DEFAULT_HOME_BASE = {
   lat: 45.5485,
   lng: 11.5479,
   name: 'Vicenza (Home)',
   address: 'Contrà S. Rocco #60',
 };
+
+interface HomeBase {
+  lat: number;
+  lng: number;
+  name: string;
+  address?: string;
+}
 
 // Custom icons
 const homeIcon = L.divIcon({
@@ -93,7 +100,7 @@ function FitBounds({
   homeBase, 
   destination 
 }: { 
-  homeBase: typeof HOME_BASE; 
+  homeBase: HomeBase; 
   destination: { lat: number; lng: number }; 
 }) {
   const map = useMap();
@@ -159,6 +166,7 @@ interface TransportMapProps {
   destinationName: string;
   polyline?: string | null;
   distanceKm?: number | null;
+  homeBase?: HomeBase | null;
   className?: string;
 }
 
@@ -168,18 +176,21 @@ export function TransportMap({
   destinationName,
   polyline,
   distanceKm,
+  homeBase: homeBaseProp,
   className = '',
 }: TransportMapProps) {
+  const homeBase = homeBaseProp || DEFAULT_HOME_BASE;
+
   const routePoints = useMemo(() => {
     if (polyline) {
       return decodePolyline(polyline);
     }
-    return [[HOME_BASE.lat, HOME_BASE.lng], [destinationLat, destinationLng]] as [number, number][];
-  }, [polyline, destinationLat, destinationLng]);
+    return [[homeBase.lat, homeBase.lng], [destinationLat, destinationLng]] as [number, number][];
+  }, [polyline, homeBase.lat, homeBase.lng, destinationLat, destinationLng]);
 
   const center: [number, number] = [
-    (HOME_BASE.lat + destinationLat) / 2,
-    (HOME_BASE.lng + destinationLng) / 2,
+    (homeBase.lat + destinationLat) / 2,
+    (homeBase.lng + destinationLng) / 2,
   ];
 
   return (
@@ -197,7 +208,7 @@ export function TransportMap({
         />
         
         <FitBounds 
-          homeBase={HOME_BASE} 
+          homeBase={homeBase} 
           destination={{ lat: destinationLat, lng: destinationLng }} 
         />
 
@@ -215,17 +226,17 @@ export function TransportMap({
 
         {/* Distance label */}
         <DistanceLabel
-          from={{ lat: HOME_BASE.lat, lng: HOME_BASE.lng }}
+          from={{ lat: homeBase.lat, lng: homeBase.lng }}
           to={{ lat: destinationLat, lng: destinationLng }}
           distanceKm={distanceKm}
         />
 
         {/* Home base marker */}
-        <Marker position={[HOME_BASE.lat, HOME_BASE.lng]} icon={homeIcon}>
+        <Marker position={[homeBase.lat, homeBase.lng]} icon={homeIcon}>
           <Popup>
             <div className="min-w-[160px]">
-              <h3 className="font-bold text-sm">{HOME_BASE.name}</h3>
-              <p className="text-xs text-gray-500">{HOME_BASE.address}</p>
+              <h3 className="font-bold text-sm">{homeBase.name}</h3>
+              {homeBase.address && <p className="text-xs text-gray-500">{homeBase.address}</p>}
               <p className="text-xs text-green-600 mt-1">🏠 Home Base</p>
             </div>
           </Popup>
@@ -246,7 +257,7 @@ export function TransportMap({
       <div className="absolute bottom-3 left-3 bg-ody-surface/90 backdrop-blur-sm rounded-lg px-3 py-2 text-xs border border-ody-border-subtle">
         <div className="flex items-center gap-2 mb-1">
           <span className="w-2 h-2 rounded-full bg-green-500"></span>
-          <span className="text-ody-text-muted">Vicenza (Home)</span>
+          <span className="text-ody-text-muted">{homeBase.name}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-ody-accent"></span>

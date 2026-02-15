@@ -576,6 +576,7 @@ function DestinationDetailPage() {
             destinationName={destination.name}
             polyline={research?.routePolyline}
             distanceKm={research?.driveDistanceKm}
+            homeBase={data?.homeBase}
             className="h-72"
           />
 

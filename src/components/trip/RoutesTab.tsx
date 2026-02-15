@@ -27,13 +27,16 @@ interface RoutesTabProps {
   tripId: string;
   routes: TripRoute[];
   destinations: TripDestination[];
+  homeBaseName?: string | null;
 }
 
-export function RoutesTab({ tripId, routes, destinations }: RoutesTabProps) {
+export function RoutesTab({ tripId, routes, destinations, homeBaseName }: RoutesTabProps) {
   const destMap = new Map(destinations.map(d => [d.id, d]));
 
-  // Find Vicenza (base) destination
-  const base = destinations.find(d => d.name.toLowerCase().includes('vicenza'));
+  // Find the base destination — use trip home base name if available, otherwise first destination
+  const base = homeBaseName
+    ? destinations.find(d => d.name.toLowerCase().includes(homeBaseName.toLowerCase().split(' ')[0]))
+    : destinations.find(d => d.name.toLowerCase().includes('vicenza')) || destinations[0];
 
   // Separate routes from base vs between other destinations
   const fromBaseRoutes = routes

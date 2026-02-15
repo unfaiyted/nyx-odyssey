@@ -1,11 +1,21 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { db } from '../db';
-import { itineraryItems, destinationHighlights, tripDestinations } from '../db/schema';
+import { trips, itineraryItems, destinationHighlights, tripDestinations } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
 
-// Home base: Vicenza, Contrà S. Rocco #60
-const HOME_BASE = { lat: 45.5455, lng: 11.5354, name: 'Vicenza (Home)' };
+// Default fallback home base — used only if trip has no home base configured
+const DEFAULT_HOME_BASE = { lat: 45.5455, lng: 11.5354, name: 'Vicenza (Home)' };
+
+async function getHomeBaseForTrip(tripId: string) {
+  const [trip] = await db.select().from(trips).where(eq(trips.id, tripId));
+  if (!trip?.homeBaseLat || !trip?.homeBaseLng) return DEFAULT_HOME_BASE;
+  return {
+    lat: trip.homeBaseLat,
+    lng: trip.homeBaseLng,
+    name: trip.homeBaseName || 'Home Base',
+  };
+}
 
 const DURATION_SUGGESTIONS: Record<string, number> = {
   attraction: 120,
@@ -135,10 +145,11 @@ export const addHighlightToItinerary = createServerFn({ method: 'POST' })
     // Find the previous activity (before our start time)
     const prevItem = sorted.filter(i => (i.endTime || i.startTime || '') < startTime).pop();
 
+    const homeBase = await getHomeBaseForTrip(data.tripId);
     let travelTimeMinutes: number | null = null;
-    let travelFromLocation = HOME_BASE.name;
-    let fromLat = HOME_BASE.lat;
-    let fromLng = HOME_BASE.lng;
+    let travelFromLocation = homeBase.name;
+    let fromLat = homeBase.lat;
+    let fromLng = homeBase.lng;
 
     if (prevItem && prevItem.lat && prevItem.lng) {
       fromLat = prevItem.lat;
@@ -235,7 +246,8 @@ export const getTravelEstimates = createServerFn({ method: 'POST' })
 
     const toLat = highlight.lat || destination?.lat;
     const toLng = highlight.lng || destination?.lng;
-    if (!toLat || !toLng) return { estimates: [], fromName: HOME_BASE.name, suggestedDuration: DURATION_SUGGESTIONS[highlight.category || 'attraction'] || 120 };
+    const homeBase = await getHomeBaseForTrip(data.tripId);
+    if (!toLat || !toLng) return { estimates: [], fromName: homeBase.name, suggestedDuration: DURATION_SUGGESTIONS[highlight.category || 'attraction'] || 120 };
 
     // Find previous item on the day
     const dayItems = await db.select().from(itineraryItems)
@@ -247,9 +259,9 @@ export const getTravelEstimates = createServerFn({ method: 'POST' })
     const startTime = data.startTime || '09:00';
     const prevItem = sorted.filter(i => (i.endTime || i.startTime || '') < startTime).pop();
 
-    let fromLat = HOME_BASE.lat;
-    let fromLng = HOME_BASE.lng;
-    let fromName = HOME_BASE.name;
+    let fromLat = homeBase.lat;
+    let fromLng = homeBase.lng;
+    let fromName = homeBase.name;
 
     if (prevItem && prevItem.lat && prevItem.lng) {
       fromLat = prevItem.lat;

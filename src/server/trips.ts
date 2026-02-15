@@ -27,6 +27,11 @@ const createTripSchema = z.object({
   status: z.enum(['planning', 'active', 'completed', 'cancelled']).default('planning'),
   totalBudget: z.string().optional(),
   currency: z.string().default('USD'),
+  homeBaseName: z.string().optional().nullable(),
+  homeBaseLat: z.number().optional().nullable(),
+  homeBaseLng: z.number().optional().nullable(),
+  homeBaseAddress: z.string().optional().nullable(),
+  homeBaseCurrency: z.string().optional().nullable(),
 });
 
 const updateTripSchema = createTripSchema.partial().extend({

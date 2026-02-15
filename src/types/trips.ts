@@ -8,6 +8,11 @@ export interface Trip {
   status: string;
   totalBudget: string | null;
   currency: string;
+  homeBaseName: string | null;
+  homeBaseLat: number | null;
+  homeBaseLng: number | null;
+  homeBaseAddress: string | null;
+  homeBaseCurrency: string | null;
   createdAt: string;
   updatedAt: string;
 }
