@@ -50,9 +50,24 @@ export const getTrip = createServerFn({ method: 'GET' })
       ? await db.select().from(destinationEvents).where(inArray(destinationEvents.destinationId, destIds))
       : [];
 
+    // Enrich itinerary items with destination names and event info
+    const destMap = new Map(dests.map(d => [d.id, d.name]));
+    const eventMap = new Map(eventRows.map(e => [e.id, e]));
+    const enrichedItin = itin.map(item => {
+      const destName = item.destinationId ? destMap.get(item.destinationId) : null;
+      const event = item.eventId ? eventMap.get(item.eventId) : null;
+      return {
+        ...item,
+        destinationName: destName || null,
+        eventName: event?.name || null,
+        eventStatus: event?.status || null,
+        eventBookingUrl: event?.bookingUrl || null,
+      };
+    });
+
     return {
       ...trip,
-      itineraryItems: itin,
+      itineraryItems: enrichedItin,
       destinations: dests,
       accommodations: accom,
       budgetItems: budget,
