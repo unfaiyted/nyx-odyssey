@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { Link } from '@tanstack/react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { addAccommodation, updateAccommodation, deleteAccommodation, setHomeBase, unsetHomeBase } from '../../server/fns/trip-details';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -396,9 +397,11 @@ export function AccommodationsTab({ tripId, items, destinations = [] }: Props) {
             const dest = destinations.find(d => d.id === item.destinationId);
 
             return (
-              <motion.div key={item.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              <Link key={item.id} to="/accommodation/$accommodationId" params={{ accommodationId: item.id }}
+                className="block">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
-                className={`glass-card p-4 space-y-3 ${item.status === 'cancelled' ? 'opacity-60' : ''}`}>
+                className={`glass-card p-4 space-y-3 hover:border-ody-accent/40 transition-all cursor-pointer ${item.status === 'cancelled' ? 'opacity-60' : ''}`}>
                 {/* Header */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -430,7 +433,7 @@ export function AccommodationsTab({ tripId, items, destinations = [] }: Props) {
                       </span>
                     )}
                     <button
-                      onClick={() => homeBaseMutation.mutate({ accommodationId: item.id, unset: !!item.isHomeBase })}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); homeBaseMutation.mutate({ accommodationId: item.id, unset: !!item.isHomeBase }); }}
                       className={`text-xs px-2 py-1 rounded-lg transition-colors ${
                         item.isHomeBase
                           ? 'bg-ody-accent text-white hover:bg-ody-accent-hover'
@@ -440,11 +443,11 @@ export function AccommodationsTab({ tripId, items, destinations = [] }: Props) {
                     >
                       <Home size={12} />
                     </button>
-                    <button onClick={() => startEdit(item)}
+                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); startEdit(item); }}
                       className="text-ody-text-dim hover:text-ody-accent transition-colors p-1">
                       <Edit3 size={14} />
                     </button>
-                    <button onClick={() => deleteMutation.mutate(item.id)}
+                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteMutation.mutate(item.id); }}
                       className="text-ody-text-dim hover:text-ody-danger transition-colors p-1">
                       <Trash2 size={14} />
                     </button>
@@ -479,7 +482,7 @@ export function AccommodationsTab({ tripId, items, destinations = [] }: Props) {
                     <div className="text-xs bg-ody-bg rounded px-2 py-1 font-mono text-ody-text-muted flex-1">
                       Conf: {item.confirmationCode}
                     </div>
-                    <button onClick={() => handleCopyConfirmation(item.confirmationCode!, item.id)}
+                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCopyConfirmation(item.confirmationCode!, item.id); }}
                       className="text-ody-text-dim hover:text-ody-accent transition-colors p-1"
                       title="Copy confirmation code">
                       {copiedId === item.id ? <Check size={12} className="text-ody-success" /> : <Copy size={12} />}
@@ -514,6 +517,7 @@ export function AccommodationsTab({ tripId, items, destinations = [] }: Props) {
                 {/* Notes */}
                 {item.notes && <p className="text-sm text-ody-text-muted">{item.notes}</p>}
               </motion.div>
+              </Link>
             );
           })}
         </div>
