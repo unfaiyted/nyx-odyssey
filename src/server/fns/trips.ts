@@ -2,6 +2,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { db } from '../../db';
 import { trips, itineraryItems, tripDestinations, accommodations, budgetItems, budgetCategories, packingItems, flights, rentalCars, tripRoutes, tripCronJobs, tripTravelers, destinationEvents } from '../../db/schema';
 import { desc, eq, inArray } from 'drizzle-orm';
+import { z } from 'zod';
 
 export const getTrips = createServerFn({ method: 'GET' }).handler(async () => {
   return await db.select().from(trips).orderBy(desc(trips.createdAt));
@@ -23,6 +24,7 @@ export const createTrip = createServerFn({ method: 'POST' })
   });
 
 export const getTrip = createServerFn({ method: 'GET' })
+  .inputValidator(z.object({ tripId: z.string().min(1) }))
   .handler(async ({ data }) => {
     const { tripId } = data;
     const [trip] = await db.select().from(trips).where(eq(trips.id, tripId));
