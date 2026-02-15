@@ -303,6 +303,124 @@ export const destinationWeatherMonthlyRelations = relations(destinationWeatherMo
   destination: one(tripDestinations, { fields: [destinationWeatherMonthly.destinationId], references: [tripDestinations.id] }),
 }));
 
+// ── Flight Research ────────────────────────────────────
+export const flightSearches = pgTable('flight_searches', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  tripId: text('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  origin: text('origin').notNull(), // airport code e.g. "VCE"
+  destination: text('destination').notNull(), // airport code e.g. "JFK"
+  originCity: text('origin_city'),
+  destinationCity: text('destination_city'),
+  departureDate: text('departure_date').notNull(),
+  returnDate: text('return_date'),
+  passengers: integer('passengers').notNull().default(1),
+  cabinClass: text('cabin_class').default('economy'), // economy, premium_economy, business, first
+  flexible: boolean('flexible').default(false), // flexible dates?
+  flexibilityDays: integer('flexibility_days'), // +/- days
+  tripType: text('trip_type').default('round_trip'), // one_way, round_trip, multi_city
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const flightOptions = pgTable('flight_options', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  searchId: text('search_id').notNull().references(() => flightSearches.id, { onDelete: 'cascade' }),
+  tripId: text('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  airline: text('airline').notNull(),
+  flightNumbers: text('flight_numbers'), // comma-separated for connecting flights
+  routeType: text('route_type').default('direct'), // direct, connecting
+  stops: integer('stops').default(0),
+  layoverAirports: text('layover_airports'), // comma-separated airport codes
+  layoverDurations: text('layover_durations'), // comma-separated durations e.g. "2h30m"
+  departureAirport: text('departure_airport').notNull(),
+  arrivalAirport: text('arrival_airport').notNull(),
+  departureDate: text('departure_date').notNull(),
+  departureTime: text('departure_time'),
+  arrivalDate: text('arrival_date').notNull(),
+  arrivalTime: text('arrival_time'),
+  duration: text('duration'), // total duration e.g. "12h30m"
+  // Return leg (for round trips)
+  returnDepartureDate: text('return_departure_date'),
+  returnDepartureTime: text('return_departure_time'),
+  returnArrivalDate: text('return_arrival_date'),
+  returnArrivalTime: text('return_arrival_time'),
+  returnDuration: text('return_duration'),
+  returnStops: integer('return_stops'),
+  returnLayoverAirports: text('return_layover_airports'),
+  returnLayoverDurations: text('return_layover_durations'),
+  // Pricing
+  pricePerPerson: numeric('price_per_person', { precision: 10, scale: 2 }),
+  totalPrice: numeric('total_price', { precision: 10, scale: 2 }),
+  currency: text('currency').default('USD'),
+  // Details
+  cabinClass: text('cabin_class').default('economy'),
+  baggageIncluded: text('baggage_included'), // e.g. "1 carry-on, 1 checked"
+  refundable: boolean('refundable').default(false),
+  bookingUrl: text('booking_url'),
+  bookingSource: text('booking_source'), // google_flights, kayak, airline_direct, etc.
+  // Status & comparison
+  status: text('status').default('found'), // found, shortlisted, rejected, booked
+  comparisonNotes: text('comparison_notes'),
+  rating: integer('rating'), // 1-5 personal rating
+  // Link to booked flight
+  bookedFlightId: text('booked_flight_id').references(() => flights.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const flightPriceHistory = pgTable('flight_price_history', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  flightOptionId: text('flight_option_id').notNull().references(() => flightOptions.id, { onDelete: 'cascade' }),
+  price: numeric('price', { precision: 10, scale: 2 }).notNull(),
+  currency: text('currency').default('USD'),
+  source: text('source'), // where the price was checked
+  checkedAt: timestamp('checked_at').defaultNow().notNull(),
+});
+
+export const priceAlerts = pgTable('price_alerts', {
+  id: text('id').primaryKey().$defaultFn(() => nanoid()),
+  tripId: text('trip_id').notNull().references(() => trips.id, { onDelete: 'cascade' }),
+  searchId: text('search_id').references(() => flightSearches.id, { onDelete: 'set null' }),
+  origin: text('origin').notNull(),
+  destination: text('destination').notNull(),
+  departureDate: text('departure_date').notNull(),
+  returnDate: text('return_date'),
+  targetPrice: numeric('target_price', { precision: 10, scale: 2 }).notNull(),
+  currency: text('currency').default('USD'),
+  currentLowestPrice: numeric('current_lowest_price', { precision: 10, scale: 2 }),
+  lastChecked: timestamp('last_checked'),
+  triggered: boolean('triggered').default(false),
+  triggeredAt: timestamp('triggered_at'),
+  active: boolean('active').default(true),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Flight research relations
+export const flightSearchesRelations = relations(flightSearches, ({ one, many }) => ({
+  trip: one(trips, { fields: [flightSearches.tripId], references: [trips.id] }),
+  options: many(flightOptions),
+  priceAlerts: many(priceAlerts),
+}));
+
+export const flightOptionsRelations = relations(flightOptions, ({ one, many }) => ({
+  search: one(flightSearches, { fields: [flightOptions.searchId], references: [flightSearches.id] }),
+  trip: one(trips, { fields: [flightOptions.tripId], references: [trips.id] }),
+  bookedFlight: one(flights, { fields: [flightOptions.bookedFlightId], references: [flights.id] }),
+  priceHistory: many(flightPriceHistory),
+}));
+
+export const flightPriceHistoryRelations = relations(flightPriceHistory, ({ one }) => ({
+  flightOption: one(flightOptions, { fields: [flightPriceHistory.flightOptionId], references: [flightOptions.id] }),
+}));
+
+export const priceAlertsRelations = relations(priceAlerts, ({ one }) => ({
+  trip: one(trips, { fields: [priceAlerts.tripId], references: [trips.id] }),
+  search: one(flightSearches, { fields: [priceAlerts.searchId], references: [flightSearches.id] }),
+}));
+
 // ── Relations ──────────────────────────────────────────
 export const tripsRelations = relations(trips, ({ many }) => ({
   itineraryItems: many(itineraryItems),
@@ -314,6 +432,9 @@ export const tripsRelations = relations(trips, ({ many }) => ({
   flights: many(flights),
   rentalCars: many(rentalCars),
   cronJobs: many(tripCronJobs),
+  flightSearches: many(flightSearches),
+  flightOptions: many(flightOptions),
+  priceAlerts: many(priceAlerts),
 }));
 
 export const itineraryItemsRelations = relations(itineraryItems, ({ one }) => ({
