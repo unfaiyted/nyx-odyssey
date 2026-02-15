@@ -193,7 +193,7 @@ function TripDetailPage() {
           {activeTab === 'flights' && <FlightsTab tripId={tripId} items={trip.flights} />}
           {activeTab === 'price-tracking' && <PriceTrackingTab tripId={tripId} />}
           {activeTab === 'rental-cars' && <RentalCarsTab tripId={tripId} items={trip.rentalCars || []} />}
-          {activeTab === 'routes' && <RoutesTab tripId={tripId} routes={trip.routes || []} destinations={trip.destinations} />}
+          {activeTab === 'routes' && <RoutesTab tripId={tripId} routes={trip.routes || []} destinations={trip.destinations} homeBaseName={trip.homeBaseName} />}
           {activeTab === 'schedule' && <ScheduleTab tripId={tripId} cronJobs={trip.cronJobs || []} />}
           {activeTab === 'travelers' && <TravelersTab tripId={tripId} items={trip.travelers || []} />}
           {activeTab === 'events' && <EventsTab tripId={tripId} items={trip.events || []} destinations={trip.destinations} />}

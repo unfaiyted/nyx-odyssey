@@ -1,11 +1,27 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { db } from '../db';
-import { tripDestinations, destinationResearch, destinationHighlights, destinationWeatherMonthly, accommodations } from '../db/schema';
+import { trips, tripDestinations, destinationResearch, destinationHighlights, destinationWeatherMonthly, accommodations } from '../db/schema';
 import { eq, and, asc } from 'drizzle-orm';
 
-// Home base: Vicenza, Contrà S. Rocco #60
-const HOME_BASE = { lat: 45.5485, lng: 11.5479 };
+// Default fallback home base (Vicenza) — used only if trip has no home base configured
+const DEFAULT_HOME_BASE = { lat: 45.5485, lng: 11.5479, name: 'Vicenza (Home)', currency: 'EUR' };
+
+async function getHomeBaseForDestination(destinationId: string) {
+  // Look up the trip this destination belongs to
+  const [dest] = await db.select().from(tripDestinations).where(eq(tripDestinations.id, destinationId));
+  if (!dest?.tripId) return DEFAULT_HOME_BASE;
+  
+  const [trip] = await db.select().from(trips).where(eq(trips.id, dest.tripId));
+  if (!trip?.homeBaseLat || !trip?.homeBaseLng) return DEFAULT_HOME_BASE;
+  
+  return {
+    lat: trip.homeBaseLat,
+    lng: trip.homeBaseLng,
+    name: trip.homeBaseName || 'Home Base',
+    currency: trip.homeBaseCurrency || trip.currency || 'USD',
+  };
+}
 
 interface OSRMRoute {
   durationMinutes: number;
@@ -67,12 +83,28 @@ export const getDestinationDetail = createServerFn({ method: 'GET' })
     const destAccommodations = await db.select().from(accommodations)
       .where(eq(accommodations.destinationId, destinationId));
 
+    // Fetch trip home base for transport display
+    let homeBase: { name: string; lat: number; lng: number; address?: string; currency?: string } | null = null;
+    if (dest.tripId) {
+      const [trip] = await db.select().from(trips).where(eq(trips.id, dest.tripId));
+      if (trip?.homeBaseLat && trip?.homeBaseLng) {
+        homeBase = {
+          name: trip.homeBaseName || 'Home Base',
+          lat: trip.homeBaseLat,
+          lng: trip.homeBaseLng,
+          address: trip.homeBaseAddress || undefined,
+          currency: trip.homeBaseCurrency || trip.currency || undefined,
+        };
+      }
+    }
+
     return {
       destination: dest,
       research: research || null,
       highlights,
       weather,
       accommodations: destAccommodations,
+      homeBase,
     };
   });
 
@@ -173,15 +205,20 @@ export const calculateTransportFromHome = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const { destinationId, destinationLat, destinationLng } = data;
 
+    // Look up the trip's home base dynamically
+    const homeBase = await getHomeBaseForDestination(destinationId);
+    const currency = homeBase.currency;
+    const currencySymbol = currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : '$';
+
     // Get driving route from OSRM
     const carRoute = await getOSRMRoute(
-      HOME_BASE.lat, HOME_BASE.lng,
+      homeBase.lat, homeBase.lng,
       destinationLat, destinationLng,
       'car'
     );
 
     if (!carRoute) {
-      throw new Error('Could not calculate route from Vicenza to destination');
+      throw new Error(`Could not calculate route from ${homeBase.name} to destination`);
     }
 
     const distanceKm = carRoute.distanceKm;
@@ -190,24 +227,24 @@ export const calculateTransportFromHome = createServerFn({ method: 'POST' })
     
     // Estimate train time (typically 0.7x car time + 15 min for station access)
     const trainTimeMinutes = Math.round(driveTimeMinutes * 0.7 + 15);
-    // Estimate train cost (roughly €0.10/km for regional trains in Italy)
+    // Estimate train cost (roughly 0.10/km for regional trains)
     const trainCost = Math.round(distanceKm * 0.10 * 100) / 100;
 
     // Estimate bus time (typically 1.3x car time + 10 min for stops)
     const busTimeMinutes = Math.round(driveTimeMinutes * 1.3 + 10);
-    // Estimate bus cost (roughly €0.06/km for FlixBus/regional buses)
+    // Estimate bus cost (roughly 0.06/km for regional buses)
     const busCost = Math.round(distanceKm * 0.06 * 100) / 100;
 
     // Estimate taxi time (similar to car)
     const taxiTimeMinutes = driveTimeMinutes;
-    // Estimate taxi cost (roughly €2.50 base + €1.50/km)
+    // Estimate taxi cost (roughly 2.50 base + 1.50/km)
     const taxiCost = Math.round((2.50 + distanceKm * 1.50) * 100) / 100;
 
-    // Generate route notes
-    const driveRouteNotes = `Via highway from Vicenza. Approx €${estimateTolls(distanceKm).toFixed(2)} in tolls, €${estimateFuelCost(distanceKm).toFixed(2)} fuel cost. Distance: ${distanceKm.toFixed(1)} km.`;
-    const trainRouteNotes = `Check Trenitalia or Italo from Vicenza station. Typical journey time ~${Math.round(trainTimeMinutes / 60)}h ${trainTimeMinutes % 60}m. Book in advance for best prices.`;
-    const busRouteNotes = `Check FlixBus or regional bus services. May require transfer depending on destination.`;
-    const taxiRouteNotes = `Direct door-to-door service. Consider rideshare apps like Uber or local taxi services. Best for groups or late-night travel.`;
+    // Generate route notes (generic, not Vicenza-specific)
+    const driveRouteNotes = `From ${homeBase.name}. Approx ${currencySymbol}${estimateTolls(distanceKm).toFixed(2)} in tolls, ${currencySymbol}${estimateFuelCost(distanceKm).toFixed(2)} fuel cost. Distance: ${distanceKm.toFixed(1)} km.`;
+    const trainRouteNotes = `Check local rail services from ${homeBase.name}. Typical journey time ~${Math.round(trainTimeMinutes / 60)}h ${trainTimeMinutes % 60}m. Book in advance for best prices.`;
+    const busRouteNotes = `Check regional bus services. May require transfer depending on destination.`;
+    const taxiRouteNotes = `Direct door-to-door service. Consider rideshare apps or local taxi services. Best for groups or late-night travel.`;
 
     // Update the database
     const existing = await db.select().from(destinationResearch)

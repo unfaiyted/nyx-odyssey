@@ -37,6 +37,11 @@ export const trips = pgTable('trips', {
   status: text('status').default('planning'), // planning, active, completed, cancelled
   totalBudget: numeric('total_budget', { precision: 10, scale: 2 }),
   currency: text('currency').default('USD'),
+  homeBaseName: text('home_base_name'),
+  homeBaseLat: doublePrecision('home_base_lat'),
+  homeBaseLng: doublePrecision('home_base_lng'),
+  homeBaseAddress: text('home_base_address'),
+  homeBaseCurrency: text('home_base_currency'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
