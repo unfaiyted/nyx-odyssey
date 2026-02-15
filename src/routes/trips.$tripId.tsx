@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
-import { getTrip } from '../server/fns/trips';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getTrip, updateTrip, deleteTrip } from '../server/fns/trips';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car, CarFront, ClipboardList, Clock } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, Car, CarFront, ClipboardList, Clock, Settings } from 'lucide-react';
 import { z } from 'zod';
-import type { TripDetail, TripTab } from '../types/trips';
+import { useState } from 'react';
+import type { Trip, TripDetail, TripTab } from '../types/trips';
 import { ItineraryTab } from '../components/trip/ItineraryTab';
 import { DestinationsTab } from '../components/trip/DestinationsTab';
 import { AccommodationsTab } from '../components/trip/AccommodationsTab';
@@ -15,6 +16,9 @@ import { FlightsTab } from '../components/trip/FlightsTab';
 import { ResearchBoard } from '../components/trip/ResearchBoard';
 import { RentalCarsTab } from '../components/trip/RentalCarsTab';
 import { ScheduleTab } from '../components/trip/ScheduleTab';
+import { TripKebabMenu } from '../components/trip/TripKebabMenu';
+import { EditTripModal } from '../components/trip/EditTripModal';
+import { DeleteTripModal } from '../components/trip/DeleteTripModal';
 
 // Define valid tabs
 const validTabs: TripTab[] = [
@@ -49,6 +53,9 @@ function TripDetailPage() {
   const { tripId } = Route.useParams();
   const navigate = useNavigate({ from: Route.fullPath });
   const search = useSearch({ from: Route.fullPath });
+  const queryClient = useQueryClient();
+  const [showEdit, setShowEdit] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
   
   // Get active tab from URL or default to 'itinerary'
   const activeTab = search.tab || 'itinerary';
@@ -57,6 +64,29 @@ function TripDetailPage() {
     queryKey: ['trip', tripId],
     queryFn: () => getTrip({ data: { tripId } }),
   });
+
+  const updateMutation = useMutation({
+    mutationFn: (data: Partial<Trip>) => updateTrip({ data: { tripId, data } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
+      setShowEdit(false);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteTrip({ data: { tripId } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trips'] });
+      navigate({ to: '/trips' });
+    },
+  });
+
+  const handleArchiveToggle = () => {
+    if (!trip) return;
+    const newStatus = trip.status === 'archived' ? 'planning' : 'archived';
+    updateMutation.mutate({ status: newStatus } as Partial<Trip>);
+  };
 
   // Handle tab change - updates URL with replaceState
   const handleTabChange = (tabId: TripTab) => {
@@ -74,6 +104,7 @@ function TripDetailPage() {
     active: 'bg-ody-success/20 text-ody-success',
     completed: 'bg-ody-text-muted/20 text-ody-text-muted',
     cancelled: 'bg-ody-danger/20 text-ody-danger',
+    archived: 'bg-ody-text-dim/20 text-ody-text-dim',
   };
 
   return (
@@ -104,6 +135,12 @@ function TripDetailPage() {
             )}
           </div>
         </div>
+        <TripKebabMenu
+          isArchived={trip.status === 'archived'}
+          onEdit={() => setShowEdit(true)}
+          onArchive={handleArchiveToggle}
+          onDelete={() => setShowDelete(true)}
+        />
       </div>
 
       {/* Tabs */}
@@ -145,6 +182,22 @@ function TripDetailPage() {
           {activeTab === 'schedule' && <ScheduleTab tripId={tripId} cronJobs={trip.cronJobs || []} />}
         </motion.div>
       </AnimatePresence>
+
+      {/* Modals */}
+      <EditTripModal
+        trip={trip}
+        open={showEdit}
+        onClose={() => setShowEdit(false)}
+        onSave={(data) => updateMutation.mutate(data)}
+        saving={updateMutation.isPending}
+      />
+      <DeleteTripModal
+        tripName={trip.name}
+        open={showDelete}
+        onClose={() => setShowDelete(false)}
+        onConfirm={() => deleteMutation.mutate()}
+        deleting={deleteMutation.isPending}
+      />
     </div>
   );
 }
