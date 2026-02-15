@@ -284,4 +284,4 @@ export interface EmergencyContact {
   createdAt: string;
 }
 
-export type TripTab = 'itinerary' | 'destinations' | 'research' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'price-tracking' | 'rental-cars' | 'routes' | 'schedule' | 'travelers';
+export type TripTab = 'overview' | 'itinerary' | 'destinations' | 'research' | 'accommodations' | 'budget' | 'packing' | 'flights' | 'price-tracking' | 'rental-cars' | 'routes' | 'schedule' | 'travelers' | 'events';
