@@ -17,6 +17,7 @@ import { Route as HighlightHighlightIdRouteImport } from './routes/highlight.$hi
 import { Route as EventEventIdRouteImport } from './routes/event.$eventId'
 import { Route as DestinationDestinationIdRouteImport } from './routes/destination.$destinationId'
 import { Route as AccommodationAccommodationIdRouteImport } from './routes/accommodation.$accommodationId'
+import { Route as TripsTripIdBulkImagesRouteImport } from './routes/trips.$tripId.bulk-images'
 
 const MapRoute = MapRouteImport.update({
   id: '/map',
@@ -60,6 +61,11 @@ const AccommodationAccommodationIdRoute =
     path: '/accommodation/$accommodationId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const TripsTripIdBulkImagesRoute = TripsTripIdBulkImagesRouteImport.update({
+  id: '/bulk-images',
+  path: '/bulk-images',
+  getParentRoute: () => TripsTripIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,8 +74,9 @@ export interface FileRoutesByFullPath {
   '/destination/$destinationId': typeof DestinationDestinationIdRoute
   '/event/$eventId': typeof EventEventIdRoute
   '/highlight/$highlightId': typeof HighlightHighlightIdRoute
-  '/trips/$tripId': typeof TripsTripIdRoute
+  '/trips/$tripId': typeof TripsTripIdRouteWithChildren
   '/trips/': typeof TripsIndexRoute
+  '/trips/$tripId/bulk-images': typeof TripsTripIdBulkImagesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,8 +85,9 @@ export interface FileRoutesByTo {
   '/destination/$destinationId': typeof DestinationDestinationIdRoute
   '/event/$eventId': typeof EventEventIdRoute
   '/highlight/$highlightId': typeof HighlightHighlightIdRoute
-  '/trips/$tripId': typeof TripsTripIdRoute
+  '/trips/$tripId': typeof TripsTripIdRouteWithChildren
   '/trips': typeof TripsIndexRoute
+  '/trips/$tripId/bulk-images': typeof TripsTripIdBulkImagesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,8 +97,9 @@ export interface FileRoutesById {
   '/destination/$destinationId': typeof DestinationDestinationIdRoute
   '/event/$eventId': typeof EventEventIdRoute
   '/highlight/$highlightId': typeof HighlightHighlightIdRoute
-  '/trips/$tripId': typeof TripsTripIdRoute
+  '/trips/$tripId': typeof TripsTripIdRouteWithChildren
   '/trips/': typeof TripsIndexRoute
+  '/trips/$tripId/bulk-images': typeof TripsTripIdBulkImagesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -103,6 +112,7 @@ export interface FileRouteTypes {
     | '/highlight/$highlightId'
     | '/trips/$tripId'
     | '/trips/'
+    | '/trips/$tripId/bulk-images'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -113,6 +123,7 @@ export interface FileRouteTypes {
     | '/highlight/$highlightId'
     | '/trips/$tripId'
     | '/trips'
+    | '/trips/$tripId/bulk-images'
   id:
     | '__root__'
     | '/'
@@ -123,6 +134,7 @@ export interface FileRouteTypes {
     | '/highlight/$highlightId'
     | '/trips/$tripId'
     | '/trips/'
+    | '/trips/$tripId/bulk-images'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,7 +144,7 @@ export interface RootRouteChildren {
   DestinationDestinationIdRoute: typeof DestinationDestinationIdRoute
   EventEventIdRoute: typeof EventEventIdRoute
   HighlightHighlightIdRoute: typeof HighlightHighlightIdRoute
-  TripsTripIdRoute: typeof TripsTripIdRoute
+  TripsTripIdRoute: typeof TripsTripIdRouteWithChildren
   TripsIndexRoute: typeof TripsIndexRoute
 }
 
@@ -194,8 +206,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccommodationAccommodationIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/trips/$tripId/bulk-images': {
+      id: '/trips/$tripId/bulk-images'
+      path: '/bulk-images'
+      fullPath: '/trips/$tripId/bulk-images'
+      preLoaderRoute: typeof TripsTripIdBulkImagesRouteImport
+      parentRoute: typeof TripsTripIdRoute
+    }
   }
 }
+
+interface TripsTripIdRouteChildren {
+  TripsTripIdBulkImagesRoute: typeof TripsTripIdBulkImagesRoute
+}
+
+const TripsTripIdRouteChildren: TripsTripIdRouteChildren = {
+  TripsTripIdBulkImagesRoute: TripsTripIdBulkImagesRoute,
+}
+
+const TripsTripIdRouteWithChildren = TripsTripIdRoute._addFileChildren(
+  TripsTripIdRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -204,7 +235,7 @@ const rootRouteChildren: RootRouteChildren = {
   DestinationDestinationIdRoute: DestinationDestinationIdRoute,
   EventEventIdRoute: EventEventIdRoute,
   HighlightHighlightIdRoute: HighlightHighlightIdRoute,
-  TripsTripIdRoute: TripsTripIdRoute,
+  TripsTripIdRoute: TripsTripIdRouteWithChildren,
   TripsIndexRoute: TripsIndexRoute,
 }
 export const routeTree = rootRouteImport
