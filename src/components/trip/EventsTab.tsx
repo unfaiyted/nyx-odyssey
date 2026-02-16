@@ -563,12 +563,30 @@ export function EventsTab({ tripId, items, destinations = [] }: Props) {
                 return (
                   <motion.div key={ev.id} layout
                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                    className="bg-ody-surface border border-ody-border rounded-xl p-4 hover:border-ody-accent/30 transition-colors">
+                    className="bg-ody-surface border border-ody-border rounded-xl overflow-hidden hover:border-ody-accent/30 transition-colors">
+                    {/* Hero image */}
+                    {ev.imageUrl && (
+                      <Link to="/event/$eventId" params={{ eventId: ev.id }} className="block relative h-40 overflow-hidden">
+                        <img src={ev.imageUrl} alt={ev.name} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f]/80 via-transparent to-transparent" />
+                        <div className="absolute bottom-2 left-3 flex items-center gap-2">
+                          <span className={`text-[11px] px-2 py-0.5 rounded-full ${stCfg.bg} ${stCfg.color} backdrop-blur-sm`}>
+                            {stCfg.label}
+                          </span>
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-black/40 text-white/80 backdrop-blur-sm">
+                            {typeCfg.emoji} {typeCfg.label}
+                          </span>
+                        </div>
+                      </Link>
+                    )}
+                    <div className="p-4">
                     <div className="flex items-start gap-3">
-                      {/* Type icon */}
-                      <div className="w-10 h-10 rounded-lg bg-ody-accent/10 flex items-center justify-center text-lg shrink-0">
-                        {typeCfg.emoji}
-                      </div>
+                      {/* Type icon — only show when no image */}
+                      {!ev.imageUrl && (
+                        <div className="w-10 h-10 rounded-lg bg-ody-accent/10 flex items-center justify-center text-lg shrink-0">
+                          {typeCfg.emoji}
+                        </div>
+                      )}
 
                       {/* Main content */}
                       <div className="flex-1 min-w-0">
@@ -674,6 +692,7 @@ export function EventsTab({ tripId, items, destinations = [] }: Props) {
                         );
                       })}
                       <span className="text-[10px] text-ody-text-dim ml-1">{stCfg.label}</span>
+                    </div>
                     </div>
                   </motion.div>
                 );
