@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, CarFront, Clock, Users, Ticket, ClipboardList, Activity, Car, ArrowRight, CheckCircle2, Circle } from 'lucide-react';
+import { Calendar, MapPin, Hotel, DollarSign, Luggage, Plane, CarFront, Clock, Users, Ticket, ClipboardList, Activity, Car, ArrowRight, CheckCircle2, Circle, Images } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
 import type { TripDetail, TripTab } from '../../types/trips';
 
 interface OverviewTabProps {
@@ -287,6 +288,17 @@ export function OverviewTab({ trip, onNavigate }: OverviewTabProps) {
               </button>
             );
           })}
+          <Link
+            to="/trips/$tripId/bulk-images"
+            params={{ tripId: trip.id }}
+            className="flex items-center gap-2 p-3 rounded-lg bg-ody-accent/10 border border-ody-accent/30 hover:border-ody-accent/60 hover:bg-ody-accent/20 transition-all text-left group"
+          >
+            <Images size={16} className="text-ody-accent" />
+            <div className="min-w-0">
+              <div className="text-sm font-medium truncate">Find All Images</div>
+              <div className="text-[10px] text-ody-text-dim">Bulk search</div>
+            </div>
+          </Link>
         </div>
       </motion.div>
     </motion.div>
