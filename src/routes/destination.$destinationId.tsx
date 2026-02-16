@@ -8,12 +8,16 @@ import {
   Shield, Utensils, Camera, Clock, Star, ExternalLink,
   Sun, CloudRain, Info, Lightbulb, Plane, Languages,
   Mountain, Users, ChevronDown, ChevronUp, Navigation,
-  Hotel, ShoppingBag, TreePine, Music, Landmark, Eye, CalendarPlus
+  Hotel, ShoppingBag, TreePine, Music, Landmark, Eye, CalendarPlus,
+  Wand2
 } from 'lucide-react';
 import { z } from 'zod';
 import { AddToItineraryModal } from '../components/destination/AddToItineraryModal';
 import { TransportMap } from '../components/destination/TransportMap';
 import { TransportModeCards } from '../components/destination/TransportModeCards';
+import { ImagePickerModal } from '../components/ImagePickerModal';
+import { findDestinationImages, updateDestinationImage } from '../server/destination-image';
+import type { CandidateImage } from '../server/destination-image';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, Legend, Area, AreaChart } from 'recharts';
 
 // Search params schema for fromTab
@@ -102,6 +106,10 @@ function DestinationDetailPage() {
   const [activeHighlightCategory, setActiveHighlightCategory] = useState<string | null>(null);
   const [itineraryHighlight, setItineraryHighlight] = useState<any>(null);
   const [isCalculatingTransport, setIsCalculatingTransport] = useState(false);
+  const [imagePickerOpen, setImagePickerOpen] = useState(false);
+  const [candidateImages, setCandidateImages] = useState<CandidateImage[]>([]);
+  const [imageSearchLoading, setImageSearchLoading] = useState(false);
+  const [imageToast, setImageToast] = useState<string | null>(null);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['destination-detail', destinationId],
@@ -125,6 +133,41 @@ function DestinationDetailPage() {
       console.error('Failed to calculate transport:', e);
     } finally {
       setIsCalculatingTransport(false);
+    }
+  };
+
+  const handleFindImage = async () => {
+    setImagePickerOpen(true);
+    setImageSearchLoading(true);
+    setCandidateImages([]);
+    try {
+      const results = await findDestinationImages({
+        data: {
+          destinationName: data?.destination?.name || '',
+          country: data?.research?.country,
+          websiteUrl: data?.destination?.websiteUrl || undefined,
+        },
+      });
+      setCandidateImages(results);
+    } catch (err) {
+      console.error('Failed to find images:', err);
+    } finally {
+      setImageSearchLoading(false);
+    }
+  };
+
+  const handleSelectImage = async (imageUrl: string) => {
+    try {
+      await updateDestinationImage({
+        data: { destinationId, imageUrl },
+      });
+      setImageToast('Image updated successfully!');
+      setTimeout(() => setImageToast(null), 3000);
+      await refetch();
+    } catch (err) {
+      console.error('Failed to update image:', err);
+      setImageToast('Failed to update image');
+      setTimeout(() => setImageToast(null), 3000);
     }
   };
 
@@ -185,7 +228,7 @@ function DestinationDetailPage() {
         <img src={photoUrl} alt={destination.name} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-ody-bg via-ody-bg/40 to-transparent" />
 
-        <div className="absolute top-4 left-4">
+        <div className="absolute top-4 left-4 right-4 flex items-start justify-between">
           <Link
             to="/trips/$tripId"
             params={{ tripId: destination.tripId }}
@@ -194,6 +237,12 @@ function DestinationDetailPage() {
           >
             <ArrowLeft size={16} /> Back to {backTabName}
           </Link>
+          <button
+            onClick={handleFindImage}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/40 backdrop-blur-sm text-white/90 text-sm hover:bg-black/60 transition-colors"
+          >
+            <Wand2 size={16} /> Find Image
+          </button>
         </div>
 
         <div className="absolute bottom-6 left-6 right-6">
@@ -706,6 +755,29 @@ function DestinationDetailPage() {
           destinationPhotoUrl={destination.photoUrl}
         />
       )}
+
+      {/* Image Picker Modal */}
+      <ImagePickerModal
+        open={imagePickerOpen}
+        images={candidateImages}
+        loading={imageSearchLoading}
+        onSelect={handleSelectImage}
+        onClose={() => setImagePickerOpen(false)}
+      />
+
+      {/* Toast */}
+      <AnimatePresence>
+        {imageToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-lg bg-ody-accent text-white text-sm font-medium shadow-lg"
+          >
+            {imageToast}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
