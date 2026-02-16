@@ -658,6 +658,7 @@ export const destinationEvents = pgTable('destination_events', {
   totalCost: numeric('total_cost', { precision: 10, scale: 2 }),
   currency: text('currency').default('EUR'),
   notes: text('notes'),
+  imageUrl: text('image_url'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
