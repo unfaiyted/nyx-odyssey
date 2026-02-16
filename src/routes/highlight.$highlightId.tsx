@@ -1,15 +1,17 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getHighlightDetail, updateHighlightNotes } from '../server/highlight-detail';
+import { getHighlightDetail, updateHighlightNotes, updateHighlightImage, addHighlightPhoto, findHighlightImages } from '../server/highlight-detail';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import {
   ArrowLeft, MapPin, Calendar, Globe, Clock, Star, ExternalLink,
   Phone, Bookmark, Camera, DollarSign, Navigation, Edit3, Save,
   X, ChevronRight, CalendarPlus, Lightbulb, MessageSquare, Link as LinkIcon,
-  Mountain, Utensils, Music, ShoppingBag, TreePine, Landmark,
+  Mountain, Utensils, Music, ShoppingBag, TreePine, Landmark, ImageIcon,
 } from 'lucide-react';
 import { AddToItineraryModal } from '../components/destination/AddToItineraryModal';
+import { ImagePickerModal } from '../components/ImagePickerModal';
+import type { CandidateImage } from '../server/destination-image';
 
 const HIGHLIGHT_CATEGORIES: Record<string, { label: string; icon: typeof Camera; color: string; bg: string }> = {
   attraction: { label: 'Attraction', icon: Camera, color: 'text-blue-400', bg: 'bg-blue-400/15' },
@@ -56,11 +58,48 @@ function HighlightDetailPage() {
   const [showItineraryModal, setShowItineraryModal] = useState(false);
   const [editingNotes, setEditingNotes] = useState(false);
   const [notesText, setNotesText] = useState('');
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  const [candidateImages, setCandidateImages] = useState<CandidateImage[]>([]);
+  const [imageSearchLoading, setImageSearchLoading] = useState(false);
+  const [addToGallery, setAddToGallery] = useState(true);
 
   const { data, isLoading } = useQuery({
     queryKey: ['highlight-detail', highlightId],
     queryFn: () => getHighlightDetail({ data: { highlightId } }),
   });
+
+  const imageMutation = useMutation({
+    mutationFn: async (imageUrl: string) => {
+      await updateHighlightImage({ data: { highlightId, imageUrl } });
+      if (addToGallery) {
+        await addHighlightPhoto({ data: { highlightId, url: imageUrl } });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['highlight-detail', highlightId] });
+    },
+  });
+
+  const handleFindImage = async () => {
+    if (!data) return;
+    setShowImagePicker(true);
+    setImageSearchLoading(true);
+    setCandidateImages([]);
+    try {
+      const images = await findHighlightImages({
+        data: {
+          highlightTitle: data.highlight.title,
+          destinationName: data.destination?.name,
+          websiteUrl: data.highlight.websiteUrl || undefined,
+        },
+      });
+      setCandidateImages(images);
+    } catch (err) {
+      console.error('Failed to find images:', err);
+    } finally {
+      setImageSearchLoading(false);
+    }
+  };
 
   const notesMutation = useMutation({
     mutationFn: (notes: string) => updateHighlightNotes({ data: { highlightId, notes } }),
@@ -127,8 +166,14 @@ function HighlightDetailPage() {
           )}
         </div>
 
-        {/* Category badge */}
-        <div className="absolute top-4 right-4">
+        {/* Category badge + Find Image */}
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          <button
+            onClick={handleFindImage}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/40 backdrop-blur-sm text-white/90 text-sm hover:bg-black/60 transition-colors"
+          >
+            <ImageIcon size={14} /> Find Image
+          </button>
           <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg backdrop-blur-sm text-sm font-medium ${cat.bg} ${cat.color}`}>
             <CatIcon size={14} /> {cat.label}
           </span>
@@ -393,6 +438,28 @@ function HighlightDetailPage() {
             })}
           </div>
         </motion.div>
+      )}
+
+      {/* Image Picker Modal */}
+      <ImagePickerModal
+        open={showImagePicker}
+        images={candidateImages}
+        loading={imageSearchLoading}
+        onSelect={(url) => imageMutation.mutate(url)}
+        onClose={() => setShowImagePicker(false)}
+      />
+      {showImagePicker && candidateImages.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[55] flex items-center gap-2 px-4 py-2 rounded-lg bg-ody-surface border border-ody-border shadow-xl">
+          <label className="flex items-center gap-2 text-sm text-ody-text-muted cursor-pointer">
+            <input
+              type="checkbox"
+              checked={addToGallery}
+              onChange={(e) => setAddToGallery(e.target.checked)}
+              className="rounded border-ody-border"
+            />
+            Also add to photo gallery
+          </label>
+        </div>
       )}
 
       {/* Add to Itinerary Modal */}
