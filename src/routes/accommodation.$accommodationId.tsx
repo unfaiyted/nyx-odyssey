@@ -1,14 +1,16 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAccommodationDetail } from '../server/accommodation-detail';
+import { updateAccommodationImage, findAccommodationImages } from '../server/accommodation-image';
 import { AddAccommodationToItineraryModal } from '../components/destination/AddAccommodationToItineraryModal';
+import { ImagePickerModal } from '../components/ImagePickerModal';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import {
   ArrowLeft, MapPin, Calendar, Globe, Star, ExternalLink,
   DollarSign, CalendarPlus, CheckCircle, Phone, Mail, Moon,
   Copy, Check, Building, Home, Tent, BedDouble, Hotel as HotelIcon,
-  ClipboardCopy, StickyNote,
+  ClipboardCopy, StickyNote, ImageIcon, Loader2,
 } from 'lucide-react';
 
 const typeConfig: Record<string, { icon: typeof HotelIcon; label: string; emoji: string; color: string; bg: string }> = {
@@ -45,13 +47,46 @@ function nightCount(checkIn: string | null, checkOut: string | null): number | n
 
 function AccommodationDetailPage() {
   const { accommodationId } = Route.useParams();
+  const queryClient = useQueryClient();
   const [showAddToItinerary, setShowAddToItinerary] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  const [candidateImages, setCandidateImages] = useState<any[]>([]);
+  const [findingImages, setFindingImages] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['accommodation', accommodationId],
     queryFn: () => getAccommodationDetail({ data: { accommodationId } }),
   });
+
+  const handleFindImages = async () => {
+    if (!data) return;
+    setFindingImages(true);
+    setShowImagePicker(true);
+    try {
+      const images = await findAccommodationImages({
+        data: {
+          name: data.accommodation.name,
+          address: data.accommodation.address || undefined,
+          destinationName: data.destination?.name,
+          bookingUrl: data.accommodation.bookingUrl || undefined,
+          type: data.accommodation.type || undefined,
+        },
+      });
+      setCandidateImages(images);
+    } catch (err) {
+      console.error('Failed to find images:', err);
+    } finally {
+      setFindingImages(false);
+    }
+  };
+
+  const handleSelectImage = async (imageUrl: string) => {
+    await updateAccommodationImage({ data: { accommodationId, imageUrl } });
+    queryClient.invalidateQueries({ queryKey: ['accommodation', accommodationId] });
+    queryClient.invalidateQueries({ queryKey: ['trip'] });
+    setShowImagePicker(false);
+  };
 
   if (isLoading) return <div className="p-6 text-center text-ody-text-muted">Loading accommodation...</div>;
   if (!data) return <div className="p-6 text-center text-ody-text-muted">Accommodation not found</div>;
@@ -81,6 +116,25 @@ function AccommodationDetailPage() {
         <ArrowLeft size={16} />
         {destination ? `Back to ${destination.name}` : 'Back to Trips'}
       </Link>
+
+      {/* Hero Image */}
+      {accommodation.imageUrl && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="relative h-64 md:h-80 rounded-2xl overflow-hidden mb-6 -mx-2"
+        >
+          <img src={accommodation.imageUrl} alt={accommodation.name} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-transparent to-transparent" />
+          <button
+            onClick={handleFindImages}
+            className="absolute top-3 right-3 p-2 rounded-full bg-black/50 backdrop-blur-sm hover:bg-black/70 transition-colors text-white"
+            title="Change image"
+          >
+            <ImageIcon size={16} />
+          </button>
+        </motion.div>
+      )}
 
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
@@ -292,6 +346,15 @@ function AccommodationDetailPage() {
             <Globe size={16} /> View Booking <ExternalLink size={12} />
           </a>
         )}
+
+        <button
+          onClick={handleFindImages}
+          disabled={findingImages}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-ody-surface border border-ody-border text-sm text-ody-text hover:border-ody-accent transition-colors disabled:opacity-50"
+        >
+          {findingImages ? <Loader2 size={16} className="animate-spin" /> : <ImageIcon size={16} />}
+          {accommodation.imageUrl ? 'Change Image' : 'Find Image'}
+        </button>
       </motion.div>
 
       {/* Destination context */}
@@ -319,6 +382,15 @@ function AccommodationDetailPage() {
         tripId={trip?.id || accommodation.tripId}
         open={showAddToItinerary}
         onClose={() => setShowAddToItinerary(false)}
+      />
+
+      {/* Image Picker Modal */}
+      <ImagePickerModal
+        open={showImagePicker}
+        onClose={() => setShowImagePicker(false)}
+        images={candidateImages}
+        loading={findingImages}
+        onSelect={handleSelectImage}
       />
 
       {/* Related Accommodations */}

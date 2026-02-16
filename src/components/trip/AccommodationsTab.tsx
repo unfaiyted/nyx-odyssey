@@ -401,7 +401,14 @@ export function AccommodationsTab({ tripId, items, destinations = [] }: Props) {
                 className="block">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
-                className={`glass-card p-4 space-y-3 hover:border-ody-accent/40 transition-all cursor-pointer ${item.status === 'cancelled' ? 'opacity-60' : ''}`}>
+                className={`glass-card overflow-hidden hover:border-ody-accent/40 transition-all cursor-pointer ${item.status === 'cancelled' ? 'opacity-60' : ''}`}>
+                {/* Image */}
+                {item.imageUrl && (
+                  <div className="h-36 w-full overflow-hidden">
+                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div className="p-4 space-y-3">
                 {/* Header */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -516,6 +523,7 @@ export function AccommodationsTab({ tripId, items, destinations = [] }: Props) {
 
                 {/* Notes */}
                 {item.notes && <p className="text-sm text-ody-text-muted">{item.notes}</p>}
+                </div>
               </motion.div>
               </Link>
             );

@@ -88,6 +88,7 @@ export interface Accommodation {
   contactEmail: string | null;
   rating: number | null;
   notes: string | null;
+  imageUrl: string | null;
   booked: boolean;
   isHomeBase: boolean;
   createdAt: string;
