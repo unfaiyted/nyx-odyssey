@@ -112,6 +112,8 @@ export const accommodations = pgTable('accommodations', {
   booked: boolean('booked').default(false),
   imageUrl: text('image_url'),
   isHomeBase: boolean('is_home_base').default(false),
+  lat: doublePrecision('lat'),
+  lng: doublePrecision('lng'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

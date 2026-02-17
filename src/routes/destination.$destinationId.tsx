@@ -9,10 +9,11 @@ import {
   Sun, CloudRain, Info, Lightbulb, Plane, Languages,
   Mountain, Users, ChevronDown, ChevronUp, Navigation,
   Hotel, ShoppingBag, TreePine, Music, Landmark, Eye, CalendarPlus,
-  Wand2
+  Wand2, BarChart3
 } from 'lucide-react';
 import { z } from 'zod';
 import { AddToItineraryModal } from '../components/destination/AddToItineraryModal';
+import { AccommodationCompare } from '../components/destination/AccommodationCompare';
 import { TransportMap } from '../components/destination/TransportMap';
 import { TransportModeCards } from '../components/destination/TransportModeCards';
 import { ImagePickerModal } from '../components/ImagePickerModal';
@@ -110,6 +111,7 @@ function DestinationDetailPage() {
   const [candidateImages, setCandidateImages] = useState<CandidateImage[]>([]);
   const [imageSearchLoading, setImageSearchLoading] = useState(false);
   const [imageToast, setImageToast] = useState<string | null>(null);
+  const [compareMode, setCompareMode] = useState(false);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['destination-detail', destinationId],
@@ -578,37 +580,65 @@ function DestinationDetailPage() {
           animate={{ opacity: 1, y: 0 }}
           className="glass-card p-6 space-y-4"
         >
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Hotel size={20} className="text-ody-accent" /> Accommodations
-          </h2>
-          <div className="space-y-3">
-            {accommodations.map(acc => (
-              <div key={acc.id} className="flex items-center justify-between p-3 rounded-lg bg-ody-bg border border-ody-border-subtle">
-                <div>
-                  <div className="font-medium">{acc.name}</div>
-                  <div className="text-xs text-ody-text-dim flex items-center gap-3">
-                    <span>{acc.type}</span>
-                    {acc.checkIn && <span>{acc.checkIn} → {acc.checkOut}</span>}
-                    {acc.rating && (
-                      <span className="flex items-center gap-0.5 text-ody-warning">
-                        <Star size={10} className="fill-ody-warning" /> {acc.rating}
-                      </span>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Hotel size={20} className="text-ody-accent" /> Accommodations
+            </h2>
+            {accommodations.length >= 2 && (
+              <button
+                onClick={() => setCompareMode(!compareMode)}
+                className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+                  compareMode
+                    ? 'border-ody-accent bg-ody-accent/10 text-ody-accent'
+                    : 'border-ody-border-subtle hover:border-ody-border text-ody-text-dim'
+                }`}
+              >
+                <BarChart3 size={14} />
+                {compareMode ? 'Hide Compare' : 'Compare'}
+              </button>
+            )}
+          </div>
+
+          <AnimatePresence>
+            {compareMode && (
+              <AccommodationCompare
+                accommodations={accommodations}
+                highlights={highlights}
+                onClose={() => setCompareMode(false)}
+              />
+            )}
+          </AnimatePresence>
+
+          {!compareMode && (
+            <div className="space-y-3">
+              {accommodations.map(acc => (
+                <div key={acc.id} className="flex items-center justify-between p-3 rounded-lg bg-ody-bg border border-ody-border-subtle">
+                  <div>
+                    <div className="font-medium">{acc.name}</div>
+                    <div className="text-xs text-ody-text-dim flex items-center gap-3">
+                      <span>{acc.type}</span>
+                      {acc.checkIn && <span>{acc.checkIn} → {acc.checkOut}</span>}
+                      {acc.rating && (
+                        <span className="flex items-center gap-0.5 text-ody-warning">
+                          <Star size={10} className="fill-ody-warning" /> {acc.rating}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    {acc.totalCost && (
+                      <div className="font-semibold">{acc.currency} {acc.totalCost}</div>
                     )}
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      acc.booked ? 'bg-ody-success/20 text-ody-success' : 'bg-ody-info/20 text-ody-info'
+                    }`}>
+                      {acc.status}
+                    </span>
                   </div>
                 </div>
-                <div className="text-right">
-                  {acc.totalCost && (
-                    <div className="font-semibold">{acc.currency} {acc.totalCost}</div>
-                  )}
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    acc.booked ? 'bg-ody-success/20 text-ody-success' : 'bg-ody-info/20 text-ody-info'
-                  }`}>
-                    {acc.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </motion.div>
       )}
 
