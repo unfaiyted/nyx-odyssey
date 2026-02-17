@@ -14,6 +14,8 @@ import {
 import { z } from 'zod';
 import { AddToItineraryModal } from '../components/destination/AddToItineraryModal';
 import { AccommodationCompare } from '../components/destination/AccommodationCompare';
+import { AddEventToItineraryModal } from '../components/destination/AddEventToItineraryModal';
+import { EventsSection } from '../components/destination/EventsSection';
 import { TransportMap } from '../components/destination/TransportMap';
 import { TransportModeCards } from '../components/destination/TransportModeCards';
 import { ImagePickerModal } from '../components/ImagePickerModal';
@@ -153,6 +155,7 @@ function DestinationDetailPage() {
   const [imageSearchLoading, setImageSearchLoading] = useState(false);
   const [imageToast, setImageToast] = useState<string | null>(null);
   const [compareMode, setCompareMode] = useState(false);
+  const [itineraryEvent, setItineraryEvent] = useState<any>(null);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['destination-detail', destinationId],
@@ -238,7 +241,7 @@ function DestinationDetailPage() {
 
   if (!data) return <div className="text-center py-12 text-ody-text-muted">Destination not found</div>;
 
-  const { destination, research, highlights, weather, accommodations } = data;
+  const { destination, research, highlights, weather, accommodations, events } = data;
   const tips: string[] = research?.travelTips ? JSON.parse(research.travelTips) : [];
 
   const tripMonths = getTripMonths(destination.arrivalDate, destination.departureDate);
@@ -815,6 +818,17 @@ function DestinationDetailPage() {
         </motion.div>
       )}
 
+      {/* Events */}
+      {events.length > 0 && (
+        <EventsSection
+          events={events}
+          tripId={destination.tripId}
+          startDate={tripStartDate}
+          endDate={tripEndDate}
+          onAddToItinerary={(event) => setItineraryEvent(event)}
+        />
+      )}
+
       {/* Transport Section - Map + Mode Comparison */}
       {destination.lat && destination.lng && (
         <motion.div
@@ -956,6 +970,18 @@ function DestinationDetailPage() {
           open={!!itineraryHighlight}
           onClose={() => setItineraryHighlight(null)}
           destinationPhotoUrl={destination.photoUrl}
+        />
+      )}
+
+      {/* Add Event to Itinerary Modal */}
+      {itineraryEvent && tripId && (
+        <AddEventToItineraryModal
+          event={itineraryEvent}
+          tripId={tripId}
+          startDate={tripStartDate}
+          endDate={tripEndDate}
+          open={!!itineraryEvent}
+          onClose={() => setItineraryEvent(null)}
         />
       )}
 

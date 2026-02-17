@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { db } from '../db';
-import { trips, tripDestinations, destinationResearch, destinationHighlights, destinationWeatherMonthly, accommodations } from '../db/schema';
+import { trips, tripDestinations, destinationResearch, destinationHighlights, destinationWeatherMonthly, accommodations, destinationEvents } from '../db/schema';
 import { eq, and, asc } from 'drizzle-orm';
 
 // Default fallback home base (Vicenza) — used only if trip has no home base configured
@@ -82,6 +82,9 @@ export const getDestinationDetail = createServerFn({ method: 'GET' })
       .orderBy(asc(destinationWeatherMonthly.month));
     const destAccommodations = await db.select().from(accommodations)
       .where(eq(accommodations.destinationId, destinationId));
+    const events = await db.select().from(destinationEvents)
+      .where(eq(destinationEvents.destinationId, destinationId))
+      .orderBy(asc(destinationEvents.startDate));
 
     // Fetch trip home base for transport display
     let homeBase: { name: string; lat: number; lng: number; address?: string; currency?: string } | null = null;
@@ -104,6 +107,7 @@ export const getDestinationDetail = createServerFn({ method: 'GET' })
       highlights,
       weather,
       accommodations: destAccommodations,
+      events,
       homeBase,
     };
   });
