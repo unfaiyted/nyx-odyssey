@@ -1,8 +1,8 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { db } from '../db';
-import { trips, tripDestinations, destinationResearch, destinationHighlights, destinationWeatherMonthly, accommodations, destinationEvents } from '../db/schema';
-import { eq, and, asc } from 'drizzle-orm';
+import { trips, tripDestinations, destinationResearch, destinationHighlights, destinationWeatherMonthly, accommodations, destinationEvents, highlightPhotos } from '../db/schema';
+import { eq, and, asc, inArray } from 'drizzle-orm';
 
 // Default fallback home base (Vicenza) — used only if trip has no home base configured
 const DEFAULT_HOME_BASE = { lat: 45.5485, lng: 11.5479, name: 'Vicenza (Home)', currency: 'EUR' };
@@ -101,10 +101,19 @@ export const getDestinationDetail = createServerFn({ method: 'GET' })
       }
     }
 
+    // Fetch highlight photos for gallery
+    const highlightIds = highlights.map(h => h.id);
+    const photos = highlightIds.length > 0
+      ? await db.select().from(highlightPhotos)
+          .where(inArray(highlightPhotos.highlightId, highlightIds))
+          .orderBy(asc(highlightPhotos.orderIndex))
+      : [];
+
     return {
       destination: dest,
       research: research || null,
       highlights,
+      highlightPhotos: photos,
       weather,
       accommodations: destAccommodations,
       events,
