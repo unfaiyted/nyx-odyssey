@@ -18,7 +18,7 @@ import { TransportModeCards } from '../components/destination/TransportModeCards
 import { ImagePickerModal } from '../components/ImagePickerModal';
 import { findDestinationImages, updateDestinationImage } from '../server/destination-image';
 import type { CandidateImage } from '../server/destination-image';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, Legend, Area, AreaChart } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, Legend, Area, AreaChart, ReferenceArea } from 'recharts';
 
 // Search params schema for fromTab
 const searchSchema = z.object({
@@ -41,6 +41,46 @@ const HIGHLIGHT_CATEGORIES: Record<string, { label: string; icon: typeof Camera;
 };
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/** Returns month abbreviations that overlap with the trip date range */
+function getTripMonths(arrivalDate?: string | null, departureDate?: string | null): Set<string> {
+  if (!arrivalDate) return new Set();
+  const start = new Date(arrivalDate);
+  const end = departureDate ? new Date(departureDate) : start;
+  if (isNaN(start.getTime())) return new Set();
+  const months = new Set<string>();
+  const cur = new Date(start.getFullYear(), start.getMonth(), 1);
+  const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+  while (cur <= endMonth) {
+    months.add(MONTH_NAMES[cur.getMonth()]);
+    cur.setMonth(cur.getMonth() + 1);
+  }
+  return months;
+}
+
+/** Build contiguous ranges of trip months for ReferenceArea highlights */
+function getTripMonthRanges(tripMonths: Set<string>): Array<{ x1: string; x2: string }> {
+  if (tripMonths.size === 0) return [];
+  const ranges: Array<{ x1: string; x2: string }> = [];
+  let rangeStart: string | null = null;
+  let rangeLast: string | null = null;
+  for (const month of MONTH_NAMES) {
+    if (tripMonths.has(month)) {
+      if (!rangeStart) rangeStart = month;
+      rangeLast = month;
+    } else {
+      if (rangeStart && rangeLast) {
+        ranges.push({ x1: rangeStart, x2: rangeLast });
+      }
+      rangeStart = null;
+      rangeLast = null;
+    }
+  }
+  if (rangeStart && rangeLast) {
+    ranges.push({ x1: rangeStart, x2: rangeLast });
+  }
+  return ranges;
+}
 
 // Map tab IDs to display names
 const TAB_NAMES: Record<string, string> = {
@@ -197,6 +237,9 @@ function DestinationDetailPage() {
 
   const { destination, research, highlights, weather, accommodations } = data;
   const tips: string[] = research?.travelTips ? JSON.parse(research.travelTips) : [];
+
+  const tripMonths = getTripMonths(destination.arrivalDate, destination.departureDate);
+  const tripMonthRanges = getTripMonthRanges(tripMonths);
 
   const weatherData = weather.map(w => ({
     month: MONTH_NAMES[w.month - 1],
@@ -376,9 +419,17 @@ function DestinationDetailPage() {
           animate={{ opacity: 1, y: 0 }}
           className="glass-card p-6 space-y-4"
         >
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Thermometer size={20} className="text-ody-accent" /> Climate
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Thermometer size={20} className="text-ody-accent" /> Climate
+            </h2>
+            {tripMonths.size > 0 && (
+              <span className="flex items-center gap-1.5 text-xs text-purple-400">
+                <span className="inline-block w-3 h-3 rounded-sm bg-purple-400/20 border border-purple-400/40" />
+                Your trip months
+              </span>
+            )}
+          </div>
           {research?.weatherNotes && (
             <p className="text-sm text-ody-text-muted">{research.weatherNotes}</p>
           )}
@@ -401,6 +452,19 @@ function DestinationDetailPage() {
                   ]}
                 />
                 <Legend />
+                {tripMonthRanges.map((range, i) => (
+                  <ReferenceArea
+                    key={`trip-temp-${i}`}
+                    x1={range.x1}
+                    x2={range.x2}
+                    fill="#a78bfa"
+                    fillOpacity={0.12}
+                    stroke="#a78bfa"
+                    strokeOpacity={0.3}
+                    strokeDasharray="4 2"
+                    label={{ value: 'Trip', position: 'insideTopRight', fill: '#a78bfa', fontSize: 11 }}
+                  />
+                ))}
                 <Area
                   type="monotone"
                   dataKey="high"
@@ -441,6 +505,18 @@ function DestinationDetailPage() {
                       color: 'var(--color-ody-text, #e0e0e0)',
                     }}
                   />
+                  {tripMonthRanges.map((range, i) => (
+                    <ReferenceArea
+                      key={`trip-rain-${i}`}
+                      x1={range.x1}
+                      x2={range.x2}
+                      fill="#a78bfa"
+                      fillOpacity={0.12}
+                      stroke="#a78bfa"
+                      strokeOpacity={0.3}
+                      strokeDasharray="4 2"
+                    />
+                  ))}
                   <Bar dataKey="rain" name="Rainy Days" fill="#6366f1" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
