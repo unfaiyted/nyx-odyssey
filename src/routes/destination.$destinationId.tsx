@@ -2,7 +2,7 @@ import { createFileRoute, Link, useSearch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getDestinationDetail, calculateTransportFromHome } from '../server/destination-detail';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   ArrowLeft, MapPin, Calendar, Globe, Thermometer, DollarSign,
   Shield, Utensils, Camera, Clock, Star, ExternalLink,
@@ -16,6 +16,7 @@ import { AddToItineraryModal } from '../components/destination/AddToItineraryMod
 import { TransportMap } from '../components/destination/TransportMap';
 import { TransportModeCards } from '../components/destination/TransportModeCards';
 import { ImagePickerModal } from '../components/ImagePickerModal';
+import { PhotoGallery, type GalleryPhoto } from '../components/destination/PhotoGallery';
 import { findDestinationImages, updateDestinationImage } from '../server/destination-image';
 import type { CandidateImage } from '../server/destination-image';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, Legend, Area, AreaChart } from 'recharts';
@@ -195,7 +196,7 @@ function DestinationDetailPage() {
 
   if (!data) return <div className="text-center py-12 text-ody-text-muted">Destination not found</div>;
 
-  const { destination, research, highlights, weather, accommodations } = data;
+  const { destination, research, highlights, highlightPhotos: hPhotos, weather, accommodations } = data;
   const tips: string[] = research?.travelTips ? JSON.parse(research.travelTips) : [];
 
   const weatherData = weather.map(w => ({
@@ -218,6 +219,44 @@ function DestinationDetailPage() {
     : highlights;
 
   const activeCats = Object.keys(highlightsByCategory);
+
+  // Assemble gallery photos from destination hero + highlight images + highlight photos
+  const galleryPhotos: GalleryPhoto[] = useMemo(() => {
+    const photos: GalleryPhoto[] = [];
+    // Destination hero photo
+    if (destination.photoUrl) {
+      photos.push({
+        id: `dest-${destination.id}`,
+        url: destination.photoUrl,
+        caption: destination.name,
+        source: 'destination',
+      });
+    }
+    // Highlight main images
+    highlights.forEach(h => {
+      if (h.imageUrl) {
+        photos.push({
+          id: `hl-${h.id}`,
+          url: h.imageUrl,
+          caption: h.title,
+          source: 'highlight',
+          highlightTitle: h.title,
+        });
+      }
+    });
+    // Additional highlight photos
+    (hPhotos || []).forEach(p => {
+      const hl = highlights.find(h => h.id === p.highlightId);
+      photos.push({
+        id: `hp-${p.id}`,
+        url: p.url,
+        caption: p.caption,
+        source: 'highlight-photo',
+        highlightTitle: hl?.title,
+      });
+    });
+    return photos;
+  }, [destination, highlights, hPhotos]);
 
   const photoUrl = destination.photoUrl || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&h=600&fit=crop';
 
@@ -569,6 +608,11 @@ function DestinationDetailPage() {
             </AnimatePresence>
           </div>
         </motion.div>
+      )}
+
+      {/* Photo Gallery */}
+      {galleryPhotos.length > 1 && (
+        <PhotoGallery photos={galleryPhotos} />
       )}
 
       {/* Accommodations for this destination */}
