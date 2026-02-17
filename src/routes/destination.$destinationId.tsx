@@ -2,7 +2,7 @@ import { createFileRoute, Link, useSearch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getDestinationDetail, calculateTransportFromHome } from '../server/destination-detail';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import {
   ArrowLeft, MapPin, Calendar, Globe, Thermometer, DollarSign,
   Shield, Utensils, Camera, Clock, Star, ExternalLink,
@@ -18,6 +18,7 @@ import { AddEventToItineraryModal } from '../components/destination/AddEventToIt
 import { EventsSection } from '../components/destination/EventsSection';
 import { TransportMap } from '../components/destination/TransportMap';
 import { TransportModeCards } from '../components/destination/TransportModeCards';
+const HighlightsMap = lazy(() => import('../components/destination/HighlightsMap').then(m => ({ default: m.HighlightsMap })));
 import { ImagePickerModal } from '../components/ImagePickerModal';
 import { findDestinationImages, updateDestinationImage } from '../server/destination-image';
 import type { CandidateImage } from '../server/destination-image';
@@ -746,6 +747,28 @@ function DestinationDetailPage() {
               </AnimatePresence>
             </div>
           )}
+        </motion.div>
+      )}
+
+      {/* Interactive Map of Highlights, Accommodations & Events */}
+      {highlights.some(h => h.lat && h.lng) && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-4"
+        >
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <MapPin size={20} className="text-ody-accent" /> Interactive Map
+          </h2>
+          <Suspense fallback={<div className="glass-card h-[440px] animate-pulse bg-ody-surface rounded-xl" />}>
+            <HighlightsMap
+              highlights={highlights}
+              accommodations={accommodations}
+              destinationLat={destination.lat}
+              destinationLng={destination.lng}
+              destinationName={destination.name}
+            />
+          </Suspense>
         </motion.div>
       )}
 
