@@ -9,7 +9,7 @@ import {
   Sun, CloudRain, Info, Lightbulb, Plane, Languages,
   Mountain, Users, ChevronDown, ChevronUp, Navigation,
   Hotel, ShoppingBag, TreePine, Music, Landmark, Eye, CalendarPlus,
-  Wand2
+  Wand2, LayoutGrid, List
 } from 'lucide-react';
 import { z } from 'zod';
 import { AddToItineraryModal } from '../components/destination/AddToItineraryModal';
@@ -144,6 +144,7 @@ function DestinationDetailPage() {
   const search = useSearch({ from: Route.fullPath });
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [activeHighlightCategory, setActiveHighlightCategory] = useState<string | null>(null);
+  const [highlightView, setHighlightView] = useState<'grid' | 'list'>('grid');
   const [itineraryHighlight, setItineraryHighlight] = useState<any>(null);
   const [isCalculatingTransport, setIsCalculatingTransport] = useState(false);
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
@@ -532,9 +533,27 @@ function DestinationDetailPage() {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Star size={20} className="text-ody-accent" /> Things to Do & See
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Star size={20} className="text-ody-accent" /> Things to Do & See
+            </h2>
+            <div className="flex items-center gap-1 bg-ody-surface rounded-lg p-1">
+              <button
+                onClick={() => setHighlightView('grid')}
+                className={`p-1.5 rounded-md transition-colors ${highlightView === 'grid' ? 'bg-ody-accent/20 text-ody-accent' : 'text-ody-text-muted hover:text-ody-text'}`}
+                title="Grid view"
+              >
+                <LayoutGrid size={16} />
+              </button>
+              <button
+                onClick={() => setHighlightView('list')}
+                className={`p-1.5 rounded-md transition-colors ${highlightView === 'list' ? 'bg-ody-accent/20 text-ody-accent' : 'text-ody-text-muted hover:text-ody-text'}`}
+                title="List view"
+              >
+                <List size={16} />
+              </button>
+            </div>
+          </div>
 
           {/* Category filter */}
           <div className="flex flex-wrap gap-2">
@@ -564,86 +583,164 @@ function DestinationDetailPage() {
             })}
           </div>
 
-          {/* Highlights grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <AnimatePresence mode="popLayout">
-              {filteredHighlights.map((h, i) => {
-                const cat = HIGHLIGHT_CATEGORIES[h.category || 'attraction'] || HIGHLIGHT_CATEGORIES.attraction;
-                const CatIcon = cat.icon;
-                return (
-                  <motion.div
-                    key={h.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="glass-card overflow-hidden group hover:border-ody-accent/30 transition-colors"
-                  >
-                    <Link to="/highlight/$highlightId" params={{ highlightId: h.id }} className="block">
-                    {h.imageUrl && (
-                      <div className="h-36 overflow-hidden">
-                        <img src={h.imageUrl} alt={h.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
-                      </div>
-                    )}
-                    <div className="p-4 space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-semibold">{h.title}</h3>
-                        <div className="flex items-center gap-2 shrink-0">
-                          {h.priceLevel && <PriceLevel level={h.priceLevel} />}
-                          {h.rating && (
-                            <span className="flex items-center gap-0.5 text-xs text-ody-warning">
-                              <Star size={12} className="fill-ody-warning" /> {h.rating}
+          {/* Highlights grid/list */}
+          {highlightView === 'grid' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <AnimatePresence mode="popLayout">
+                {filteredHighlights.map((h, i) => {
+                  const cat = HIGHLIGHT_CATEGORIES[h.category || 'attraction'] || HIGHLIGHT_CATEGORIES.attraction;
+                  const CatIcon = cat.icon;
+                  return (
+                    <motion.div
+                      key={h.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="glass-card overflow-hidden group hover:border-ody-accent/30 transition-colors"
+                    >
+                      <Link to="/highlight/$highlightId" params={{ highlightId: h.id }} className="block">
+                      {h.imageUrl && (
+                        <div className="h-36 overflow-hidden">
+                          <img src={h.imageUrl} alt={h.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                        </div>
+                      )}
+                      <div className="p-4 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="font-semibold">{h.title}</h3>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {h.priceLevel && <PriceLevel level={h.priceLevel} />}
+                            {h.rating && (
+                              <span className="flex items-center gap-0.5 text-xs text-ody-warning">
+                                <Star size={12} className="fill-ody-warning" /> {h.rating}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {h.description && (
+                          <p className="text-sm text-ody-text-muted line-clamp-3">{h.description}</p>
+                        )}
+                        <div className="flex items-center gap-3 text-xs text-ody-text-dim pt-1">
+                          <span className={`flex items-center gap-1 ${cat.color}`}>
+                            <CatIcon size={12} /> {cat.label}
+                          </span>
+                          {h.duration && (
+                            <span className="flex items-center gap-1">
+                              <Clock size={12} /> {h.duration}
+                            </span>
+                          )}
+                          {h.address && (
+                            <span className="flex items-center gap-1">
+                              <MapPin size={12} /> {h.address}
                             </span>
                           )}
                         </div>
                       </div>
-                      {h.description && (
-                        <p className="text-sm text-ody-text-muted line-clamp-3">{h.description}</p>
-                      )}
-                      <div className="flex items-center gap-3 text-xs text-ody-text-dim pt-1">
-                        <span className={`flex items-center gap-1 ${cat.color}`}>
-                          <CatIcon size={12} /> {cat.label}
-                        </span>
-                        {h.duration && (
-                          <span className="flex items-center gap-1">
-                            <Clock size={12} /> {h.duration}
-                          </span>
-                        )}
-                        {h.address && (
-                          <span className="flex items-center gap-1">
-                            <MapPin size={12} /> {h.address}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    </Link>
-                    <div className="px-4 pb-4">
-                      <div className="flex items-center gap-2">
-                        {h.websiteUrl && (
-                          <a
-                            href={h.websiteUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs text-ody-accent hover:underline"
-                            onClick={e => e.stopPropagation()}
+                      </Link>
+                      <div className="px-4 pb-4">
+                        <div className="flex items-center gap-2">
+                          {h.websiteUrl && (
+                            <a
+                              href={h.websiteUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-ody-accent hover:underline"
+                              onClick={e => e.stopPropagation()}
+                            >
+                              <ExternalLink size={12} /> Website
+                            </a>
+                          )}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setItineraryHighlight(h); }}
+                            className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-ody-accent/10 text-ody-accent hover:bg-ody-accent/20 transition-colors ml-auto"
                           >
-                            <ExternalLink size={12} /> Website
-                          </a>
-                        )}
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setItineraryHighlight(h); }}
-                          className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-ody-accent/10 text-ody-accent hover:bg-ody-accent/20 transition-colors ml-auto"
-                        >
-                          <CalendarPlus size={12} /> Add to Itinerary
-                        </button>
+                            <CalendarPlus size={12} /> Add to Itinerary
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <AnimatePresence mode="popLayout">
+                {filteredHighlights.map((h, i) => {
+                  const cat = HIGHLIGHT_CATEGORIES[h.category || 'attraction'] || HIGHLIGHT_CATEGORIES.attraction;
+                  const CatIcon = cat.icon;
+                  return (
+                    <motion.div
+                      key={h.id}
+                      layout
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      transition={{ delay: i * 0.02 }}
+                      className="glass-card group hover:border-ody-accent/30 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 p-3">
+                        {h.imageUrl && (
+                          <Link to="/highlight/$highlightId" params={{ highlightId: h.id }} className="shrink-0">
+                            <img src={h.imageUrl} alt={h.title} className="w-12 h-12 rounded-lg object-cover" loading="lazy" />
+                          </Link>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <Link to="/highlight/$highlightId" params={{ highlightId: h.id }} className="font-medium text-sm hover:text-ody-accent transition-colors truncate">
+                              {h.title}
+                            </Link>
+                            {h.rating && (
+                              <span className="flex items-center gap-0.5 text-xs text-ody-warning shrink-0">
+                                <Star size={10} className="fill-ody-warning" /> {h.rating}
+                              </span>
+                            )}
+                            {h.priceLevel && <span className="shrink-0"><PriceLevel level={h.priceLevel} /></span>}
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-ody-text-dim mt-0.5">
+                            <span className={`flex items-center gap-1 ${cat.color}`}>
+                              <CatIcon size={11} /> {cat.label}
+                            </span>
+                            {h.duration && (
+                              <span className="flex items-center gap-1">
+                                <Clock size={11} /> {h.duration}
+                              </span>
+                            )}
+                            {h.address && (
+                              <span className="flex items-center gap-1 truncate">
+                                <MapPin size={11} /> {h.address}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {h.websiteUrl && (
+                            <a
+                              href={h.websiteUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 text-ody-text-muted hover:text-ody-accent transition-colors"
+                              title="Website"
+                            >
+                              <ExternalLink size={14} />
+                            </a>
+                          )}
+                          <button
+                            onClick={() => setItineraryHighlight(h)}
+                            className="p-1.5 text-ody-text-muted hover:text-ody-accent transition-colors"
+                            title="Add to Itinerary"
+                          >
+                            <CalendarPlus size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+          )}
         </motion.div>
       )}
 
