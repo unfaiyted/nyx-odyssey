@@ -2,14 +2,14 @@ import { createFileRoute, Link, useSearch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getDestinationDetail, calculateTransportFromHome } from '../server/destination-detail';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import {
   ArrowLeft, MapPin, Calendar, Globe, Thermometer, DollarSign,
   Shield, Utensils, Camera, Clock, Star, ExternalLink,
   Sun, CloudRain, Info, Lightbulb, Plane, Languages,
   Mountain, Users, ChevronDown, ChevronUp, Navigation,
   Hotel, ShoppingBag, TreePine, Music, Landmark, Eye, CalendarPlus,
-  Wand2, LayoutGrid, List, BarChart3
+  Wand2, LayoutGrid, List, BarChart3, Search
 } from 'lucide-react';
 import { z } from 'zod';
 import { AddToItineraryModal } from '../components/destination/AddToItineraryModal';
@@ -144,6 +144,21 @@ function StatCard({ icon: Icon, label, value, sublabel, className = '' }: {
   );
 }
 
+function LiveClock({ timezone }: { timezone: string }) {
+  const [time, setTime] = useState('');
+  useEffect(() => {
+    const update = () => {
+      try {
+        setTime(new Date().toLocaleTimeString('en-US', { timeZone: timezone, hour: '2-digit', minute: '2-digit', hour12: true }));
+      } catch { setTime('--:--'); }
+    };
+    update();
+    const id = setInterval(update, 30000);
+    return () => clearInterval(id);
+  }, [timezone]);
+  return <span>{time}</span>;
+}
+
 function DestinationDetailPage() {
   const { destinationId } = Route.useParams();
   const search = useSearch({ from: Route.fullPath });
@@ -158,6 +173,11 @@ function DestinationDetailPage() {
   const [imageToast, setImageToast] = useState<string | null>(null);
   const [compareMode, setCompareMode] = useState(false);
   const [itineraryEvent, setItineraryEvent] = useState<any>(null);
+  const [highlightSearch, setHighlightSearch] = useState('');
+  const [highlightShowCount, setHighlightShowCount] = useState(8);
+  const [accomSearch, setAccomSearch] = useState('');
+  const [accomSort, setAccomSort] = useState<'name' | 'cost' | 'rating' | 'status'>('name');
+  const [accomShowCount, setAccomShowCount] = useState(6);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['destination-detail', destinationId],
@@ -264,9 +284,16 @@ function DestinationDetailPage() {
     return acc;
   }, {} as Record<string, typeof highlights>);
 
-  const filteredHighlights = activeHighlightCategory
-    ? highlights.filter(h => (h.category || 'attraction') === activeHighlightCategory)
-    : highlights;
+  const filteredHighlights = useMemo(() => {
+    let list = activeHighlightCategory
+      ? highlights.filter(h => (h.category || 'attraction') === activeHighlightCategory)
+      : highlights;
+    if (highlightSearch) {
+      const q = highlightSearch.toLowerCase();
+      list = list.filter(h => h.title.toLowerCase().includes(q) || h.description?.toLowerCase().includes(q) || h.address?.toLowerCase().includes(q));
+    }
+    return list;
+  }, [highlights, activeHighlightCategory, highlightSearch]);
 
   const activeCats = Object.keys(highlightsByCategory);
 
@@ -387,7 +414,11 @@ function DestinationDetailPage() {
             <StatCard icon={DollarSign} label="Currency" value={research.currency} />
           )}
           {research.timezone && (
-            <StatCard icon={Clock} label="Timezone" value={research.timezone} />
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-4 space-y-1">
+              <div className="flex items-center gap-2 text-ody-text-dim text-xs"><Clock size={14} />Local Time</div>
+              <div className="text-lg font-semibold"><LiveClock timezone={research.timezone} /></div>
+              <div className="text-xs text-ody-text-muted">{research.timezone}</div>
+            </motion.div>
           )}
           {research.population && (
             <StatCard icon={Users} label="Population" value={research.population} />
@@ -578,10 +609,17 @@ function DestinationDetailPage() {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <Star size={20} className="text-ody-accent" /> Things to Do & See
             </h2>
+            <div className="flex items-center gap-2 flex-1 justify-end">
+              <div className="relative max-w-[220px]">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ody-text-dim" />
+                <input value={highlightSearch} onChange={e => { setHighlightSearch(e.target.value); setHighlightShowCount(8); }}
+                  placeholder="Search highlights..."
+                  className="w-full bg-ody-surface border border-ody-border rounded-lg pl-9 pr-3 py-1.5 text-sm outline-none focus:border-ody-accent" />
+              </div>
             <div className="flex items-center gap-1 bg-ody-surface rounded-lg p-1">
               <button
                 onClick={() => setHighlightView('grid')}
@@ -597,6 +635,7 @@ function DestinationDetailPage() {
               >
                 <List size={16} />
               </button>
+            </div>
             </div>
           </div>
 
@@ -632,7 +671,7 @@ function DestinationDetailPage() {
           {highlightView === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <AnimatePresence mode="popLayout">
-                {filteredHighlights.map((h, i) => {
+                {filteredHighlights.slice(0, highlightShowCount).map((h, i) => {
                   const cat = HIGHLIGHT_CATEGORIES[h.category || 'attraction'] || HIGHLIGHT_CATEGORIES.attraction;
                   const CatIcon = cat.icon;
                   return (
@@ -712,7 +751,7 @@ function DestinationDetailPage() {
           ) : (
             <div className="space-y-1">
               <AnimatePresence mode="popLayout">
-                {filteredHighlights.map((h, i) => {
+                {filteredHighlights.slice(0, highlightShowCount).map((h, i) => {
                   const cat = HIGHLIGHT_CATEGORIES[h.category || 'attraction'] || HIGHLIGHT_CATEGORIES.attraction;
                   const CatIcon = cat.icon;
                   return (
@@ -786,6 +825,13 @@ function DestinationDetailPage() {
               </AnimatePresence>
             </div>
           )}
+
+          {filteredHighlights.length > highlightShowCount && (
+            <button onClick={() => setHighlightShowCount(c => c + 8)}
+              className="w-full py-2 text-sm text-ody-accent hover:bg-ody-accent/10 rounded-lg transition-colors">
+              Show More ({filteredHighlights.length - highlightShowCount} remaining)
+            </button>
+          )}
         </motion.div>
       )}
 
@@ -803,6 +849,7 @@ function DestinationDetailPage() {
             <HighlightsMap
               highlights={highlights}
               accommodations={accommodations}
+              events={data.events || []}
               destinationLat={destination.lat}
               destinationLng={destination.lng}
               destinationName={destination.name}
@@ -823,10 +870,25 @@ function DestinationDetailPage() {
           animate={{ opacity: 1, y: 0 }}
           className="glass-card p-6 space-y-4"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <Hotel size={20} className="text-ody-accent" /> Accommodations
             </h2>
+            <div className="flex items-center gap-2">
+              <div className="relative max-w-[180px]">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ody-text-dim" />
+                <input value={accomSearch} onChange={e => { setAccomSearch(e.target.value); setAccomShowCount(6); }}
+                  placeholder="Search..."
+                  className="w-full bg-ody-bg border border-ody-border rounded-lg pl-9 pr-3 py-1.5 text-sm outline-none focus:border-ody-accent" />
+              </div>
+              <select value={accomSort} onChange={e => setAccomSort(e.target.value as any)}
+                className="bg-ody-bg border border-ody-border rounded-lg px-2 py-1.5 text-sm outline-none focus:border-ody-accent">
+                <option value="name">By Name</option>
+                <option value="cost">By Cost</option>
+                <option value="rating">By Rating</option>
+                <option value="status">By Status</option>
+              </select>
+            </div>
             {accommodations.length >= 2 && (
               <button
                 onClick={() => setCompareMode(!compareMode)}
@@ -852,9 +914,22 @@ function DestinationDetailPage() {
             )}
           </AnimatePresence>
 
-          {!compareMode && (
+          {!compareMode && (() => {
+            let sortedAccom = [...accommodations];
+            if (accomSearch) {
+              const q = accomSearch.toLowerCase();
+              sortedAccom = sortedAccom.filter(a => a.name.toLowerCase().includes(q) || a.address?.toLowerCase().includes(q));
+            }
+            sortedAccom.sort((a, b) => {
+              if (accomSort === 'cost') return parseFloat(b.totalCost || '0') - parseFloat(a.totalCost || '0');
+              if (accomSort === 'rating') return (b.rating || 0) - (a.rating || 0);
+              if (accomSort === 'status') return (a.status || '').localeCompare(b.status || '');
+              return a.name.localeCompare(b.name);
+            });
+            const displayed = sortedAccom.slice(0, accomShowCount);
+            return (<>
             <div className="space-y-3">
-              {accommodations.map(acc => (
+              {displayed.map(acc => (
                 <div key={acc.id} className="flex items-center justify-between p-3 rounded-lg bg-ody-bg border border-ody-border-subtle">
                   <div>
                     <div className="font-medium">{acc.name}</div>
@@ -881,7 +956,14 @@ function DestinationDetailPage() {
                 </div>
               ))}
             </div>
-          )}
+            {sortedAccom.length > accomShowCount && (
+              <button onClick={() => setAccomShowCount(c => c + 6)}
+                className="w-full py-2 text-sm text-ody-accent hover:bg-ody-accent/10 rounded-lg transition-colors">
+                Show More ({sortedAccom.length - accomShowCount} remaining)
+              </button>
+            )}
+            </>);
+          })()}
         </motion.div>
       )}
 

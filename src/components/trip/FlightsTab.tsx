@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { addFlight, deleteFlight } from '../../server/fns/trip-details';
+import { addFlight, updateFlight, deleteFlight } from '../../server/fns/trip-details';
 import { motion } from 'framer-motion';
-import { Plus, Plane, Clock, Trash2, Calendar, Ticket, Search } from 'lucide-react';
+import { Plus, Plane, Clock, Trash2, Calendar, Ticket, Search, Edit3, DollarSign, Users, X } from 'lucide-react';
 import type { Flight } from '../../types/trips';
 import { FlightResearchTab } from './FlightResearchTab';
 
@@ -169,7 +169,7 @@ function JourneyOverview({ flights }: { flights: Flight[] }) {
   );
 }
 
-function FlightCard({ flight, index, onDelete }: { flight: Flight; index: number; onDelete: (id: string) => void }) {
+function FlightCard({ flight, index, onDelete, onEdit }: { flight: Flight; index: number; onDelete: (id: string) => void; onEdit?: (flight: Flight) => void }) {
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -188,6 +188,12 @@ function FlightCard({ flight, index, onDelete }: { flight: Flight; index: number
           <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[flight.status] || statusColors.confirmed}`}>
             {flight.status}
           </span>
+          {onEdit && (
+            <button onClick={() => onEdit(flight)}
+              className="text-ody-text-dim hover:text-ody-accent transition-colors p-1">
+              <Edit3 size={14} />
+            </button>
+          )}
           <button onClick={() => onDelete(flight.id)}
             className="text-ody-text-dim hover:text-ody-danger transition-colors p-1">
             <Trash2 size={14} />
@@ -247,6 +253,9 @@ function FlightCard({ flight, index, onDelete }: { flight: Flight; index: number
         <div className="flex flex-wrap gap-3 mt-4 pt-3 border-t border-ody-border/50 text-xs text-ody-text-dim">
           {flight.seatNumber && <span>Seat: <strong className="text-ody-text-muted">{flight.seatNumber}</strong></span>}
           {flight.class && <span className="capitalize">{flight.class} class</span>}
+          {flight.totalPrice && <span className="flex items-center gap-1 font-medium text-ody-text"><DollarSign size={10} /> {flight.currency || 'USD'} {flight.totalPrice} total</span>}
+          {flight.pricePerPerson && <span className="text-ody-text-dim">({flight.currency || 'USD'} {flight.pricePerPerson}/pp)</span>}
+          {flight.passengers && flight.passengers > 1 && <span className="flex items-center gap-1"><Users size={10} /> {flight.passengers} pax</span>}
           {flight.notes && <span className="text-ody-text-muted">{flight.notes}</span>}
         </div>
       </div>
@@ -327,24 +336,65 @@ export function FlightsTab({ tripId, items }: Props) {
 function BookedFlightsView({ tripId, items }: Props) {
   const queryClient = useQueryClient();
   const [showAdd, setShowAdd] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     airline: '', flightNumber: '', confirmationCode: '', departureAirport: '', departureCity: '',
     arrivalAirport: '', arrivalCity: '', departureDate: '', departureTime: '', arrivalDate: '',
     arrivalTime: '', duration: '', seatNumber: '', class: 'economy', notes: '',
+    pricePerPerson: '', totalPrice: '', currency: 'USD', passengers: '1', status: 'confirmed',
   });
 
   const groups = useMemo(() => groupFlightLegs(items), [items]);
+
+  // Total flight cost
+  const totalFlightCost = useMemo(() => {
+    return items.reduce((sum, f) => sum + parseFloat(f.totalPrice || '0'), 0);
+  }, [items]);
+  const mainCurrency = items.find(f => f.currency)?.currency || 'USD';
+
+  const emptyForm = {
+    airline: '', flightNumber: '', confirmationCode: '', departureAirport: '', departureCity: '',
+    arrivalAirport: '', arrivalCity: '', departureDate: '', departureTime: '', arrivalDate: '',
+    arrivalTime: '', duration: '', seatNumber: '', class: 'economy', notes: '',
+    pricePerPerson: '', totalPrice: '', currency: 'USD', passengers: '1', status: 'confirmed',
+  };
 
   const addMutation = useMutation({
     mutationFn: (data: any) => addFlight({ data: { tripId, ...data } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
       setShowAdd(false);
-      setForm({ airline: '', flightNumber: '', confirmationCode: '', departureAirport: '', departureCity: '',
-        arrivalAirport: '', arrivalCity: '', departureDate: '', departureTime: '', arrivalDate: '',
-        arrivalTime: '', duration: '', seatNumber: '', class: 'economy', notes: '' });
+      setEditingId(null);
+      setForm({ ...emptyForm });
     },
   });
+
+  const updateMutation = useMutation({
+    mutationFn: (data: any) => updateFlight({ data: { tripId, ...data } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trip', tripId] });
+      setShowAdd(false);
+      setEditingId(null);
+      setForm({ ...emptyForm });
+    },
+  });
+
+  const startEdit = (flight: Flight) => {
+    setEditingId(flight.id);
+    setForm({
+      airline: flight.airline, flightNumber: flight.flightNumber,
+      confirmationCode: flight.confirmationCode || '', departureAirport: flight.departureAirport,
+      departureCity: flight.departureCity || '', arrivalAirport: flight.arrivalAirport,
+      arrivalCity: flight.arrivalCity || '', departureDate: flight.departureDate,
+      departureTime: flight.departureTime || '', arrivalDate: flight.arrivalDate,
+      arrivalTime: flight.arrivalTime || '', duration: flight.duration || '',
+      seatNumber: flight.seatNumber || '', class: flight.class || 'economy',
+      notes: flight.notes || '', pricePerPerson: flight.pricePerPerson || '',
+      totalPrice: flight.totalPrice || '', currency: flight.currency || 'USD',
+      passengers: String(flight.passengers || 1), status: flight.status || 'confirmed',
+    });
+    setShowAdd(true);
+  };
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteFlight({ data: { tripId, id } }),
@@ -362,11 +412,23 @@ function BookedFlightsView({ tripId, items }: Props) {
             </span>
           )}
         </h3>
-        <button onClick={() => setShowAdd(!showAdd)}
+        <button onClick={() => { setShowAdd(!showAdd); setEditingId(null); setForm({ ...emptyForm }); }}
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-ody-accent/10 text-ody-accent text-sm hover:bg-ody-accent/20 transition-colors">
           <Plus size={14} /> Add Flight
         </button>
       </div>
+
+      {/* Total cost summary */}
+      {totalFlightCost > 0 && (
+        <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
+          className="glass-card p-4 flex items-center justify-between bg-gradient-to-r from-ody-accent/5 to-transparent">
+          <div className="flex items-center gap-2 text-sm text-ody-text-muted">
+            <DollarSign size={16} className="text-ody-accent" />
+            Total Flight Cost
+          </div>
+          <div className="text-lg font-bold text-ody-accent">{mainCurrency} {totalFlightCost.toFixed(2)}</div>
+        </motion.div>
+      )}
 
       {/* Journey overview */}
       {items.length > 0 && <JourneyOverview flights={items} />}
@@ -416,12 +478,36 @@ function BookedFlightsView({ tripId, items }: Props) {
               <option value="business">Business</option><option value="first">First</option>
             </select>
           </div>
+          {/* Price fields */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <input placeholder="Price per person" type="number" step="0.01" value={form.pricePerPerson} onChange={e => setForm(p => ({ ...p, pricePerPerson: e.target.value }))}
+              className="bg-ody-bg border border-ody-border rounded-lg px-3 py-2 text-sm outline-none focus:border-ody-accent" />
+            <input placeholder="Total price" type="number" step="0.01" value={form.totalPrice} onChange={e => setForm(p => ({ ...p, totalPrice: e.target.value }))}
+              className="bg-ody-bg border border-ody-border rounded-lg px-3 py-2 text-sm outline-none focus:border-ody-accent" />
+            <select value={form.currency} onChange={e => setForm(p => ({ ...p, currency: e.target.value }))}
+              className="bg-ody-bg border border-ody-border rounded-lg px-3 py-2 text-sm outline-none focus:border-ody-accent">
+              <option value="USD">USD $</option><option value="EUR">EUR €</option>
+              <option value="GBP">GBP £</option><option value="JPY">JPY ¥</option>
+            </select>
+            <input placeholder="Passengers" type="number" min="1" value={form.passengers} onChange={e => setForm(p => ({ ...p, passengers: e.target.value }))}
+              className="bg-ody-bg border border-ody-border rounded-lg px-3 py-2 text-sm outline-none focus:border-ody-accent" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <select value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value }))}
+              className="bg-ody-bg border border-ody-border rounded-lg px-3 py-2 text-sm outline-none focus:border-ody-accent">
+              <option value="confirmed">Confirmed</option><option value="cancelled">Cancelled</option><option value="delayed">Delayed</option>
+            </select>
+          </div>
           <textarea placeholder="Notes" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
             className="w-full bg-ody-bg border border-ody-border rounded-lg px-3 py-2 text-sm outline-none focus:border-ody-accent resize-none h-16" />
           <div className="flex gap-2">
-            <button onClick={() => addMutation.mutate(form)} disabled={!form.airline || !form.flightNumber || !form.departureAirport || !form.arrivalAirport || !form.departureDate || !form.arrivalDate}
-              className="px-4 py-2 rounded-lg bg-ody-accent text-white text-sm hover:bg-ody-accent-hover disabled:opacity-50 transition-colors">Save</button>
-            <button onClick={() => setShowAdd(false)}
+            <button onClick={() => {
+              const payload = { ...form, pricePerPerson: form.pricePerPerson || null, totalPrice: form.totalPrice || null, passengers: parseInt(form.passengers) || 1 };
+              if (editingId) updateMutation.mutate({ id: editingId, ...payload });
+              else addMutation.mutate(payload);
+            }} disabled={!form.airline || !form.flightNumber || !form.departureAirport || !form.arrivalAirport || !form.departureDate || !form.arrivalDate}
+              className="px-4 py-2 rounded-lg bg-ody-accent text-white text-sm hover:bg-ody-accent-hover disabled:opacity-50 transition-colors">{editingId ? 'Update' : 'Save'}</button>
+            <button onClick={() => { setShowAdd(false); setEditingId(null); setForm({ ...emptyForm }); }}
               className="px-4 py-2 rounded-lg border border-ody-border text-sm hover:bg-ody-surface-hover transition-colors">Cancel</button>
           </div>
         </motion.div>
@@ -465,7 +551,7 @@ function BookedFlightsView({ tripId, items }: Props) {
                           />
                         </div>
                         <div className="flex-1 pb-2">
-                          <FlightCard flight={flight} index={gi * 10 + i} onDelete={(id) => deleteMutation.mutate(id)} />
+                          <FlightCard flight={flight} index={gi * 10 + i} onDelete={(id) => deleteMutation.mutate(id)} onEdit={startEdit} />
                         </div>
                       </div>
                     </div>

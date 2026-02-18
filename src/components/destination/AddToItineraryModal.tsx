@@ -80,6 +80,7 @@ export function AddToItineraryModal({ highlight, tripId, startDate, endDate, ope
   const [travelMode, setTravelMode] = useState('car');
   const [notes, setNotes] = useState('');
   const [addTravel, setAddTravel] = useState(true);
+  const [includeReturn, setIncludeReturn] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const tripDays = startDate && endDate ? getDaysBetween(startDate, endDate) : [];
@@ -129,6 +130,7 @@ export function AddToItineraryModal({ highlight, tripId, startDate, endDate, ope
         travelMode,
         notes: notes || undefined,
         addTravelSegment: addTravel,
+        addReturnSegment: addTravel && includeReturn,
       },
     }),
     onSuccess: () => {
@@ -390,6 +392,10 @@ export function AddToItineraryModal({ highlight, tripId, startDate, endDate, ope
                         })()} to arrive by {startTime}
                       </p>
                     )}
+                    <label className="flex items-center gap-2 text-xs text-ody-text-dim cursor-pointer mt-1">
+                      <input type="checkbox" checked={includeReturn} onChange={e => setIncludeReturn(e.target.checked)} className="accent-[var(--color-ody-accent)]" />
+                      Include return trip to home base
+                    </label>
                   </>
                 )}
               </div>

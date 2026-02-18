@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { db } from '../../db';
 import {
   accommodations, budgetItems, destinationEvents, itineraryItems,
-  tripDestinations, flightOptions, flightSearches,
+  tripDestinations, flightOptions, flightSearches, flights,
 } from '../../db/schema';
 import { eq, and, inArray } from 'drizzle-orm';
 import type { BudgetSummary, BudgetSummaryItem } from '../../types/trips';
@@ -12,12 +12,13 @@ export const getBudgetSummary = createServerFn({ method: 'GET' })
   .inputValidator(z.object({ tripId: z.string().min(1) }))
   .handler(async ({ data: { tripId } }): Promise<BudgetSummary> => {
     // Fetch all data in parallel
-    const [accomRows, destRows, manualItems, searchRows, itinRows] = await Promise.all([
+    const [accomRows, destRows, manualItems, searchRows, itinRows, bookedFlightRows] = await Promise.all([
       db.select().from(accommodations).where(eq(accommodations.tripId, tripId)),
       db.select().from(tripDestinations).where(eq(tripDestinations.tripId, tripId)),
       db.select().from(budgetItems).where(eq(budgetItems.tripId, tripId)),
       db.select().from(flightSearches).where(eq(flightSearches.tripId, tripId)),
       db.select().from(itineraryItems).where(eq(itineraryItems.tripId, tripId)),
+      db.select().from(flights).where(eq(flights.tripId, tripId)),
     ]);
 
     const destIds = destRows.map(d => d.id);
@@ -140,18 +141,55 @@ export const getBudgetSummary = createServerFn({ method: 'GET' })
     }
 
     // ── Flights ──
-    const flightItems: BudgetSummaryItem[] = flightOptionRows.map(f => ({
-      id: f.id,
-      name: `${f.airline} ${f.departureAirport}→${f.arrivalAirport}`,
-      source: 'flight' as const,
-      status: f.status || 'found',
-      estimatedCost: Number(f.totalPrice || 0),
-      actualCost: f.status === 'booked' ? Number(f.totalPrice || 0) : 0,
-      category: 'flights',
-      currency: f.currency || 'USD',
-      sourceId: f.id,
-      onItinerary: false,
-    }));
+    // Group booked flights by confirmation code and create budget items
+    const flightItems: BudgetSummaryItem[] = [];
+    const bookedConfCodes = new Set<string>();
+
+    // First: booked flights grouped by confirmation code
+    const byConfCode = new Map<string, typeof bookedFlightRows>();
+    for (const f of bookedFlightRows) {
+      const key = f.confirmationCode || f.id;
+      const group = byConfCode.get(key) || [];
+      group.push(f);
+      byConfCode.set(key, group);
+    }
+
+    for (const [code, group] of Array.from(byConfCode.entries())) {
+      const totalPrice = group.reduce((sum, f) => sum + parseFloat(f.totalPrice || '0'), 0);
+      const first = group[0];
+      const last = group[group.length - 1];
+      if (first.confirmationCode) bookedConfCodes.add(first.confirmationCode);
+      flightItems.push({
+        id: first.id,
+        name: `${first.airline} ${first.departureAirport}→${last.arrivalAirport}`,
+        source: 'flight' as const,
+        status: 'booked',
+        estimatedCost: totalPrice,
+        actualCost: totalPrice,
+        category: 'flights',
+        currency: first.currency || 'USD',
+        sourceId: first.id,
+        detail: group.length > 1 ? `${group.length} legs` : undefined,
+        onItinerary: false,
+      });
+    }
+
+    // Then: shortlisted flight options not already covered by booked flights
+    for (const f of flightOptionRows) {
+      if (f.status === 'booked') continue; // skip booked options, we use actual flights
+      flightItems.push({
+        id: f.id,
+        name: `${f.airline} ${f.departureAirport}→${f.arrivalAirport}`,
+        source: 'flight' as const,
+        status: f.status || 'found',
+        estimatedCost: Number(f.totalPrice || 0),
+        actualCost: 0,
+        category: 'flights',
+        currency: f.currency || 'USD',
+        sourceId: f.id,
+        onItinerary: false,
+      });
+    }
 
     // ── Totals ──
     const accomTotal = accomItems.reduce((s, i) => s + i.estimatedCost, 0);

@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Link } from '@tanstack/react-router';
-import { Star, Clock, MapPin, Hotel, Calendar } from 'lucide-react';
+import { Star, Clock, MapPin, Hotel, Calendar, Eye, EyeOff } from 'lucide-react';
 
 // Fix default marker icons for bundlers
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -184,23 +184,57 @@ export function HighlightsMap({
     );
   }
 
+  const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set());
+
+  const toggleCategory = (cat: string) => {
+    setHiddenCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
+    });
+  };
+
+  const visibleMarkers = allMarkers.filter(m => !hiddenCategories.has(m.category));
+
   return (
     <div className={`glass-card overflow-hidden ${className}`}>
-      {/* Legend */}
+      {/* Filter Legend */}
       <div className="flex flex-wrap gap-2 p-3 border-b border-ody-border-subtle bg-ody-surface/50">
         {activeCategories.map(cat => {
           const config = CATEGORY_COLORS[cat] || CATEGORY_COLORS.attraction;
           const count = allMarkers.filter(m => m.category === cat).length;
+          const hidden = hiddenCategories.has(cat);
           return (
-            <span key={cat} className="flex items-center gap-1.5 text-xs text-ody-text-muted">
+            <button
+              key={cat}
+              onClick={() => toggleCategory(cat)}
+              className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg transition-all cursor-pointer select-none ${
+                hidden
+                  ? 'opacity-40 text-ody-text-dim line-through'
+                  : 'text-ody-text-muted hover:bg-ody-surface-hover'
+              }`}
+            >
               <span
-                className="w-3 h-3 rounded-full border"
-                style={{ backgroundColor: config.bg, borderColor: config.border }}
+                className="w-3 h-3 rounded-full border shrink-0"
+                style={{
+                  backgroundColor: hidden ? 'transparent' : config.bg,
+                  borderColor: config.border,
+                }}
               />
               {config.label} ({count})
-            </span>
+              {hidden ? <EyeOff size={10} /> : <Eye size={10} className="opacity-40" />}
+            </button>
           );
         })}
+        {hiddenCategories.size > 0 && (
+          <button
+            onClick={() => setHiddenCategories(new Set())}
+            className="text-xs text-ody-accent hover:underline ml-auto"
+          >
+            Show All
+          </button>
+        )}
       </div>
 
       {/* Map */}
@@ -215,15 +249,15 @@ export function HighlightsMap({
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           />
-          <FitBounds markers={allMarkers} />
+          <FitBounds markers={visibleMarkers.length > 0 ? visibleMarkers : allMarkers} />
 
-          {allMarkers.map((marker, i) => {
+          {visibleMarkers.map((marker, i) => {
             const catConfig = CATEGORY_COLORS[marker.category] || CATEGORY_COLORS.attraction;
             const icon = createColoredIcon(catConfig.bg, catConfig.border);
 
             return (
               <Marker key={`${marker.type}-${marker.data.id}-${i}`} position={[marker.lat, marker.lng]} icon={icon}>
-                <Popup>
+                <Popup maxWidth={300} minWidth={220}>
                   <MarkerPopup marker={marker} />
                 </Popup>
               </Marker>
@@ -240,18 +274,20 @@ function MarkerPopup({ marker }: { marker: { type: string; category: string; dat
 
   if (type === 'highlight') {
     return (
-      <div className="min-w-[200px] max-w-[280px]">
+      <div className="w-[260px] -m-[1px]">
         {data.imageUrl && (
-          <img src={data.imageUrl} alt={data.title} className="w-full h-24 object-cover rounded-t-lg -mt-[14px] -mx-[14px] mb-2" style={{ width: 'calc(100% + 28px)' }} />
+          <div className="w-full h-32 overflow-hidden rounded-t-lg -mt-3 -mx-0 mb-2" style={{ margin: '-13px -20px 8px -20px', width: 'calc(100% + 40px)' }}>
+            <img src={data.imageUrl} alt={data.title} className="w-full h-full object-cover" />
+          </div>
         )}
-        <Link to="/highlight/$highlightId" params={{ highlightId: data.id }} className="font-semibold text-sm text-blue-600 hover:underline block">
+        <Link to="/highlight/$highlightId" params={{ highlightId: data.id }} className="font-semibold text-sm text-blue-600 hover:underline block leading-tight">
           {data.title}
         </Link>
-        {data.description && <p className="text-xs text-gray-600 mt-1 line-clamp-2">{data.description}</p>}
-        <div className="flex items-center gap-2 mt-1.5 text-xs text-gray-500">
+        {data.description && <p className="text-[11px] text-gray-600 mt-1 line-clamp-2 leading-relaxed">{data.description}</p>}
+        <div className="flex items-center gap-3 mt-2 text-[11px] text-gray-500">
           {data.rating && (
             <span className="flex items-center gap-0.5">
-              <Star size={10} className="text-amber-500" /> {data.rating}
+              <Star size={10} className="text-amber-500 fill-amber-500" /> {data.rating}
             </span>
           )}
           {data.duration && (
@@ -259,38 +295,67 @@ function MarkerPopup({ marker }: { marker: { type: string; category: string; dat
               <Clock size={10} /> {data.duration}
             </span>
           )}
+          {data.priceLevel && (
+            <span className="text-amber-600">{'$'.repeat(data.priceLevel)}</span>
+          )}
         </div>
-        {data.address && <p className="text-xs text-gray-400 mt-1 flex items-center gap-0.5"><MapPin size={10} /> {data.address}</p>}
+        {data.address && <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-1"><MapPin size={10} className="shrink-0" /> <span className="truncate">{data.address}</span></p>}
       </div>
     );
   }
 
   if (type === 'accommodation') {
     return (
-      <div className="min-w-[180px]">
+      <div className="w-[240px] -m-[1px]">
+        {data.imageUrl && (
+          <div className="w-full h-28 overflow-hidden rounded-t-lg" style={{ margin: '-13px -20px 8px -20px', width: 'calc(100% + 40px)' }}>
+            <img src={data.imageUrl} alt={data.name} className="w-full h-full object-cover" />
+          </div>
+        )}
         <Link to="/accommodation/$accommodationId" params={{ accommodationId: data.id }} className="font-semibold text-sm text-blue-600 hover:underline flex items-center gap-1">
-          <Hotel size={12} /> {data.name}
+          <Hotel size={12} className="shrink-0" /> {data.name}
         </Link>
-        <div className="text-xs text-gray-500 mt-1">
+        <div className="flex items-center gap-2 mt-1 text-[11px] text-gray-500">
           {data.type && <span className="capitalize">{data.type}</span>}
-          {data.checkIn && <span className="ml-2">{data.checkIn} → {data.checkOut}</span>}
+          {data.rating && (
+            <span className="flex items-center gap-0.5">
+              <Star size={10} className="text-amber-500 fill-amber-500" /> {data.rating}
+            </span>
+          )}
+          {data.status && (
+            <span className={`px-1.5 py-0.5 rounded text-[10px] ${
+              data.status === 'booked' ? 'bg-green-100 text-green-700' :
+              data.status === 'shortlisted' ? 'bg-amber-100 text-amber-700' :
+              'bg-gray-100 text-gray-600'
+            }`}>{data.status}</span>
+          )}
         </div>
-        {data.address && <p className="text-xs text-gray-400 mt-1"><MapPin size={10} className="inline" /> {data.address}</p>}
+        {data.checkIn && (
+          <p className="text-[11px] text-gray-500 mt-1 flex items-center gap-1">
+            <Calendar size={10} /> {data.checkIn} → {data.checkOut}
+          </p>
+        )}
+        {data.address && <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-1"><MapPin size={10} className="shrink-0" /> <span className="truncate">{data.address}</span></p>}
       </div>
     );
   }
 
   if (type === 'event') {
     return (
-      <div className="min-w-[180px]">
+      <div className="w-[240px] -m-[1px]">
+        {data.imageUrl && (
+          <div className="w-full h-28 overflow-hidden rounded-t-lg" style={{ margin: '-13px -20px 8px -20px', width: 'calc(100% + 40px)' }}>
+            <img src={data.imageUrl} alt={data.name} className="w-full h-full object-cover" />
+          </div>
+        )}
         <Link to="/event/$eventId" params={{ eventId: data.id }} className="font-semibold text-sm text-blue-600 hover:underline flex items-center gap-1">
-          <Calendar size={12} /> {data.name}
+          <Calendar size={12} className="shrink-0" /> {data.name}
         </Link>
-        <div className="text-xs text-gray-500 mt-1">
+        <div className="flex items-center gap-2 mt-1 text-[11px] text-gray-500">
           {data.eventType && <span className="capitalize">{data.eventType}</span>}
-          {data.startDate && <span className="ml-2">{data.startDate}</span>}
+          {data.startDate && <span>{data.startDate}</span>}
         </div>
-        {data.venue && <p className="text-xs text-gray-400 mt-1">{data.venue}</p>}
+        {data.venue && <p className="text-[11px] text-gray-400 mt-1 flex items-center gap-1"><MapPin size={10} className="shrink-0" /> {data.venue}</p>}
       </div>
     );
   }

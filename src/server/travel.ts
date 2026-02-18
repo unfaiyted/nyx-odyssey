@@ -107,6 +107,7 @@ export const addHighlightToItinerary = createServerFn({ method: 'POST' })
     travelMode: z.string().optional(),
     notes: z.string().optional(),
     addTravelSegment: z.boolean().default(true),
+    addReturnSegment: z.boolean().default(false),
   }))
   .handler(async ({ data }) => {
     // Get the highlight
@@ -226,6 +227,44 @@ export const addHighlightToItinerary = createServerFn({ method: 'POST' })
       notes: data.notes,
       orderIndex: maxOrder2 + 1,
     }).returning();
+
+    // Add return travel segment if requested
+    if (data.addReturnSegment && highlightLat && highlightLng && endTime) {
+      const returnRoute = await getOSRMRoute(highlightLat, highlightLng, homeBase.lat, homeBase.lng,
+        (data.travelMode === 'walk' || data.travelMode === 'foot') ? 'foot' : 'car');
+      if (returnRoute) {
+        let returnTravelMin = returnRoute.durationMinutes;
+        if (data.travelMode === 'train') returnTravelMin = Math.round(returnRoute.durationMinutes * 0.7 + 15);
+        if (data.travelMode === 'bus') returnTravelMin = Math.round(returnRoute.durationMinutes * 1.3 + 10);
+
+        const [eh, em] = endTime.split(':').map(Number);
+        const returnEndMin = (eh || 0) * 60 + (em || 0) + returnTravelMin;
+        const returnEndTime = `${String(Math.floor(returnEndMin / 60) % 24).padStart(2, '0')}:${String(returnEndMin % 60).padStart(2, '0')}`;
+        const mode = data.travelMode || 'car';
+        const modeEmoji: Record<string, string> = { car: '🚗', train: '🚆', bus: '🚌', walk: '🚶' };
+
+        const maxOrder3 = (await db.select().from(itineraryItems)
+          .where(and(eq(itineraryItems.tripId, data.tripId), eq(itineraryItems.date, data.date))))
+          .reduce((max, i) => Math.max(max, i.orderIndex), -1);
+
+        await db.insert(itineraryItems).values({
+          tripId: data.tripId,
+          title: `${modeEmoji[mode] || '🚗'} Return to ${homeBase.name}`,
+          description: `From ${highlight.title} · ${returnTravelMin} min by ${mode}`,
+          date: data.date,
+          startTime: endTime,
+          endTime: returnEndTime,
+          location: highlight.address || destination?.name,
+          lat: highlightLat,
+          lng: highlightLng,
+          category: 'transport',
+          travelTimeMinutes: returnTravelMin,
+          travelMode: mode,
+          travelFromLocation: highlight.title,
+          orderIndex: maxOrder3 + 1,
+        });
+      }
+    }
 
     return item;
   });

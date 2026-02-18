@@ -76,6 +76,7 @@ export function AddEventToItineraryModal({ event, tripId, startDate, endDate, op
   const [travelMode, setTravelMode] = useState('car');
   const [notes, setNotes] = useState('');
   const [addTravel, setAddTravel] = useState(true);
+  const [includeReturn, setIncludeReturn] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const tripDays = startDate && endDate ? getDaysBetween(startDate, endDate) : [];
@@ -150,6 +151,8 @@ export function AddEventToItineraryModal({ event, tripId, startDate, endDate, op
         location: event.venue || event.venueAddress || undefined,
         category: 'activity',
         travelMode: addTravel ? travelMode : undefined,
+        addTravelSegment: addTravel,
+        addReturnSegment: addTravel && includeReturn,
         notes: notes || undefined,
       },
     }),
@@ -422,25 +425,31 @@ export function AddEventToItineraryModal({ event, tripId, startDate, endDate, op
                     </label>
                   </div>
                   {addTravel && (
-                    <div className="grid grid-cols-2 gap-2">
-                      {TRAVEL_MODES.map(m => {
-                        const Icon = m.icon;
-                        return (
-                          <button
-                            key={m.mode}
-                            onClick={() => setTravelMode(m.mode)}
-                            className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs transition-all ${
-                              travelMode === m.mode
-                                ? 'bg-ody-accent/20 border border-ody-accent/50 text-ody-accent'
-                                : 'bg-ody-surface border border-ody-border/50 hover:border-ody-accent/30'
-                            }`}
-                          >
-                            <Icon size={14} />
-                            <span className="font-medium">{m.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <>
+                      <div className="grid grid-cols-2 gap-2">
+                        {TRAVEL_MODES.map(m => {
+                          const Icon = m.icon;
+                          return (
+                            <button
+                              key={m.mode}
+                              onClick={() => setTravelMode(m.mode)}
+                              className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs transition-all ${
+                                travelMode === m.mode
+                                  ? 'bg-ody-accent/20 border border-ody-accent/50 text-ody-accent'
+                                  : 'bg-ody-surface border border-ody-border/50 hover:border-ody-accent/30'
+                              }`}
+                            >
+                              <Icon size={14} />
+                              <span className="font-medium">{m.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <label className="flex items-center gap-2 text-xs text-ody-text-dim cursor-pointer mt-1">
+                        <input type="checkbox" checked={includeReturn} onChange={e => setIncludeReturn(e.target.checked)} className="accent-[var(--color-ody-accent)]" />
+                        Include return trip to home base
+                      </label>
+                    </>
                   )}
                 </div>
 

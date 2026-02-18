@@ -471,6 +471,21 @@ export function EventsTab({ tripId, items, destinations = [] }: Props) {
             className="w-full pl-9 pr-3 py-2 bg-ody-surface border border-ody-border rounded-lg text-sm"
             placeholder="Search events..." />
         </div>
+        {destinations.length > 0 && (
+          <div className="relative min-w-[160px]">
+            <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ody-text-dim" />
+            <select value={filterDestination}
+              onChange={e => setFilterDestination(e.target.value)}
+              className="w-full bg-ody-surface border border-ody-border rounded-lg pl-9 pr-8 py-2 text-sm outline-none focus:border-ody-accent appearance-none cursor-pointer">
+              <option value="all">All Destinations</option>
+              {destinations.map(d => (
+                <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+              <option value="none">Unlinked</option>
+            </select>
+            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-ody-text-dim pointer-events-none" />
+          </div>
+        )}
         <div className="flex gap-1 bg-ody-surface border border-ody-border rounded-lg p-0.5">
           <button onClick={() => setViewMode('list')}
             className={`px-3 py-1.5 text-xs rounded-md transition-colors ${viewMode === 'list' ? 'bg-ody-accent text-white' : 'text-ody-text-muted hover:text-ody-text'}`}>
