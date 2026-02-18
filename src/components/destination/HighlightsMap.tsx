@@ -1,20 +1,36 @@
-import { useMemo, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
+import { useMemo, useState, useEffect } from 'react';
 import { Link } from '@tanstack/react-router';
 import { Star, Clock, MapPin, Hotel, Calendar, Eye, EyeOff } from 'lucide-react';
 
-// Fix default marker icons for bundlers
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+// Leaflet must be loaded client-side only
+let L: any = null;
+let MapContainer: any = null;
+let TileLayer: any = null;
+let Marker: any = null;
+let Popup: any = null;
+let useMap: any = null;
 
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-});
+if (typeof window !== 'undefined') {
+  const leaflet = require('leaflet');
+  const reactLeaflet = require('react-leaflet');
+  L = leaflet.default || leaflet;
+  MapContainer = reactLeaflet.MapContainer;
+  TileLayer = reactLeaflet.TileLayer;
+  Marker = reactLeaflet.Marker;
+  Popup = reactLeaflet.Popup;
+  useMap = reactLeaflet.useMap;
+
+  const markerIcon2x = require('leaflet/dist/images/marker-icon-2x.png');
+  const markerIcon = require('leaflet/dist/images/marker-icon.png');
+  const markerShadow = require('leaflet/dist/images/marker-shadow.png');
+
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: markerIcon2x.default || markerIcon2x,
+    iconUrl: markerIcon.default || markerIcon,
+    shadowUrl: markerShadow.default || markerShadow,
+  });
+}
 
 // Category color mapping
 const CATEGORY_COLORS: Record<string, { bg: string; border: string; label: string }> = {
@@ -174,6 +190,11 @@ export function HighlightsMap({
     const cats = new Set(allMarkers.map(m => m.category));
     return Array.from(cats);
   }, [allMarkers]);
+
+  // SSR guard
+  if (typeof window === 'undefined' || !MapContainer) {
+    return <div className={`glass-card p-8 text-center text-ody-text-muted ${className}`}><p>Loading map...</p></div>;
+  }
 
   if (allMarkers.length === 0) {
     return (

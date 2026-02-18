@@ -16,7 +16,7 @@ import { AddToItineraryModal } from '../components/destination/AddToItineraryMod
 import { AccommodationCompare } from '../components/destination/AccommodationCompare';
 import { AddEventToItineraryModal } from '../components/destination/AddEventToItineraryModal';
 import { EventsSection } from '../components/destination/EventsSection';
-import { TransportMap } from '../components/destination/TransportMap';
+const TransportMap = lazy(() => import('../components/destination/TransportMap').then(m => ({ default: m.TransportMap })));
 import { TransportModeCards } from '../components/destination/TransportModeCards';
 const HighlightsMap = lazy(() => import('../components/destination/HighlightsMap').then(m => ({ default: m.HighlightsMap })));
 import { ImagePickerModal } from '../components/ImagePickerModal';
