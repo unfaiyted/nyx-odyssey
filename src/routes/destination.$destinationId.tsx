@@ -2,7 +2,13 @@ import { createFileRoute, Link, useSearch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getDestinationDetail, calculateTransportFromHome } from '../server/destination-detail';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, lazy, Suspense, type ReactNode } from 'react';
+
+function ClientOnly({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return mounted ? <>{children}</> : <>{fallback}</>;
+}
 import {
   ArrowLeft, MapPin, Calendar, Globe, Thermometer, DollarSign,
   Shield, Utensils, Camera, Clock, Star, ExternalLink,
@@ -248,25 +254,17 @@ function DestinationDetailPage() {
   const fromTab = search.fromTab || 'destinations';
   const backTabName = TAB_NAMES[fromTab] || 'Destinations';
 
-  if (isLoading) {
-    return (
-      <div className="max-w-5xl mx-auto">
-        <div className="animate-pulse space-y-6">
-          <div className="h-64 bg-ody-surface rounded-xl" />
-          <div className="grid grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map(i => <div key={i} className="h-24 bg-ody-surface rounded-xl" />)}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) return <div className="text-center py-12 text-ody-text-muted">Destination not found</div>;
-
-  const { destination, research, highlights, highlightPhotos: hPhotos, weather, accommodations, events } = data;
+  // Derived data — safe even when data is null/loading
+  const destination = data?.destination;
+  const research = data?.research;
+  const highlights = data?.highlights ?? [];
+  const hPhotos = data?.highlightPhotos ?? [];
+  const weather = data?.weather ?? [];
+  const accommodations = data?.accommodations ?? [];
+  const events = data?.events ?? [];
   const tips: string[] = research?.travelTips ? JSON.parse(research.travelTips) : [];
 
-  const tripMonths = getTripMonths(destination.arrivalDate, destination.departureDate);
+  const tripMonths = destination ? getTripMonths(destination.arrivalDate, destination.departureDate) : new Set<string>();
   const tripMonthRanges = getTripMonthRanges(tripMonths);
 
   const weatherData = weather.map(w => ({
@@ -299,6 +297,7 @@ function DestinationDetailPage() {
 
   // Assemble gallery photos from destination hero + highlight images + highlight photos
   const galleryPhotos: GalleryPhoto[] = useMemo(() => {
+    if (!destination) return [];
     const photos: GalleryPhoto[] = [];
     // Destination hero photo
     if (destination.photoUrl) {
@@ -334,6 +333,22 @@ function DestinationDetailPage() {
     });
     return photos;
   }, [destination, highlights, hPhotos]);
+
+  // Early returns AFTER all hooks
+  if (isLoading) {
+    return (
+      <div className="max-w-5xl mx-auto">
+        <div className="animate-pulse space-y-6">
+          <div className="h-64 bg-ody-surface rounded-xl" />
+          <div className="grid grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => <div key={i} className="h-24 bg-ody-surface rounded-xl" />)}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!destination) return <div className="text-center py-12 text-ody-text-muted">Destination not found</div>;
 
   const photoUrl = destination.photoUrl || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&h=600&fit=crop';
 
@@ -845,16 +860,18 @@ function DestinationDetailPage() {
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <MapPin size={20} className="text-ody-accent" /> Interactive Map
           </h2>
-          <Suspense fallback={<div className="glass-card h-[440px] animate-pulse bg-ody-surface rounded-xl" />}>
-            <HighlightsMap
-              highlights={highlights}
-              accommodations={accommodations}
-              events={data.events || []}
-              destinationLat={destination.lat}
-              destinationLng={destination.lng}
-              destinationName={destination.name}
-            />
-          </Suspense>
+          <ClientOnly fallback={<div className="glass-card h-[440px] animate-pulse bg-ody-surface rounded-xl" />}>
+            <Suspense fallback={<div className="glass-card h-[440px] animate-pulse bg-ody-surface rounded-xl" />}>
+              <HighlightsMap
+                highlights={highlights}
+                accommodations={accommodations}
+                events={data.events || []}
+                destinationLat={destination.lat}
+                destinationLng={destination.lng}
+                destinationName={destination.name}
+              />
+            </Suspense>
+          </ClientOnly>
         </motion.div>
       )}
 
@@ -990,15 +1007,19 @@ function DestinationDetailPage() {
           </h2>
 
           {/* Transport Map */}
-          <TransportMap
-            destinationLat={destination.lat}
-            destinationLng={destination.lng}
-            destinationName={destination.name}
-            polyline={research?.routePolyline}
-            distanceKm={research?.driveDistanceKm}
-            homeBase={data?.homeBase}
-            className="h-72"
-          />
+          <ClientOnly fallback={<div className="h-72 glass-card animate-pulse bg-ody-surface rounded-xl" />}>
+            <Suspense fallback={<div className="h-72 glass-card animate-pulse bg-ody-surface rounded-xl" />}>
+              <TransportMap
+                destinationLat={destination.lat}
+                destinationLng={destination.lng}
+                destinationName={destination.name}
+                polyline={research?.routePolyline}
+                distanceKm={research?.driveDistanceKm}
+                homeBase={data?.homeBase}
+                className="h-72"
+              />
+            </Suspense>
+          </ClientOnly>
 
           {/* Transport Mode Cards */}
           <TransportModeCards

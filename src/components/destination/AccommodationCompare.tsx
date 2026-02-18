@@ -59,20 +59,17 @@ export function AccommodationCompare({
   highlights: Highlight[];
   onClose: () => void;
 }) {
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState<string[]>([]);
   const maxSelect = 3;
 
   const toggle = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else if (next.size < maxSelect) next.add(id);
-      return next;
-    });
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter(x => x !== id) : prev.length < maxSelect ? [...prev, id] : prev
+    );
   };
 
   const compared = useMemo(
-    () => accommodations.filter((a) => selected.has(a.id)),
+    () => accommodations.filter((a) => selected.includes(a.id)),
     [accommodations, selected],
   );
 
@@ -124,11 +121,11 @@ export function AccommodationCompare({
       {/* Selection */}
       <div className="space-y-2">
         <p className="text-sm text-ody-text-dim">
-          Select {maxSelect} accommodations to compare ({selected.size}/{maxSelect})
+          Select {maxSelect} accommodations to compare ({selected.length}/{maxSelect})
         </p>
         <div className="flex flex-wrap gap-2">
           {accommodations.map((acc) => {
-            const isSelected = selected.has(acc.id);
+            const isSelected = selected.includes(acc.id);
             return (
               <button
                 key={acc.id}
@@ -137,8 +134,8 @@ export function AccommodationCompare({
                   isSelected
                     ? 'border-ody-accent bg-ody-accent/10 text-ody-accent'
                     : 'border-ody-border-subtle bg-ody-bg hover:border-ody-border text-ody-text-secondary'
-                } ${!isSelected && selected.size >= maxSelect ? 'opacity-40 cursor-not-allowed' : ''}`}
-                disabled={!isSelected && selected.size >= maxSelect}
+                } ${!isSelected && selected.length >= maxSelect ? 'opacity-40 cursor-not-allowed' : ''}`}
+                disabled={!isSelected && selected.length >= maxSelect}
               >
                 {isSelected && <Check size={14} />}
                 <Hotel size={14} />
@@ -299,7 +296,7 @@ export function AccommodationCompare({
         )}
       </AnimatePresence>
 
-      {!showComparison && selected.size > 0 && (
+      {!showComparison && selected.length > 0 && (
         <p className="text-sm text-ody-text-dim text-center py-4">
           Select at least one more accommodation to compare
         </p>

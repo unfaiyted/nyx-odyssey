@@ -1,34 +1,19 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
 import { Link } from '@tanstack/react-router';
 import { Star, Clock, MapPin, Hotel, Calendar, Eye, EyeOff } from 'lucide-react';
 
-// Leaflet must be loaded client-side only
-let L: any = null;
-let MapContainer: any = null;
-let TileLayer: any = null;
-let Marker: any = null;
-let Popup: any = null;
-let useMap: any = null;
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 if (typeof window !== 'undefined') {
-  const leaflet = require('leaflet');
-  const reactLeaflet = require('react-leaflet');
-  L = leaflet.default || leaflet;
-  MapContainer = reactLeaflet.MapContainer;
-  TileLayer = reactLeaflet.TileLayer;
-  Marker = reactLeaflet.Marker;
-  Popup = reactLeaflet.Popup;
-  useMap = reactLeaflet.useMap;
-
-  const markerIcon2x = require('leaflet/dist/images/marker-icon-2x.png');
-  const markerIcon = require('leaflet/dist/images/marker-icon.png');
-  const markerShadow = require('leaflet/dist/images/marker-shadow.png');
-
   delete (L.Icon.Default.prototype as any)._getIconUrl;
   L.Icon.Default.mergeOptions({
-    iconRetinaUrl: markerIcon2x.default || markerIcon2x,
-    iconUrl: markerIcon.default || markerIcon,
-    shadowUrl: markerShadow.default || markerShadow,
+    iconRetinaUrl: markerIcon2x,
+    iconUrl: markerIcon,
+    shadowUrl: markerShadow,
   });
 }
 
@@ -191,12 +176,7 @@ export function HighlightsMap({
     return Array.from(cats);
   }, [allMarkers]);
 
-  const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set());
-
-  // SSR guard
-  if (typeof window === 'undefined' || !MapContainer) {
-    return <div className={`glass-card p-8 text-center text-ody-text-muted ${className}`}><p>Loading map...</p></div>;
-  }
+  const [hiddenCategories, setHiddenCategories] = useState<string[]>([]);
 
   if (allMarkers.length === 0) {
     return (
@@ -208,15 +188,12 @@ export function HighlightsMap({
   }
 
   const toggleCategory = (cat: string) => {
-    setHiddenCategories(prev => {
-      const next = new Set(prev);
-      if (next.has(cat)) next.delete(cat);
-      else next.add(cat);
-      return next;
-    });
+    setHiddenCategories(prev =>
+      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+    );
   };
 
-  const visibleMarkers = allMarkers.filter(m => !hiddenCategories.has(m.category));
+  const visibleMarkers = allMarkers.filter(m => !hiddenCategories.includes(m.category));
 
   return (
     <div className={`glass-card overflow-hidden ${className}`}>
@@ -225,7 +202,7 @@ export function HighlightsMap({
         {activeCategories.map(cat => {
           const config = CATEGORY_COLORS[cat] || CATEGORY_COLORS.attraction;
           const count = allMarkers.filter(m => m.category === cat).length;
-          const hidden = hiddenCategories.has(cat);
+          const hidden = hiddenCategories.includes(cat);
           return (
             <button
               key={cat}
@@ -248,9 +225,9 @@ export function HighlightsMap({
             </button>
           );
         })}
-        {hiddenCategories.size > 0 && (
+        {hiddenCategories.length > 0 && (
           <button
-            onClick={() => setHiddenCategories(new Set())}
+            onClick={() => setHiddenCategories([])}
             className="text-xs text-ody-accent hover:underline ml-auto"
           >
             Show All
