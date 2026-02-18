@@ -191,6 +191,8 @@ export function HighlightsMap({
     return Array.from(cats);
   }, [allMarkers]);
 
+  const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set());
+
   // SSR guard
   if (typeof window === 'undefined' || !MapContainer) {
     return <div className={`glass-card p-8 text-center text-ody-text-muted ${className}`}><p>Loading map...</p></div>;
@@ -204,8 +206,6 @@ export function HighlightsMap({
       </div>
     );
   }
-
-  const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set());
 
   const toggleCategory = (cat: string) => {
     setHiddenCategories(prev => {
